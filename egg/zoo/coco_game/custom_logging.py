@@ -58,7 +58,6 @@ class TensorboardLogger(Callback):
             train_logging_step: int = 50,
             test_logging_step: int = 20,
             resume_training: bool = False,
-            start_epoch: int = 0,
             game: torch.nn.Module = None,
             class_map: Dict[int, str] = {},
             get_image_method=None,
@@ -72,7 +71,6 @@ class TensorboardLogger(Callback):
             test_logging_step:  number of batches to log in testing
             resume_training: if the train is resumed, load previous global steps
             game: A torch module used to log the graph
-            start_epoch: the epoch to start with
         """
         self.writer = SummaryWriter(log_dir=tensorboard_dir)
         self.gs_file = join(tensorboard_dir, "gs.txt")
@@ -81,13 +79,12 @@ class TensorboardLogger(Callback):
         self.train_gs = 0
         self.test_gs = 0
         self.loggers = loggers
-        self.epoch = start_epoch
 
         self.game = game
         self.class_map = class_map
         self.get_images = get_image_method
 
-        self.embeddings_log_step = 5
+        self.embeddings_log_step = 3
 
         if resume_training:
             try:
@@ -117,16 +114,15 @@ class TensorboardLogger(Callback):
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
 
-        self.log_precision_recall(logs, phase="train", global_step=self.epoch)
-        self.log_messages_embedding(logs, is_train=True, global_step=self.epoch)
+        self.log_precision_recall(logs, phase="train", global_step=epoch)
+        self.log_messages_embedding(logs, is_train=True, global_step=epoch)
 
-        self.writer.add_scalar("epoch", self.epoch, global_step=self.train_gs)
+        self.writer.add_scalar("epoch", epoch, global_step=self.train_gs)
         self.loggers["train"].cur_batch = 0
-        self.epoch += 1
 
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
-        self.log_precision_recall(logs, phase="test", global_step=self.epoch)
-        self.log_messages_embedding(logs, is_train=False, global_step=self.epoch)
+        self.log_precision_recall(logs, phase="test", global_step=epoch)
+        self.log_messages_embedding(logs, is_train=False, global_step=epoch)
 
         self.loggers["test"].cur_batch = 0
 
@@ -325,13 +321,6 @@ class TensorboardLogger(Callback):
     def log_messages_embedding(self, logs: Interaction, is_train: bool, global_step: int):
         """
         Logs the messages as an embedding
-        Args:
-            logs:
-            phase:
-            global_step:
-
-        Returns:
-
         """
 
         if global_step % self.embeddings_log_step != 0:
@@ -341,7 +330,7 @@ class TensorboardLogger(Callback):
 
         if self.get_images is not None:
             # sample down the number of images to load to 200
-            to_log = random.sample(range(true_class.shape[0]), k=200)
+            to_log = random.sample(range(true_class.shape[0]), k=min(200, true_class.shape[0]))
             image_id = image_id[to_log]
             true_class = true_class[to_log]
             messages=logs.message[to_log]
