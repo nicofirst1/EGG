@@ -50,6 +50,22 @@ arch_args=(
   "--head_choice"
   "single"
 
+ "--sender_hidden"
+ "16"
+ "--receiver_hidden"
+  "16"
+ "--receiver_num_layers"
+ "2"
+ "--sender_num_layers"
+ "2"
+ "--box_head_hidden"
+ "32"
+ "--sender_embedding"
+ "16"
+ "--receiver_embedding"
+ "16"
+ "--embedding_size"
+ "25"
 )
 
 data_args=(
