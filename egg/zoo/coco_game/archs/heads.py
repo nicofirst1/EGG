@@ -93,9 +93,6 @@ class SingleModule(HeadModule):
             nn.Linear(num_features, hidden_dim),
             nn.ReLU(),
             nn.Dropout(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(),
             nn.Linear(hidden_dim, num_classes),
         )
 
