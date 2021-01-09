@@ -10,11 +10,10 @@ from egg.core import CheckpointSaver, ProgressBarLogger
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import VisionSender
-from egg.zoo.coco_game.custom_logging.custom_logging import TensorboardLogger
-from egg.zoo.coco_game.custom_logging.to_push import RandomLogging
+from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
-from egg.zoo.coco_game.utils import console, dump_params, load_last_chk, get_images
+from egg.zoo.coco_game.utils import console, dump_params, get_images
 
 
 def parse_arguments(params=None):

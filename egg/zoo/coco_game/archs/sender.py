@@ -56,23 +56,18 @@ class VisionSender(nn.Module):
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
 
-    def forward(self, inp, **kwargs):
+    def forward(self, inp):
         """
         inp : tuple (image, segmented): containing original image and segmented part
         """
 
-        # inp is of dimension [batch, channels=3, img_h, img_w * 2] img_h=img_w=299
+        # inp is of dimension [batch, channels=3, img_h, img_w * 2]
         # get the output of the vision module
         vision_out = self.process_image(inp)
 
         # vision out [batch , vision out]
         # then fc on vision out
         fc_out = self.fc(vision_out)
-        if torch.isnan(fc_out).any():
-            raise RuntimeError(
-                "Sender fully connected is nan (likely gradient exploded), try to lower the learning rate parameter "
-                "or increase the depth of your network: embedding size/ n_hidden"
-            )
 
         # fc_out [batch, hidden size]
         return fc_out

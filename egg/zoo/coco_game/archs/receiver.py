@@ -41,7 +41,7 @@ class Receiver(nn.Module):
         self.box_module = head_module
 
     def forward(self, signal, image):
-        # image is of dimension [batch, channels=3, img_h, img_w] img_h=img_w=299
+        # image is of dimension [batch, channels=3, img_h, img_w]
         vision_out = self.feature_extractor(image)
         vision_out = self.cat_flat(vision_out)
 

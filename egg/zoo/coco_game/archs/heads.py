@@ -28,7 +28,7 @@ def initialize_model():
 
 
 def get_out_features():
-    return 512 * 2
+    return 512
 
 
 class HeadModule(nn.Module):
@@ -71,19 +71,17 @@ class Flat(nn.Module):
 
     def __init__(self, sz=(1, 1)):
         super(Flat, self).__init__()
-        self.amp = nn.AdaptiveMaxPool2d(sz)
         self.aap = nn.AdaptiveAvgPool2d(sz)
 
     def forward(self, x):
-        cat = torch.cat((self.amp(x), self.aap(x)), dim=1)
-        flat = cat.view([cat.shape[0], -1])
+        x = self.aap(x)
+        flat = x.view([x.shape[0], -1])
         return flat
 
 
 class SingleModule(HeadModule):
     """
-    Usa single sequential model for both classification and regression.
-    Use sigmoid for both classification and regression
+    Usa single sequential model for  classification
     """
 
     def __init__(self, num_features: int, num_classes: int, hidden_dim: int):
