@@ -131,6 +131,7 @@ class Interaction:
                 )
             return torch.cat(lst, dim=0)
 
+        interactions= [x for x in interactions if x.sender_input is not None]
         assert interactions, "list must not be empty"
         assert all(len(x.aux) == len(interactions[0].aux) for x in interactions)
 
