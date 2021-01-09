@@ -6,7 +6,7 @@ from egg.zoo.coco_game.archs.heads import Flat, HeadModule, get_head, get_out_fe
 
 def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     head_module = get_head(opts.head_choice)
-    num_features = get_out_features() + opts.sender_hidden
+    num_features = get_out_features() + opts.receiver_hidden
 
     head_module = head_module(
         num_features=num_features,
