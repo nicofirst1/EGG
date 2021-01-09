@@ -193,7 +193,7 @@ class CocoDetection(VisionDataset):
 
 
         except cv2.error:
-            console.log(f"Faulty image at index {index}")
+            print(f"Faulty image at index {index}")
             return self.__getitem__(index + 1)
 
         # we save the receiver distorted image and bboxes

@@ -44,9 +44,9 @@ arch_args=(
   "--vocab_size"
   "10"
   "--image_type"
-  "both"
+  "img"
   "--image_union"
-  "cat"
+  "mul"
   "--head_choice"
   "single"
 
@@ -54,7 +54,7 @@ arch_args=(
 
 data_args=(
   "--min_area"
-  "0.1"
+  "0"
   "--num_classes"
   "15"
 )
