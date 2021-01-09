@@ -72,15 +72,3 @@ def get_cross_entropy(pred_classes: torch.Tensor, targets):
     # pytorch does softmax inside cross entropy
     return F.cross_entropy(pred_classes, targets, reduction="none")
 
-
-def get_confidence(iou, pred_class: torch.Tensor, true_class: torch.Tensor):
-    """
-    Return the confidence in the prediction as the probability coming from the prediction [pc] times the IOU
-    """
-    p_cs = torch.nn.functional.softmax(pred_class, dim=1)
-    p_c = torch.diag(torch.index_select(p_cs, 1, true_class.long()))
-    # cut when iou is not of shape batch size
-    p_c = p_c[: iou.shape[0]]
-    conf = iou * p_c
-    conf = torch.diag(conf)
-    return conf

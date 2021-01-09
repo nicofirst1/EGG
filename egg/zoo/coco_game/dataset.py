@@ -8,7 +8,6 @@ import cv2
 import lycon
 import numpy as np
 import torch
-from PIL import Image
 from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
@@ -24,8 +23,6 @@ class CocoDetection(VisionDataset):
         ann_file (string): Path to json annotation file.
         base_transform (callable, optional): A function/transform that  takes in an PIL image
             and returns a transformed version. E.g, ``transforms.ToTensor``
-        distortion_transform (callable, optional): A function/transform that takes input sample and its target as entry
-            and returns a transformed version.
         perc_ids (int, optional): Max number of ids to load from the dataset, -1 for all
     """
 
@@ -45,7 +42,6 @@ class CocoDetection(VisionDataset):
             root: path to the coco dataset
             ann_file: path to coco annotations file
             base_transform: transformation used for the sender input
-            distortion_transform: transformation used for the receiver input
             perc_ids: percentage of ids to keep
             num_classes: number of classes to keep
             skip_first: number of first classes to skip, since the first 5 in coco are over represented
@@ -153,7 +149,7 @@ class CocoDetection(VisionDataset):
             f"Area filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
         )
 
-    def get_images(self, img_id: int, size: Tuple[int, int]) -> Image:
+    def get_images(self, img_id: int, size: Tuple[int, int]) -> List[np.array]:
 
         paths = self.coco.loadImgs(img_id)
         paths = [os.path.join(self.root, pt['file_name']) for pt in paths]
@@ -169,7 +165,7 @@ class CocoDetection(VisionDataset):
         """
         Function called by the epoch iterator
         Returns:
-            tuple: Tuple (image, target, kwargs). target is the object returned by ``coco.loadAnns``.
+            tuple: Tuple (image, target). target is the object returned by ``coco.loadAnns``.
         """
         # get annotation id-> target -> image id
         ann_ids = self.anns_ids[index]
@@ -189,14 +185,12 @@ class CocoDetection(VisionDataset):
             return self.__getitem__(index + 1)
 
         try:
-            # For sender we only need to resize and normalize the images
+            # Resize and normalize images
             transformed = self.base_transform(
                 image=img_original,
                 masks=[sgm],
             )
-            # save image and segment
-            resized_image = transformed["image"]
-            sgm = transformed["masks"][0]
+
 
         except cv2.error:
             console.log(f"Faulty image at index {index}")
@@ -204,6 +198,10 @@ class CocoDetection(VisionDataset):
 
         # we save the receiver distorted image and bboxes
         labels = target["category_id"]
+
+        # save image and segment
+        resized_image = transformed["image"]
+        sgm = transformed["masks"][0]
 
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
         sgm = np.transpose(sgm)
@@ -249,15 +247,6 @@ def transformations(input_size: int) -> album.Compose:
 
     return base_transform
 
-
-def extract_target_infos(target):
-    new_target = {k: [] for k in target[0].keys()}
-
-    for t in target:
-        for k, v in t.items():
-            new_target[k].append(v)
-
-    return new_target
 
 
 def collate(
