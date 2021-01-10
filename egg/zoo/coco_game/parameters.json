@@ -25,7 +25,6 @@
     "box_head_hidden": [16,64],
     "sender_embedding": [16,64],
     "receiver_embedding": [16,64],
-    "embedding_size": [25,50],
     "sender_entropy_coeff":[ 0.1],
     "checkpoint_freq": [0],
     "validation_freq": [1],
