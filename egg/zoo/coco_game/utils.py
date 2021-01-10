@@ -43,7 +43,7 @@ def dump_params(opts):
     """
     Dumps the opts into the logdir
     """
-    file_path = join(opts.log_dir_uid, "params.txt")
+    file_path = join(opts.log_dir_uid, "params.json")
     Path(opts.log_dir_uid).mkdir(parents=True, exist_ok=True)
 
     to_dump = copy(vars(opts))
