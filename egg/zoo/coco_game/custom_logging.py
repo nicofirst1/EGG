@@ -1,3 +1,4 @@
+import copy
 import random
 from os.path import join
 from typing import Dict
@@ -84,8 +85,8 @@ class TensorboardLogger(Callback):
         self.get_images = get_image_method
 
         self.embeddings_log_step = 3
-        self.conv_logged = False
-        self.game_logged = False
+        self.log_conv = False
+        self.log_graph = False
 
         if resume_training:
             try:
@@ -117,11 +118,11 @@ class TensorboardLogger(Callback):
 
         self.log_precision_recall(logs, phase="train", global_step=epoch)
         self.log_messages_embedding(logs, is_train=True, global_step=epoch)
-        if not self.conv_logged:
+        if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
-        if self.game_logged is not None:
+        if self.log_graph:
             self.log_graphs(logs)
-            self.game_logged=True
+            self.log_graph=False
 
         self.writer.add_scalar("epoch", epoch, global_step=self.train_gs)
         self.loggers["train"].cur_batch = 0
@@ -129,11 +130,11 @@ class TensorboardLogger(Callback):
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         self.log_precision_recall(logs, phase="test", global_step=epoch)
         self.log_messages_embedding(logs, is_train=False, global_step=epoch)
-        if not self.conv_logged:
+        if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
 
         self.loggers["test"].cur_batch = 0
-        self.conv_logged=True
+        self.log_conv=False
 
     def on_batch_end(
             self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
@@ -226,7 +227,7 @@ class TensorboardLogger(Callback):
         pretrained = self.game.sender.agent.vision
 
         # port to cpu
-        pretrained = pretrained.cpu()
+        pretrained = copy.deepcopy(pretrained).cpu()
 
         # get info
         batch_size = logs.labels.shape[0]
