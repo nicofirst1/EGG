@@ -276,7 +276,6 @@ def collate(
 
 
 def get_data(
-        input_size: int,
         opts: Namespace,
 ):
     """
@@ -294,7 +293,7 @@ def get_data(
     path2imgs = opts.data_root + "/images/"
     path2json = opts.data_root + "/annotations/"
 
-    base_trans = transformations(input_size)
+    base_trans = transformations(opts.image_resize)
 
     # generate datasets
     coco_train = CocoDetection(

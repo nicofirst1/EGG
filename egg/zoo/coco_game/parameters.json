@@ -18,7 +18,7 @@
     "test_data_perc": [1.0],
     "sender_hidden": [16,64],
     "receiver_hidden": [16,64],
-    "receiver_num_layers":12],
+    "receiver_num_layers":[12],
     "receiver_cell_type": ["rnn","lstm","gru"],
     "sender_num_layers": [1],
     "sender_cell_type":  ["rnn","lstm","gru"],

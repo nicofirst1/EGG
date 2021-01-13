@@ -14,7 +14,6 @@ def initialize_model():
      be a waste of space to instantiate two different models and change the last layer as described in the tutorial.
      So we take one model, remove the last fc layer and directly map the output in our sender receiver.
     """
-    input_size = 224
     model = models.resnet18(pretrained=True)
     # remove last fully connected
     model = nn.Sequential(*list(model.children())[:-2])
@@ -24,7 +23,8 @@ def initialize_model():
         param.requires_grad = False
 
     model = model.eval()
-    return model, input_size
+    #todo: check if to device must be done
+    return model
 
 
 def get_out_features():

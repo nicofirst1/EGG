@@ -74,6 +74,12 @@ def parse_arguments(params=None):
         help="When 'image_type==both', how to aggregate infos from both images",
         choices=["cat", "mul"],
     )
+    parser.add_argument(
+        "--image_resize",
+        type=int,
+        default=224,
+        help="Size of pretrain input image. Minimum is 224",
+    )
 
     #################################################
     # LOG
@@ -254,16 +260,17 @@ def parse_arguments(params=None):
             opt.num_classes + opt.skip_first <= 80
     ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
 
+    assert opt.image_resize>=224, "The size of the image must be minimum 224"
     return opt
 
 
-def get_game(feat_extractor, image_size, opts):
+def get_game(feat_extractor, opts):
     ######################################
     #   Sender receiver modules
     ######################################
     sender = VisionSender(
         feat_extractor,
-        image_size=image_size,
+        image_size=opts.image_resize,
         image_type=opts.image_type,
         image_union=opts.image_union,
         n_hidden=opts.sender_hidden,
@@ -348,11 +355,11 @@ def main(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
     dump_params(opts)
-    model, input_size = initialize_model()
+    model = initialize_model()
 
-    game, loggers = get_game(model, input_size, opts)
+    game, loggers = get_game(model, opts)
 
-    train, test = get_data(input_size, opts)
+    train, test = get_data( opts)
 
     optimizer = core.build_optimizer(game.parameters())
 
