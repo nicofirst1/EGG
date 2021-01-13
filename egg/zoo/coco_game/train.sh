@@ -11,13 +11,15 @@ train_args=(
   "--batch_size"
   "64"
   "--n_epochs"
-  "10000"
+  "25"
   "--train_data_perc"
   "1"
   "--test_data_perc"
   "1.0"
   "--num_workers"
   "4"
+  "--lr"
+  "0.01"
 )
 
 log_args=(
@@ -47,25 +49,26 @@ arch_args=(
   "img"
   "--image_union"
   "mul"
+  "--image_resize"
+  "224"
   "--head_choice"
   "single"
-
- "--sender_hidden"
- "16"
- "--receiver_hidden"
+  "--sender_hidden"
   "16"
- "--receiver_num_layers"
- "2"
- "--sender_num_layers"
- "2"
- "--box_head_hidden"
- "32"
- "--sender_embedding"
- "16"
- "--receiver_embedding"
- "16"
- "--embedding_size"
- "25"
+  "--receiver_hidden"
+  "16"
+  "--receiver_num_layers"
+  "1"
+  "--sender_num_layers"
+  "1"
+  "--box_head_hidden"
+  "16"
+  "--sender_embedding"
+  "16"
+  "--receiver_embedding"
+  "16"
+  "--embedding_size"
+  "25"
 )
 
 data_args=(
@@ -83,4 +86,4 @@ loss_args=(
 
 all_args=("${train_args[@]}" "${log_args[@]}" "${arch_args[@]}" "${data_args[@]}" "${loss_args[@]}")
 
-python main.py "${all_args[@]}" #--log_dir_uid single_cnn2  #--resume_training
+python main.py "${all_args[@]}" #--log_dir_uid 701c4df8 --resume_training
