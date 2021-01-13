@@ -17,7 +17,6 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     rec = Receiver(
         feature_extractor=feature_extractor,
         head_module=head_module,
-        embedding_size=opts.embedding_size,
     )
     return rec
 
@@ -31,10 +30,8 @@ class Receiver(nn.Module):
         self,
         feature_extractor: nn.Module,
         head_module: HeadModule,
-        embedding_size: int,
     ):
         super(Receiver, self).__init__()
-        self.embedding_size = embedding_size
         self.feature_extractor = feature_extractor
         self.cat_flat = Flat()
 

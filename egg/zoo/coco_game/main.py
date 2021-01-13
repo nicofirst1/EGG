@@ -170,13 +170,13 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--sender_hidden",
         type=int,
-        default=32,
+        default=16,
         help="Size of the hidden layer of Sender (default: 10)",
     )
     parser.add_argument(
         "--receiver_hidden",
         type=int,
-        default=32,
+        default=16,
         help="Size of the hidden layer of Receiver (default: 10)",
     )
 
@@ -213,22 +213,21 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--box_head_hidden",
         type=int,
-        default=64,
+        default=32,
         help="Size of the hidden layer of Receiver (default: 10)",
     )
     parser.add_argument(
         "--sender_embedding",
         type=int,
-        default=32,
+        default=16,
         help="Output dimensionality of the layer that embeds symbols produced at previous step in Sender (default: 10)",
     )
     parser.add_argument(
         "--receiver_embedding",
         type=int,
-        default=32,
+        default=16,
         help="Output dimensionality of the layer that embeds the message symbols for Receiver (default: 10)",
     )
-    parser.add_argument("--embedding_size", type=int, default=50, help="embedding size")
 
     parser.add_argument(
         "--sender_entropy_coeff",
