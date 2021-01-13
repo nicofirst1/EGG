@@ -23,7 +23,6 @@ def initialize_model():
         param.requires_grad = False
 
     model = model.eval()
-    #todo: check if to device must be done
     return model
 
 

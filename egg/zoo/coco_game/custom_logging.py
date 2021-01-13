@@ -4,10 +4,9 @@ from typing import Dict
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 
 from egg.core import Callback, Interaction, LoggingStrategy
-from egg.zoo.coco_game.archs.receiver import Receiver
-from egg.zoo.coco_game.archs.sender import VisionSender
 from egg.zoo.coco_game.utils import get_labels
 
 
@@ -85,6 +84,8 @@ class TensorboardLogger(Callback):
         self.get_images = get_image_method
 
         self.embeddings_log_step = 3
+        self.conv_logged = False
+        self.game_logged = False
 
         if resume_training:
             try:
@@ -116,6 +117,11 @@ class TensorboardLogger(Callback):
 
         self.log_precision_recall(logs, phase="train", global_step=epoch)
         self.log_messages_embedding(logs, is_train=True, global_step=epoch)
+        if not self.conv_logged:
+            self.log_conv_filter(logs, phase="train", global_step=epoch)
+        if self.game_logged is not None:
+            self.log_graphs(logs)
+            self.game_logged=True
 
         self.writer.add_scalar("epoch", epoch, global_step=self.train_gs)
         self.loggers["train"].cur_batch = 0
@@ -123,8 +129,11 @@ class TensorboardLogger(Callback):
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         self.log_precision_recall(logs, phase="test", global_step=epoch)
         self.log_messages_embedding(logs, is_train=False, global_step=epoch)
+        if not self.conv_logged:
+            self.log_conv_filter(logs, phase="train", global_step=epoch)
 
         self.loggers["test"].cur_batch = 0
+        self.conv_logged=True
 
     def on_batch_end(
             self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
@@ -135,7 +144,6 @@ class TensorboardLogger(Callback):
                 self.log(loss.detach(), logs, is_training)
             if batch_id % self.test_log_step == 0 and not is_training:
                 self.log(loss.detach(), logs, is_training)
-
 
     def log_receiver_output(
             self, receiver_output: torch.Tensor, phase: str, global_step: int
@@ -197,7 +205,6 @@ class TensorboardLogger(Callback):
             model = self.game.receiver
 
         self.writer.add_graph(model=model, input_to_model=inp)
-        self.game = None
 
     def log_labels(self, logs: Interaction, phase: str, global_step: int):
         """
@@ -216,18 +223,10 @@ class TensorboardLogger(Callback):
 
     def log_conv_filter(self, logs: Interaction, phase: str, global_step: int):
 
-        sender: VisionSender = self.game.sender.agent
-        receiver: Receiver = self.game.receiver.agent
-
-        # extract modules
-        pretrained = sender.vision
-        conv_sender = sender.cat_flat.conv
-        conv_receiver = receiver.cat_flat.conv
+        pretrained = self.game.sender.agent.vision
 
         # port to cpu
         pretrained = pretrained.cpu()
-        conv_sender = conv_sender.cpu().eval()
-        conv_receiver = conv_receiver.cpu().eval()
 
         # get info
         batch_size = logs.labels.shape[0]
@@ -235,58 +234,48 @@ class TensorboardLogger(Callback):
 
         # get random images
         sender_img = logs.sender_input[idx]
-        receiver_img = logs.receiver_input[idx]
 
         # split img/seg
         img_size = sender_img.shape[1]
-        sender_seg = sender_img[:, :, img_size:]
         sender_img = sender_img[:, :, :img_size]
 
         # add batch size dimension
-        sender_seg = sender_seg.unsqueeze(dim=0)
         sender_img = sender_img.unsqueeze(dim=0)
-        receiver_img = receiver_img.unsqueeze(dim=0)
 
         activation = {}
 
+        # function for hook
         def get_activation(name):
             def hook(model, input, output):
                 activation[name] = output.detach()
 
             return hook
 
-        pretrained[0].register_forward_hook(get_activation("conv1"))
-        conv_sender[0].register_forward_hook(get_activation("sender"))
-        conv_sender[0].register_forward_hook(get_activation("receiver"))
+        # register all conv layers for hook
+        for i in range(len(pretrained)):
+            if type(pretrained[i]) == torch.nn.Conv2d:
+                pretrained[i].register_forward_hook(get_activation(f"conv{i}"))
+            elif type(pretrained[i]) == torch.nn.Sequential:
+                for j in range(len(pretrained[i])):
+                    for child in pretrained[i][j].children():
+                        if type(child) == torch.nn.Conv2d:
+                            pretrained[i][j].register_forward_hook(get_activation(f"conv{i + j}"))
+
         # run trough pretrained
-        sender_seg = pretrained(sender_seg)
-        sender_img = pretrained(sender_img)
-        receiver_img = pretrained(receiver_img)
+        pretrained(sender_img)
 
-        # run trough conv
-        sender_seg = conv_sender(sender_seg)
-        sender_img = conv_sender(sender_img)
-        receiver_img = conv_receiver(receiver_img)
+        for k, v in activation.items():
+            # permute to have [filters, 1, H,W]
+            tensor = v.permute((1, 0, 2, 3))
+            # get only first 64 filters
+            tensor = tensor[:64, :, :, :]
+            grid = make_grid(tensor, normalize=True)
 
-        # remove batch dimension
-        sender_seg = sender_seg.squeeze(dim=0)
-        sender_img = sender_img.squeeze(dim=0)
-        receiver_img = receiver_img.squeeze(dim=0)
-
-        a = 1
-
-        self.writer.add_image(
-            tag=f"{phase}/conv/sender",
-            img_tensor=sender_seg,
-            global_step=global_step,
-            dataformats="HWC",
-        )
-        self.writer.add_image(
-            tag=f"{phase}/conv/receiver",
-            img_tensor=sender_img,
-            global_step=global_step,
-            dataformats="HWC",
-        )
+            self.writer.add_image(
+                tag=f"{phase}/{k}/sender_img",
+                img_tensor=grid,
+                global_step=global_step,
+            )
 
     def log_precision_recall(self, logs: Interaction, phase: str, global_step: int):
         """
@@ -333,7 +322,7 @@ class TensorboardLogger(Callback):
             to_log = random.sample(range(true_class.shape[0]), k=min(200, true_class.shape[0]))
             image_id = image_id[to_log]
             true_class = true_class[to_log]
-            messages=logs.message[to_log]
+            messages = logs.message[to_log]
 
             if is_train:
                 imgs = self.get_images(image_id.tolist(), True, (100, 100))
@@ -345,7 +334,7 @@ class TensorboardLogger(Callback):
             imgs /= 255
         else:
             imgs = None
-            messages=logs.message
+            messages = logs.message
 
         try:
             class_labels = [self.class_map[idx] for idx in true_class.tolist()]
@@ -413,10 +402,6 @@ class TensorboardLogger(Callback):
         self.log_receiver_output(logs.receiver_output, phase, global_step)
         self.log_labels(logs, phase, global_step)
         self.log_messages_distribution(logs, phase, global_step)
-        # self.log_conv_filter(logs, phase, global_step)
-
-        # if self.game is not None:
-        #     self.log_graphs(logs)
 
 
 def get_single_label(labels, idx):
