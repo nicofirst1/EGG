@@ -185,6 +185,7 @@ class CocoDetection(VisionDataset):
             return self.__getitem__(index + 1)
 
         try:
+
             # Resize and normalize images
             transformed = self.base_transform(
                 image=img_original,
@@ -204,8 +205,8 @@ class CocoDetection(VisionDataset):
         sgm = transformed["masks"][0]
 
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
-        sgm = np.transpose(sgm)
-        resized_image = np.transpose(resized_image)
+        sgm = np.transpose(sgm, axes=(2, 0, 1))
+        resized_image = np.transpose(resized_image, axes=(2, 0, 1))
 
         # transform  in torch tensor
         resized_image = torch.FloatTensor(resized_image)
@@ -241,12 +242,11 @@ def transformations(input_size: int) -> album.Compose:
     base_transform = album.Compose(
         [
             album.Resize(input_size, input_size),
-            album.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            album.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225], max_pixel_value=255),
         ],
     )
 
     return base_transform
-
 
 
 def collate(
