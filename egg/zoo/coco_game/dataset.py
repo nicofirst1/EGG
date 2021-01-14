@@ -12,7 +12,7 @@ from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
-from egg.zoo.coco_game.utils import console
+from egg.zoo.coco_game.utils.utils import console
 
 
 class CocoDetection(VisionDataset):

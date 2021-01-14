@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as F
 
-from egg.zoo.coco_game.utils import get_labels
+from egg.zoo.coco_game.utils.utils import get_labels
 
 
 def loss_init(
