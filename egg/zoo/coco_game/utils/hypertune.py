@@ -59,11 +59,11 @@ def hypertune(main_function):
     args, _ = parser.parse_known_args()
 
     # extract json
-    with open(args.param_json) as json_file:
+    with open(args.sweep_file) as json_file:
         parmas = json.load(json_file)
 
     # get combination generator
-    combinations = product_dict(**parmas)
+    combinations = list(product_dict(**parmas))
 
     # remove sweep_file_arg from sys arg
     index = sys.argv.index(sweep_file_arg)
@@ -78,3 +78,4 @@ def hypertune(main_function):
         main_function()
 
     console.log("HyperParameter search completed")
+    sys.exit(0)

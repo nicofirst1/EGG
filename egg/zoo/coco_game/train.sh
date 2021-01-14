@@ -2,7 +2,7 @@
 checkpoint_path="checkpoints"
 interactions_path="interactions"
 tensorboard_path="tensorboard"
-
+log_dir="HyperLogs"
 home="/home/dizzi/Desktop/EGG/"
 
 export PYTHONPATH="$home/egg/zoo/coco_game/:$home"
@@ -38,6 +38,8 @@ log_args=(
   "--test_logging_step"
   "5"
   "--use_rich_traceback"
+  "--log_dir"
+  "$log_dir"
 )
 
 arch_args=(
