@@ -402,6 +402,7 @@ def main(params=None):
         trainer.load_from_latest(Path(opts.checkpoint_dir))
 
     trainer.train(n_epochs=opts.n_epochs)
+    console.log("Train is over")
 
 
 if __name__ == "__main__":

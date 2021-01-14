@@ -11,15 +11,15 @@ train_args=(
   "--batch_size"
   "64"
   "--n_epochs"
-  "25"
+  "18"
   "--train_data_perc"
   "1"
   "--test_data_perc"
   "1.0"
   "--num_workers"
-  "4"
+  "8"
   "--lr"
-  "0.01"
+  "0.0001"
 )
 
 log_args=(
@@ -44,7 +44,7 @@ arch_args=(
   "--max_len"
   "2"
   "--vocab_size"
-  "10"
+  "5"
   "--image_type"
   "img"
   "--image_union"
@@ -67,8 +67,10 @@ arch_args=(
   "16"
   "--receiver_embedding"
   "16"
-  "--embedding_size"
-  "25"
+  "--sender_cell_type"
+  "rnn"
+  "--receiver_cell_type"
+  "rnn"
 )
 
 data_args=(
