@@ -139,6 +139,7 @@ class TensorboardLogger(Callback):
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         self.log_precision_recall(logs, phase="test", global_step=epoch)
         self.log_messages_embedding(logs, is_train=False, global_step=epoch)
+        self.log_hparams(logs,loss)
         if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
 
@@ -196,8 +197,7 @@ class TensorboardLogger(Callback):
             self.writer.add_scalar(
                 tag=f"{phase}/{k}", scalar_value=v, global_step=global_step
             )
-        if self.hparam is not None:
-            self.writer.add_hparams(hparam_dict=self.hparam, metric_dict=metrics)
+
 
     def log_graphs(self, logs: Interaction, use_sender=False):
         """
@@ -218,6 +218,18 @@ class TensorboardLogger(Callback):
             model = self.game.receiver
 
         self.writer.add_graph(model=model, input_to_model=inp)
+
+    def log_hparams(self, logs: Interaction, loss: float):
+        """
+        Logs Hparam with metrics
+        """
+        if self.hparam is None:
+            return
+        metrics = logs.aux
+        metrics = {k: v.mean() for k, v in metrics.items()}
+        metrics['loss'] = loss
+
+        self.writer.add_hparams(hparam_dict=self.hparam, metric_dict=metrics, run_name="hparams")
 
     def log_labels(self, logs: Interaction, phase: str, global_step: int):
         """
