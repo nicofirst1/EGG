@@ -32,13 +32,19 @@ def set_sys_args(params):
 
     # cast to string
     params = [str(x) for x in params]
-
     # check for args not present in params and save them
     not_set_args = [x for x in (set(sys.argv) - set(params)) if "--" in x]
     values = [sys.argv[sys.argv.index(x) + 1] for x in not_set_args]
+
+    # remove values captured for args with no value
+    no_value=[values.index(x) for x in values if "--" in x]
+    for idx in no_value:
+        not_set_args.pop(idx)
+        values.pop(idx)
+
+
     to_add = list(sum(zip(not_set_args, values), ()))
     to_add.insert(0, first)
-
     # define new sys.argv
     sys.argv = to_add + params
 
