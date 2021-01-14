@@ -48,7 +48,8 @@ def hypertune(main_function):
     Decorator performing hypertune on parameters
     """
 
-    sweep_file_arg = "--sweep_file"
+    sweep_file_name = "sweep_file"
+    sweep_file_arg = f"--{sweep_file_name}"
 
     # parse params
     parser = argparse.ArgumentParser()
@@ -58,24 +59,28 @@ def hypertune(main_function):
     )
     args, _ = parser.parse_known_args()
 
-    # extract json
-    with open(args.sweep_file) as json_file:
-        parmas = json.load(json_file)
+    if args.__getattribute__(sweep_file_name) is not None:
+        # extract json
+        with open(args.__getattribute__(sweep_file_name)) as json_file:
+            parmas = json.load(json_file)
 
-    # get combination generator
-    combinations = list(product_dict(**parmas))
+        # get combination generator
+        combinations = list(product_dict(**parmas))
 
-    # remove sweep_file_arg from sys arg
-    index = sys.argv.index(sweep_file_arg)
-    sys.argv.pop(index)
-    sys.argv.pop(index)
+        # remove sweep_file_arg from sys arg
+        index = sys.argv.index(sweep_file_arg)
+        sys.argv.pop(index)
+        sys.argv.pop(index)
 
-    console.log(f"There are {len(combinations)} combinations")
+        console.log(f"There are {len(combinations)} combinations")
 
-    # iterate over possible combinations
-    for p in combinations:
-        set_sys_args(p)
+        # iterate over possible combinations
+        for p in combinations:
+            set_sys_args(p)
+            main_function()
+
+        console.log("HyperParameter search completed")
+    else:
         main_function()
 
-    console.log("HyperParameter search completed")
     sys.exit(0)
