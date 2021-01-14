@@ -1,8 +1,22 @@
 {
-
-    "receiver_num_layers":[1,2],
-    "sender_num_layers": [1,2],
-    "box_head_hidden": [16,64],
-    "sender_embedding": [16,64],
-    "receiver_embedding": [16,64]
+  "receiver_num_layers": [
+    1,
+    2
+  ],
+  "sender_num_layers": [
+    1,
+    2
+  ],
+  "box_head_hidden": [
+    16,
+    64
+  ],
+  "sender_embedding": [
+    16,
+    64
+  ],
+  "receiver_embedding": [
+    16,
+    64
+  ]
 }

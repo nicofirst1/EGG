@@ -1,4 +1,5 @@
 from egg.zoo.coco_game.tests.test_bbox import test_bbox
+
 from egg.zoo.coco_game.tests.test_data import test_data_mods
 from egg.zoo.coco_game.tests.test_losses import test_loss_mods
 from egg.zoo.coco_game.tests.test_receiver_mods import test_receiver_mods

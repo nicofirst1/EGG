@@ -1,8 +1,8 @@
 import json
 from glob import glob
 
-from rich.progress import track
 from rich.console import Console
+from rich.progress import track
 from tensorboard.backend.event_processing import event_accumulator
 
 
@@ -79,4 +79,4 @@ def find_accumulators(path2logs, tag="test/class_accuracy"):
 if __name__ == '__main__':
     res = find_accumulators("Logs")
     res = filter_params(res)
-    Console().log(sorted(res.items(),reverse=True))
+    Console().log(sorted(res.items(), reverse=True))

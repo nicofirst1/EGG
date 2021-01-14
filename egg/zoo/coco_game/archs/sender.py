@@ -40,7 +40,7 @@ class VisionSender(nn.Module):
     """
 
     def __init__(
-        self, model, image_size: int, image_type: str, image_union: str, n_hidden=10
+            self, model, image_size: int, image_type: str, image_union: str, n_hidden=10
     ):
         super(VisionSender, self).__init__()
 
@@ -102,7 +102,7 @@ class VisionSender(nn.Module):
 
         # split image and segment
         img = inp[:, :, :, : self.image_size]
-        seg = inp[:, :, :, self.image_size :]
+        seg = inp[:, :, :, self.image_size:]
         # img and seg = [batch, channels, image_size, image_size]
 
         if self.image_type == "seg":

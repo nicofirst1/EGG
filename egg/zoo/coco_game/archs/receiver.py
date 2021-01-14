@@ -27,9 +27,9 @@ class Receiver(nn.Module):
     """
 
     def __init__(
-        self,
-        feature_extractor: nn.Module,
-        head_module: HeadModule,
+            self,
+            feature_extractor: nn.Module,
+            head_module: HeadModule,
     ):
         super(Receiver, self).__init__()
         self.feature_extractor = feature_extractor

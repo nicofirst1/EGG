@@ -7,8 +7,8 @@ from egg.zoo.coco_game.utils.utils import get_labels
 
 
 def loss_init(
-    cross_lambda: float,
-    batch_size: int,
+        cross_lambda: float,
+        batch_size: int,
 ):
     """
     Init loss and return function
@@ -31,12 +31,12 @@ class Losses:
     batch_size: int
 
     def final_loss(
-        self,
-        _sender_input,
-        _message,
-        _receiver_input,
-        receiver_output,
-        labels,
+            self,
+            _sender_input,
+            _message,
+            _receiver_input,
+            receiver_output,
+            labels,
     ):
         """
         Estimate l1 and cross entropy loss. Adds it to final loss
@@ -71,4 +71,3 @@ def get_cross_entropy(pred_classes: torch.Tensor, targets):
     targets = targets.to(pred_classes.device)
     # pytorch does softmax inside cross entropy
     return F.cross_entropy(pred_classes, targets, reduction="none")
-

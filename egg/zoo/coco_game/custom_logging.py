@@ -122,7 +122,7 @@ class TensorboardLogger(Callback):
             self.log_conv_filter(logs, phase="train", global_step=epoch)
         if self.log_graph:
             self.log_graphs(logs)
-            self.log_graph=False
+            self.log_graph = False
 
         self.writer.add_scalar("epoch", epoch, global_step=self.train_gs)
         self.loggers["train"].cur_batch = 0
@@ -134,7 +134,7 @@ class TensorboardLogger(Callback):
             self.log_conv_filter(logs, phase="train", global_step=epoch)
 
         self.loggers["test"].cur_batch = 0
-        self.log_conv=False
+        self.log_conv = False
 
     def on_batch_end(
             self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True

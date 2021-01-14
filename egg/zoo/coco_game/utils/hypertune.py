@@ -48,7 +48,7 @@ def hypertune(main_function):
     Decorator performing hypertune on parameters
     """
 
-    sweep_file_arg="--sweep_file"
+    sweep_file_arg = "--sweep_file"
 
     # parse params
     parser = argparse.ArgumentParser()
@@ -72,7 +72,7 @@ def hypertune(main_function):
 
     console.log(f"There are {len(combinations)} combinations")
 
-    #iterate over possible combinations
+    # iterate over possible combinations
     for p in combinations:
         set_sys_args(p)
         main_function()

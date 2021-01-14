@@ -65,7 +65,8 @@ For now, I would go with 1 and 2.
 - Why l1? Should try l2.
 
 ## Box Head
-- add a trainable convolution before the flattening 
+
+- add a trainable convolution before the flattening
 - learn about the AdaptiveMaxPool2d/AdaptiveMeanPool2d [X]
 
 #### Ref links

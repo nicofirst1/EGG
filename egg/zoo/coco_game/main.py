@@ -261,7 +261,7 @@ def parse_arguments(params=None):
             opt.num_classes + opt.skip_first <= 80
     ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
 
-    assert opt.image_resize>=224, "The size of the image must be minimum 224"
+    assert opt.image_resize >= 224, "The size of the image must be minimum 224"
     return opt
 
 
@@ -351,6 +351,7 @@ def define_project_dir(opts):
     opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
 
+
 @hypertune
 def main(params=None):
     opts = parse_arguments(params=params)
@@ -360,10 +361,9 @@ def main(params=None):
 
     game, loggers = get_game(model, opts)
 
-    train, test = get_data( opts)
+    train, test = get_data(opts)
 
     optimizer = core.build_optimizer(game.parameters())
-
 
     get_imgs = get_images(train.dataset.get_images, test.dataset.get_images)
 

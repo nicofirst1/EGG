@@ -27,6 +27,8 @@ log_args=(
   "0.0001 "
   "--test_log_prob"
   "0.005"
+  "--log_dir"
+  "$log_dir"
   "--tensorboard_dir"
   "$tensorboard_path"
   "--checkpoint_dir"
@@ -38,8 +40,7 @@ log_args=(
   "--test_logging_step"
   "5"
   "--use_rich_traceback"
-  "--log_dir"
-  "$log_dir"
+
 )
 
 arch_args=(
@@ -90,4 +91,4 @@ loss_args=(
 
 all_args=("${train_args[@]}" "${log_args[@]}" "${arch_args[@]}" "${data_args[@]}" "${loss_args[@]}")
 
-python main.py "${all_args[@]}" --log_dir_uid 597c9406 --resume_training
+python main.py "${all_args[@]}" #--log_dir_uid 597c9406 --resume_training
