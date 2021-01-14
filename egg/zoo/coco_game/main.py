@@ -388,7 +388,8 @@ def main(params=None):
             loggers=loggers,
             game=game,
             class_map={k: v["name"] for k, v in train.dataset.coco.cats.items()},
-            get_image_method=get_imgs
+            get_image_method=get_imgs,
+            hparams=vars(opts),
         ),
     ]
 

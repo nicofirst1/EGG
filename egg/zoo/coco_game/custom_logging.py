@@ -61,6 +61,7 @@ class TensorboardLogger(Callback):
             game: torch.nn.Module = None,
             class_map: Dict[int, str] = {},
             get_image_method=None,
+            hparams=None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -88,11 +89,19 @@ class TensorboardLogger(Callback):
         self.log_conv = False
         self.log_graph = False
 
+        self.hparam = self.filter_hparam(hparams)
+
         if resume_training:
             try:
                 self.get_gs()
             except FileNotFoundError:
                 pass
+
+    @staticmethod
+    def filter_hparam(hparam):
+        allowed_types = [int, float, str, bool, torch.Tensor]
+        hparam = {k: v for k, v in hparam.items() if any([isinstance(v, t) for t in allowed_types])}
+        return hparam
 
     def get_gs(self):
         """
@@ -182,10 +191,13 @@ class TensorboardLogger(Callback):
             tag=f"{phase}/loss", scalar_value=loss, global_step=global_step
         )
 
+        metrics = {k: v.mean() for k, v in metrics.items()}
         for k, v in metrics.items():
             self.writer.add_scalar(
-                tag=f"{phase}/{k}", scalar_value=v.mean(), global_step=global_step
+                tag=f"{phase}/{k}", scalar_value=v, global_step=global_step
             )
+        if self.hparam is not None:
+            self.writer.add_hparams(hparam_dict=self.hparam, metric_dict=metrics)
 
     def log_graphs(self, logs: Interaction, use_sender=False):
         """
