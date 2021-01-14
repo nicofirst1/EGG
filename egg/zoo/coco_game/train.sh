@@ -68,9 +68,9 @@ arch_args=(
   "--receiver_embedding"
   "16"
   "--sender_cell_type"
-  "rnn"
+  "lstm"
   "--receiver_cell_type"
-  "rnn"
+  "lstm"
 )
 
 data_args=(
@@ -88,4 +88,4 @@ loss_args=(
 
 all_args=("${train_args[@]}" "${log_args[@]}" "${arch_args[@]}" "${data_args[@]}" "${loss_args[@]}")
 
-python main.py "${all_args[@]}" #--log_dir_uid 701c4df8 --resume_training
+python main.py "${all_args[@]}" --log_dir_uid 597c9406 --resume_training
