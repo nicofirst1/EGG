@@ -7,6 +7,9 @@ from egg.zoo.coco_game.utils.utils import console
 
 
 def product_dict(**kwargs):
+    """
+    Get combinations of parameters
+    """
     keys = kwargs.keys()
     vals = kwargs.values()
     for instance in itertools.product(*vals):
@@ -14,22 +17,36 @@ def product_dict(**kwargs):
 
 
 def set_sys_args(params):
+    """
+    Set sys.argv with given parameters
+    """
+    # save functiun call
     first = sys.argv[0]
-    params = [[f"--{k}", v] for k, v in params.items()]
 
+    # transform from dict to list of --key value
+    params = [[f"--{k}", v] for k, v in params.items()]
     params = [x for sub in params for x in sub]
 
+    # check if there are any bool
     assert not any(isinstance(x, bool) for x in params), "Cannot pass Bool values when action store is true"
+
+    # cast to string
     params = [str(x) for x in params]
 
+    # check for args not present in params and save them
     not_set_args = [x for x in (set(sys.argv) - set(params)) if "--" in x]
     values = [sys.argv[sys.argv.index(x) + 1] for x in not_set_args]
     to_add = list(sum(zip(not_set_args, values), ()))
     to_add.insert(0, first)
+
+    # define new sys.argv
     sys.argv = to_add + params
 
 
 def hypertune(main_function):
+    """
+    Decorator performing hypertune on parameters
+    """
 
     sweep_file_arg="--sweep_file"
 
@@ -54,11 +71,10 @@ def hypertune(main_function):
     sys.argv.pop(index)
 
     console.log(f"There are {len(combinations)} combinations")
+
     #iterate over possible combinations
     for p in combinations:
-        print(sys.argv)
         set_sys_args(p)
-        print(sys.argv)
-
         main_function()
+
     console.log("HyperParameter search completed")
