@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 from egg.core import Callback, Interaction, LoggingStrategy
-from egg.zoo.coco_game.utils import get_labels
+from egg.zoo.coco_game.utils.utils import get_labels
 
 
 class RandomLogging(LoggingStrategy):

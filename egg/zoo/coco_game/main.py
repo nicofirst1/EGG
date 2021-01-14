@@ -13,7 +13,8 @@ from egg.zoo.coco_game.archs.sender import VisionSender
 from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
-from egg.zoo.coco_game.utils import console, dump_params, get_images
+from egg.zoo.coco_game.utils.hypertune import hypertune
+from egg.zoo.coco_game.utils.utils import console, dump_params, get_images
 
 
 def parse_arguments(params=None):
@@ -350,7 +351,7 @@ def define_project_dir(opts):
     opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
 
-
+@hypertune
 def main(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
