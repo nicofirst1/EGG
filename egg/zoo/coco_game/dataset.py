@@ -187,10 +187,14 @@ class CocoDetection(VisionDataset):
         try:
 
             # Resize and normalize images
-            transformed = self.base_transform(
+            resized_image = self.base_transform(
                 image=img_original,
-                masks=[sgm],
-            )
+            )['image']
+
+            sgm = self.base_transform(
+                image=sgm,
+            )['image']
+
 
 
         except cv2.error:
@@ -200,9 +204,6 @@ class CocoDetection(VisionDataset):
         # we save the receiver distorted image and bboxes
         labels = target["category_id"]
 
-        # save image and segment
-        resized_image = transformed["image"]
-        sgm = transformed["masks"][0]
 
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
         sgm = np.transpose(sgm, axes=(2, 0, 1))
