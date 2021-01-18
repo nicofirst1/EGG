@@ -71,7 +71,14 @@ def hypertune(main_function):
             parmas = json.load(json_file)
 
         # get combination generator
-        combinations = list(product_dict(**parmas))
+        if isinstance(parmas,dict):
+            combinations = list(product_dict(**parmas))
+        elif isinstance(parmas, list):
+            combinations=[]
+            for p in parmas:
+                combinations+= list(product_dict(**p))
+        else:
+            raise TypeError(f"params of class {type(parmas)} not recognized")
 
         # remove sweep_file_arg from sys arg
         index = sys.argv.index(sweep_file_arg)
@@ -81,9 +88,11 @@ def hypertune(main_function):
         console.log(f"There are {len(combinations)} combinations")
 
         # iterate over possible combinations
-        for p in combinations:
-            set_sys_args(p)
+        for idx in range(len(combinations)):
+            c=combinations[idx]
+            set_sys_args(c)
             main_function()
+            console.log(f"Combination {idx}/{len(combinations)}")
 
         console.log("HyperParameter search completed")
     else:
