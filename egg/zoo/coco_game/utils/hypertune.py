@@ -92,11 +92,11 @@ def hypertune(main_function):
 
         # iterate over possible combinations
         for idx in range(len(combinations)):
+            console.log(f"Combination {idx}/{len(combinations)}")
             c = combinations[idx]
             exception_catch(main_function, c)
             # set_sys_args(c)
             # main_function()
-            console.log(f"Combination {idx}/{len(combinations)}")
 
         console.log("HyperParameter search completed")
     else:
@@ -106,6 +106,10 @@ def hypertune(main_function):
 
 
 def exception_catch(main_function, combination):
+    """
+    When a train experience a deadlock then the runtimerror is raised.
+    Catch it, kill any progress instance and resume training
+    """
     uid = str(uuid.uuid4())[:8]
     combination["log_dir_uid"] = uid
 
