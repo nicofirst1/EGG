@@ -11,13 +11,13 @@ train_args=(
   "--batch_size"
   "64"
   "--n_epochs"
-  "8"
+  "4"
   "--train_data_perc"
   "1"
   "--test_data_perc"
   "1.0"
   "--num_workers"
-  "3"
+  "4"
   "--lr"
   "0.001"
 )
@@ -88,6 +88,8 @@ loss_args=(
   "1.0"
   "--kl_lambda"
   "0.0"
+  "--use_class_weights"
+  "False"
 
 )
 

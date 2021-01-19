@@ -1,7 +1,7 @@
 import os
 import random
 from argparse import Namespace
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import albumentations as album
 import cv2
@@ -81,6 +81,22 @@ class CocoDetection(VisionDataset):
             f"Perc filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
         )
         return [x for i, x in enumerate(items) if not i in to_delete]
+
+    def get_class_weights(self) -> Dict[int, int]:
+        dataset = self.coco.dataset
+
+        ans = dataset["annotations"]
+        class_weights = {}
+
+        for idx in range(len(ans)):
+            cat = ans[idx]["category_id"]
+            if cat not in class_weights.keys():
+                class_weights[cat] = 0
+            class_weights[cat] += 1
+
+        class_weights = {k: v / idx for k, v in class_weights.items()}
+        class_weights = {k: 1 - v for k, v in class_weights.items()}
+        return class_weights
 
     def filter_anns_classes(self, num_classes: int, over_presented: int):
         """
@@ -204,7 +220,6 @@ class CocoDetection(VisionDataset):
         # we save the receiver distorted image and bboxes
         labels = target["category_id"]
 
-
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
         sgm = np.transpose(sgm, axes=(2, 0, 1))
         resized_image = np.transpose(resized_image, axes=(2, 0, 1))
@@ -317,10 +332,10 @@ def get_data(
         min_area=opts.min_area,
     )
 
-    if opts.num_workers>0:
-        timeout=10
+    if opts.num_workers > 0:
+        timeout = 10
     else:
-        timeout=0
+        timeout = 0
 
     # generate dataloaders
     coco_train = DataLoader(

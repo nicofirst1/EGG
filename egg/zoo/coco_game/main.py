@@ -14,7 +14,7 @@ from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.utils.hypertune import hypertune
-from egg.zoo.coco_game.utils.utils import console, dump_params, get_images
+from egg.zoo.coco_game.utils.utils import console, dump_params, get_images, str2bool
 
 
 def parse_arguments(params=None):
@@ -33,9 +33,8 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
-        "--resume_training",
-        default=True,
-        action="store_true",
+        "--resume_training", type=str2bool, nargs='?',
+        const=True, default=True,
         help="Resume training loading models from '--checkpoint_dir'",
     )
 
@@ -55,6 +54,12 @@ def parse_arguments(params=None):
         type=float,
         default=1,
         help="Weight for cross Kullback-Leibler divergence loss for classification task.",
+    )
+
+    parser.add_argument(
+        "--use_class_weights", type=str2bool, nargs='?',
+        const=True, default=False,
+        help="Extract class weights from the dataset and pass them to the loss function",
     )
 
     #################################################
@@ -272,7 +277,7 @@ def parse_arguments(params=None):
     return opt
 
 
-def get_game(feat_extractor, opts):
+def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Sender receiver modules
     ######################################
@@ -324,6 +329,7 @@ def get_game(feat_extractor, opts):
             cross_lambda=opts.cross_lambda,
             kl_lambda=opts.kl_lambda,
             batch_size=opts.batch_size,
+            class_weights=class_weights,
         ),
         sender_entropy_coeff=opts.sender_entropy_coeff,
         receiver_entropy_coeff=0,
@@ -360,6 +366,20 @@ def define_project_dir(opts):
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
 
 
+def get_class_weight(train, opts):
+    if opts.use_class_weights:
+        class_weights = train.dataset.get_class_weights()
+        # transform from dict to sorted tensor
+        class_weights = [x[1] for x in sorted(class_weights.items())]
+        class_weights = torch.Tensor(class_weights)
+        class_weights = class_weights.to(opts.device)
+
+    else:
+        class_weights = None
+
+    return class_weights
+
+
 @hypertune
 def main(params=None):
     opts = parse_arguments(params=params)
@@ -367,9 +387,10 @@ def main(params=None):
     dump_params(opts)
     model = initialize_model()
 
-    game, loggers = get_game(model, opts)
-
     train, test = get_data(opts)
+
+    class_weights = get_class_weight(train, opts)
+    game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
 
