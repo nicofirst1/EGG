@@ -8,6 +8,7 @@ from egg.zoo.coco_game.utils.utils import get_labels
 
 def loss_init(
         cross_lambda: float,
+        kl_lambda: float,
         batch_size: int,
 ):
     """
@@ -15,6 +16,7 @@ def loss_init(
     """
     losses = Losses(
         cross_lambda=cross_lambda,
+        kl_lambda=kl_lambda,
         batch_size=batch_size,
     )
 
@@ -28,6 +30,7 @@ class Losses:
     """
 
     cross_lambda: float
+    kl_lambda: float
     batch_size: int
 
     def final_loss(
@@ -49,11 +52,14 @@ class Losses:
         x_loss = get_cross_entropy(receiver_output, label_class)
         metrics["x_loss"] = x_loss
 
+        kl_loss = get_kl(receiver_output, label_class)
+        metrics["kl_loss"] = kl_loss
+
         acc = get_accuracy(receiver_output, label_class)
         acc = acc.unsqueeze(dim=-1)
         metrics["class_accuracy"] = acc
 
-        loss = x_loss * self.cross_lambda
+        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda
 
         metrics["custom_loss"] = loss
         return loss, metrics
@@ -71,3 +77,19 @@ def get_cross_entropy(pred_classes: torch.Tensor, targets):
     targets = targets.to(pred_classes.device)
     # pytorch does softmax inside cross entropy
     return F.cross_entropy(pred_classes, targets, reduction="none")
+
+
+def get_kl(pred_classes: torch.Tensor, targets):
+    """
+    Return kl divergence loss
+    """
+    pred_classes = F.softmax(pred_classes)
+
+    targets = targets.unsqueeze(dim=1)
+    target_dist = torch.zeros(pred_classes.shape).to(targets)
+    target_dist.scatter_(1, targets, 1)
+    target_dist = target_dist.float()
+    
+    kl = F.kl_div(pred_classes, target_dist, reduction="none")
+    kl = kl.mean(dim=1)
+    return kl

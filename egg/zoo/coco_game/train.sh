@@ -86,9 +86,11 @@ data_args=(
 loss_args=(
   "--cross_lambda"
   "1.0"
+  "--kl_lambda"
+  "0.0"
 
 )
 
 all_args=("${train_args[@]}" "${log_args[@]}" "${arch_args[@]}" "${data_args[@]}" "${loss_args[@]}")
 
-python main.py "${all_args[@]}" #--log_dir_uid 597c9406 --resume_training
+python main.py "${all_args[@]}" --sweep_file parameters.json #--log_dir_uid random_signal #

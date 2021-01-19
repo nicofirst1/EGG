@@ -50,6 +50,13 @@ def parse_arguments(params=None):
         help="Weight for cross entropy loss for classification task.",
     )
 
+    parser.add_argument(
+        "--kl_lambda",
+        type=float,
+        default=1,
+        help="Weight for cross Kullback-Leibler divergence loss for classification task.",
+    )
+
     #################################################
     # Vision model
     #################################################
@@ -315,6 +322,7 @@ def get_game(feat_extractor, opts):
         receiver,
         loss=loss_init(
             cross_lambda=opts.cross_lambda,
+            kl_lambda=opts.kl_lambda,
             batch_size=opts.batch_size,
         ),
         sender_entropy_coeff=opts.sender_entropy_coeff,
