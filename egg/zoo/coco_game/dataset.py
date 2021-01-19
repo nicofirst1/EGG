@@ -317,6 +317,11 @@ def get_data(
         min_area=opts.min_area,
     )
 
+    if opts.num_workers>0:
+        timeout=10
+    else:
+        timeout=0
+
     # generate dataloaders
     coco_train = DataLoader(
         coco_train,
@@ -324,6 +329,7 @@ def get_data(
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
+        timeout=timeout
     )
     coco_val = DataLoader(
         coco_val,
@@ -331,6 +337,8 @@ def get_data(
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
+        timeout=timeout
+
     )
 
     return coco_train, coco_val
