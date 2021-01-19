@@ -2,6 +2,10 @@ import argparse
 import itertools
 import json
 import sys
+import threading
+import uuid
+
+from rich.progress import _RefreshThread
 
 from egg.zoo.coco_game.utils.utils import console
 
@@ -37,11 +41,10 @@ def set_sys_args(params):
     values = [sys.argv[sys.argv.index(x) + 1] for x in not_set_args]
 
     # remove values captured for args with no value
-    no_value=[values.index(x) for x in values if "--" in x]
+    no_value = [values.index(x) for x in values if "--" in x]
     for idx in no_value:
         not_set_args.pop(idx)
         values.pop(idx)
-
 
     to_add = list(sum(zip(not_set_args, values), ()))
     to_add.insert(0, first)
@@ -71,12 +74,12 @@ def hypertune(main_function):
             parmas = json.load(json_file)
 
         # get combination generator
-        if isinstance(parmas,dict):
+        if isinstance(parmas, dict):
             combinations = list(product_dict(**parmas))
         elif isinstance(parmas, list):
-            combinations=[]
+            combinations = []
             for p in parmas:
-                combinations+= list(product_dict(**p))
+                combinations += list(product_dict(**p))
         else:
             raise TypeError(f"params of class {type(parmas)} not recognized")
 
@@ -89,9 +92,10 @@ def hypertune(main_function):
 
         # iterate over possible combinations
         for idx in range(len(combinations)):
-            c=combinations[idx]
-            set_sys_args(c)
-            main_function()
+            c = combinations[idx]
+            exception_catch(main_function, c)
+            # set_sys_args(c)
+            # main_function()
             console.log(f"Combination {idx}/{len(combinations)}")
 
         console.log("HyperParameter search completed")
@@ -99,3 +103,23 @@ def hypertune(main_function):
         main_function()
 
     sys.exit(0)
+
+
+def exception_catch(main_function, combination):
+    uid = str(uuid.uuid4())[:8]
+    combination["log_dir_uid"] = uid
+
+    completed = False
+
+    while not completed:
+
+        try:
+            set_sys_args(combination)
+            main_function()
+            completed = True
+        except RuntimeError:
+            for thread in threading.enumerate():
+                if isinstance(thread, _RefreshThread):
+                    thread.progress.stop()
+            console.clear()
+            continue
