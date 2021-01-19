@@ -34,7 +34,7 @@ log_args=(
   "--checkpoint_dir"
   "$checkpoint_path"
   "--checkpoint_freq"
-  "2"
+  "1"
   "--train_logging_step"
   "50"
   "--test_logging_step"
@@ -45,9 +45,9 @@ log_args=(
 
 arch_args=(
   "--max_len"
-  "2"
+  "3"
   "--vocab_size"
-  "5"
+  "20"
   "--image_type"
   "img"
   "--image_union"

@@ -85,9 +85,10 @@ class TensorboardLogger(Callback):
         self.class_map = class_map
         self.get_images = get_image_method
 
-        self.embeddings_log_step = 3
+        self.embeddings_log_step = 2
         self.log_conv = False
         self.log_graph = False
+        self.embedding_num=300
 
         self.hparam = self.filter_hparam(hparams)
 
@@ -344,7 +345,7 @@ class TensorboardLogger(Callback):
 
         if self.get_images is not None:
             # sample down the number of images to load to 200
-            to_log = random.sample(range(true_class.shape[0]), k=min(200, true_class.shape[0]))
+            to_log = random.sample(range(true_class.shape[0]), k=min(self.embedding_num, true_class.shape[0]))
             image_id = image_id[to_log]
             true_class = true_class[to_log]
             messages = logs.message[to_log]
