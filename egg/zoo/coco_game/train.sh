@@ -11,7 +11,7 @@ train_args=(
   "--batch_size"
   "64"
   "--n_epochs"
-  "5"
+  "8"
   "--train_data_perc"
   "1"
   "--test_data_perc"
@@ -19,14 +19,14 @@ train_args=(
   "--num_workers"
   "3"
   "--lr"
-  "0.0001"
+  "0.001"
 )
 
 log_args=(
   "--train_log_prob"
-  "0.0001 "
+  "0.0"
   "--test_log_prob"
-  "0.005"
+  "0.0"
   "--log_dir"
   "$log_dir"
   "--tensorboard_dir"
@@ -65,15 +65,15 @@ arch_args=(
   "--sender_num_layers"
   "1"
   "--box_head_hidden"
-  "16"
+  "32"
   "--sender_embedding"
   "16"
   "--receiver_embedding"
   "16"
   "--sender_cell_type"
-  "lstm"
+  "gru"
   "--receiver_cell_type"
-  "lstm"
+  "gru"
 )
 
 data_args=(

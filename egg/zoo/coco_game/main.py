@@ -34,7 +34,7 @@ def parse_arguments(params=None):
 
     parser.add_argument(
         "--resume_training",
-        default=False,
+        default=True,
         action="store_true",
         help="Resume training loading models from '--checkpoint_dir'",
     )
