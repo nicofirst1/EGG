@@ -88,7 +88,7 @@ class TensorboardLogger(Callback):
         self.embeddings_log_step = 2
         self.log_conv = False
         self.log_graph = False
-        self.embedding_num=300
+        self.embedding_num = 300
 
         self.hparam = self.filter_hparam(hparams)
 
@@ -140,7 +140,7 @@ class TensorboardLogger(Callback):
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         self.log_precision_recall(logs, phase="test", global_step=epoch)
         self.log_messages_embedding(logs, is_train=False, global_step=epoch)
-        self.log_hparams(logs,loss)
+        self.log_hparams(logs, loss)
         if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
 
@@ -199,7 +199,6 @@ class TensorboardLogger(Callback):
                 tag=f"{phase}/{k}", scalar_value=v, global_step=global_step
             )
 
-
     def log_graphs(self, logs: Interaction, use_sender=False):
         """
         Logs the game graph once if not None.
@@ -239,7 +238,8 @@ class TensorboardLogger(Callback):
         labels = logs.labels
 
         # classes
-        true_classes, _ = get_labels(labels)
+        res_dict = get_labels(labels)
+        true_classes = res_dict['class_id']
 
         self.writer.add_histogram(
             tag=f"{phase}/true_class",
@@ -309,7 +309,8 @@ class TensorboardLogger(Callback):
         """
 
         # extract classification info
-        true_classes, _ = get_labels(logs.labels)
+        res_dict = get_labels(logs.labels)
+        true_classes = res_dict['class_id']
         predictions = logs.receiver_output
         predictions = torch.softmax(predictions, dim=1)
 
@@ -341,7 +342,9 @@ class TensorboardLogger(Callback):
         if global_step % self.embeddings_log_step != 0:
             return
 
-        true_class, image_id = get_labels(logs.labels)
+        res_dict = get_labels(logs.labels)
+        true_class = res_dict['class_id']
+        image_id = res_dict['image_id']
 
         if self.get_images is not None:
             # sample down the number of images to load to 200
@@ -428,11 +431,3 @@ class TensorboardLogger(Callback):
         self.log_receiver_output(logs.receiver_output, phase, global_step)
         self.log_labels(logs, phase, global_step)
         self.log_messages_distribution(logs, phase, global_step)
-
-
-def get_single_label(labels, idx):
-    bbox, classes = get_labels(labels)
-    bbox = bbox[idx]
-    classes = int(classes[idx])
-
-    return bbox, classes
