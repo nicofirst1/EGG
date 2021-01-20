@@ -218,7 +218,7 @@ class CocoDetection(VisionDataset):
             return self.__getitem__(index + 1)
 
         # we save the receiver distorted image and bboxes
-        labels = target["category_id"]
+        cat_id = target["category_id"]
 
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
         sgm = np.transpose(sgm, axes=(2, 0, 1))
@@ -227,7 +227,7 @@ class CocoDetection(VisionDataset):
         # transform  in torch tensor
         resized_image = torch.FloatTensor(resized_image)
         sgm = torch.FloatTensor(sgm.copy())
-        labels = torch.LongTensor([labels, img_id])
+        labels = torch.LongTensor([cat_id, img_id])
 
         return resized_image, sgm, labels
 

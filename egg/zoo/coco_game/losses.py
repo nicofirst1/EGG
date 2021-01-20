@@ -51,7 +51,8 @@ class Losses:
 
         metrics = {}
 
-        label_class, _ = get_labels(labels)
+        res_dict = get_labels(labels)
+        label_class = res_dict['class_id']
 
         x_loss = get_cross_entropy(receiver_output, label_class, weights=self.class_weights)
         metrics["x_loss"] = x_loss

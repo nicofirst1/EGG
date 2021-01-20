@@ -5,7 +5,7 @@ from copy import copy
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
-from typing import Tuple
+from typing import Dict
 
 import torch
 from rich.console import Console
@@ -55,13 +55,18 @@ def dump_params(opts):
         json.dump(to_dump, fp)
 
 
-def get_labels(labels: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     """
     Only function to be used to extract labels information
     """
     label_class = labels[:, 0]
     label_img_id = labels[:, 1]
-    return label_class, label_img_id
+    res = dict(
+        class_id=label_class,
+        image_id=label_img_id
+
+    )
+    return res
 
 
 def get_images(train_method, test_method):
@@ -72,7 +77,6 @@ def get_images(train_method, test_method):
             return test_method(image_ids, img_size)
 
     return inner
-
 
 
 def str2bool(v):
