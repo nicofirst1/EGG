@@ -92,7 +92,7 @@ def hypertune(main_function):
 
         # iterate over possible combinations
         for idx in range(len(combinations)):
-            console.log(f"Combination {idx}/{len(combinations)}")
+            console.log(f"Combination {idx + 1}/{len(combinations)}")
             c = combinations[idx]
             exception_catch(main_function, c)
             # set_sys_args(c)
@@ -102,6 +102,7 @@ def hypertune(main_function):
     else:
         main_function()
 
+    play_bell()
     sys.exit(0)
 
 
@@ -121,9 +122,20 @@ def exception_catch(main_function, combination):
             set_sys_args(combination)
             main_function()
             completed = True
-        except RuntimeError:
+        except RuntimeError as e:
             for thread in threading.enumerate():
                 if isinstance(thread, _RefreshThread):
                     thread.progress.stop()
             console.clear()
+            print(e)
             continue
+        except KeyboardInterrupt:
+            console.clear()
+            console.log("Skipping to next experiment")
+            break
+
+
+def play_bell(duration=1, freq=640, reps=4):
+    import os
+    for _ in range(reps):
+        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))

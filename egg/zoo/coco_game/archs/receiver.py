@@ -45,8 +45,7 @@ class Receiver(nn.Module):
         self.box_module = nn.Linear(hidden_dim, num_classes)
 
     def forward(self, signal, image):
-
-        #signal= torch.rand(signal.shape).to(signal)
+        # signal= torch.rand(signal.shape).to(signal)
 
         class_logits = self.box_module(signal)
         # class_logits [batch, num_classes]
