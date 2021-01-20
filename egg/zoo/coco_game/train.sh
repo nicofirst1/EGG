@@ -49,7 +49,7 @@ arch_args=(
   "--vocab_size"
   "20"
   "--image_type"
-  "img"
+  "both"
   "--image_union"
   "mul"
   "--image_resize"
@@ -57,9 +57,9 @@ arch_args=(
   "--head_choice"
   "single"
   "--sender_hidden"
-  "16"
+  "64"
   "--receiver_hidden"
-  "16"
+  "64"
   "--receiver_num_layers"
   "1"
   "--sender_num_layers"
@@ -87,12 +87,12 @@ loss_args=(
   "--cross_lambda"
   "1.0"
   "--kl_lambda"
-  "0.0"
+  "0.3"
   "--use_class_weights"
-  "False"
+  "True"
 
 )
 
 all_args=("${train_args[@]}" "${log_args[@]}" "${arch_args[@]}" "${data_args[@]}" "${loss_args[@]}")
 
-python main.py "${all_args[@]}" --sweep_file parameters.json #--log_dir_uid random_signal #
+python main.py "${all_args[@]}" --sweep_file parameters.json # --log_dir_uid a61c6aaa --resume_training #
