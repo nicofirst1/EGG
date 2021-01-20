@@ -61,7 +61,7 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     """
     label_class = labels[:, 0]
     label_img_id = labels[:, 1]
-    ann_id = labels[:, 3]
+    ann_id = labels[:, 2]
     res = dict(
         class_id=label_class,
         image_id=label_img_id,
@@ -72,7 +72,7 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
 
 
 def get_images(train_method, test_method):
-    def inner(image_ids: List[int], is_training: bool, img_size: Tuple[int, int], image_ann_ids: List[int]):
+    def inner(image_ids: List[int], image_ann_ids: List[int], is_training: bool, img_size: Tuple[int, int]):
         if is_training:
             return train_method(image_ids, image_ann_ids, img_size)
         else:

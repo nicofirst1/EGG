@@ -358,9 +358,9 @@ class TensorboardLogger(Callback):
             messages = logs.message[to_log]
 
             if is_train:
-                imgs = self.get_images(image_id.tolist(), True, image_size)
+                imgs = self.get_images(image_id.tolist(), ann_id.tolist(),True, image_size)
             else:
-                imgs = self.get_images(image_id.tolist(), False, image_size)
+                imgs = self.get_images(image_id.tolist(), ann_id.tolist(), False, image_size)
 
             imgs = torch.Tensor(imgs)
             imgs = imgs.permute(0, 3, 1, 2)
