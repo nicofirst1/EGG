@@ -165,12 +165,13 @@ class CocoDetection(VisionDataset):
             f"Area filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
         )
 
-    def get_images(self, img_id: int, size: Tuple[int, int]) -> List[np.array]:
+    def get_images(self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]) -> List[np.array]:
 
-        paths = self.coco.loadImgs(img_id)
-        paths = [os.path.join(self.root, pt['file_name']) for pt in paths]
+        infos = self.coco.loadImgs(img_id)
+        paths = [os.path.join(self.root, pt['file_name']) for pt in infos]
 
         imgs = [lycon.load(pt) for pt in paths]
+
         imgs = [cv2.resize(img, dsize=size, interpolation=cv2.INTER_CUBIC) for img in imgs]
 
         return imgs
@@ -219,6 +220,7 @@ class CocoDetection(VisionDataset):
 
         # we save the receiver distorted image and bboxes
         cat_id = target["category_id"]
+        ann_id = target["id"]
 
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
         sgm = np.transpose(sgm, axes=(2, 0, 1))
@@ -227,7 +229,7 @@ class CocoDetection(VisionDataset):
         # transform  in torch tensor
         resized_image = torch.FloatTensor(resized_image)
         sgm = torch.FloatTensor(sgm.copy())
-        labels = torch.LongTensor([cat_id, img_id])
+        labels = torch.LongTensor([cat_id, img_id, ann_id])
 
         return resized_image, sgm, labels
 

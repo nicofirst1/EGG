@@ -339,24 +339,28 @@ class TensorboardLogger(Callback):
         Logs the messages as an embedding
         """
 
+        image_size=(200,200)
+
         if global_step % self.embeddings_log_step != 0:
             return
 
         res_dict = get_labels(logs.labels)
         true_class = res_dict['class_id']
         image_id = res_dict['image_id']
+        ann_id = res_dict['ann_id']
 
         if self.get_images is not None:
             # sample down the number of images to load to 200
             to_log = random.sample(range(true_class.shape[0]), k=min(self.embedding_num, true_class.shape[0]))
             image_id = image_id[to_log]
             true_class = true_class[to_log]
+            ann_id = ann_id[to_log]
             messages = logs.message[to_log]
 
             if is_train:
-                imgs = self.get_images(image_id.tolist(), True, (100, 100))
+                imgs = self.get_images(image_id.tolist(), True, image_size)
             else:
-                imgs = self.get_images(image_id.tolist(), False, (100, 100))
+                imgs = self.get_images(image_id.tolist(), False, image_size)
 
             imgs = torch.Tensor(imgs)
             imgs = imgs.permute(0, 3, 1, 2)

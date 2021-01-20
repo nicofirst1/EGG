@@ -5,7 +5,7 @@ from copy import copy
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import torch
 from rich.console import Console
@@ -61,20 +61,22 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     """
     label_class = labels[:, 0]
     label_img_id = labels[:, 1]
+    ann_id = labels[:, 3]
     res = dict(
         class_id=label_class,
-        image_id=label_img_id
+        image_id=label_img_id,
+        ann_id=ann_id,
 
     )
     return res
 
 
 def get_images(train_method, test_method):
-    def inner(image_ids, is_training, img_size):
+    def inner(image_ids: List[int], is_training: bool, img_size: Tuple[int, int], image_ann_ids: List[int]):
         if is_training:
-            return train_method(image_ids, img_size)
+            return train_method(image_ids, image_ann_ids, img_size)
         else:
-            return test_method(image_ids, img_size)
+            return test_method(image_ids, image_ann_ids, img_size)
 
     return inner
 
