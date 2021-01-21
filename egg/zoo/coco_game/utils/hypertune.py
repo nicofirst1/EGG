@@ -88,7 +88,11 @@ def hypertune(main_function):
         sys.argv.pop(index)
         sys.argv.pop(index)
 
-        console.log(f"There are {len(combinations)} combinations")
+        comb_len = len(combinations)
+        if comb_len > 1:
+            console.log(f"There are {len(combinations)} combinations")
+        else:
+            console.log(f"There is {len(combinations)} combinations")
 
         # iterate over possible combinations
         for idx in range(len(combinations)):
