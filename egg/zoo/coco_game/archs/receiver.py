@@ -14,20 +14,20 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
         hidden_dim=opts.box_head_hidden,
     )
 
-    # rec = Receiver(
-    #     feature_extractor=feature_extractor,
-    #     head_module=head_module,
-    # )
-
     rec = Receiver(
         feature_extractor=feature_extractor,
-        num_classes=opts.num_classes,
-        hidden_dim=opts.sender_hidden,
+        head_module=head_module,
     )
+
+    # rec = Receiver(
+    #     feature_extractor=feature_extractor,
+    #     num_classes=opts.num_classes,
+    #     hidden_dim=opts.sender_hidden,
+    # )
     return rec
 
 
-class Receiver(nn.Module):
+class Receiver2(nn.Module):
     """
     Recevier  module, directly concatenates the output of the vision module with the signal and pass it to a fc
     """
@@ -53,7 +53,7 @@ class Receiver(nn.Module):
         return class_logits
 
 
-class Receiver2(nn.Module):
+class Receiver(nn.Module):
     """
     Recevier  module, directly concatenates the output of the vision module with the signal and pass it to a fc
     """

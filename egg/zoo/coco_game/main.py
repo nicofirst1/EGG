@@ -4,6 +4,7 @@ from os.path import join
 from pathlib import Path
 
 import torch
+from torch.optim.sgd import SGD
 
 from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
@@ -393,7 +394,7 @@ def main(params=None):
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
-
+    #optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
     get_imgs = get_images(train.dataset.get_images, test.dataset.get_images)
 
     callbacks = [
