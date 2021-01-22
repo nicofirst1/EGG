@@ -69,7 +69,7 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--head_choice",
         type=str,
-        default="single",
+        default="simple",
         help="Choose the receiver box head module",
         choices=list(HEAD_CHOICES.keys()),
     )
