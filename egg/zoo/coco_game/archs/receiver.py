@@ -1,15 +1,14 @@
-import torch
 from torch import nn
 
-from egg.zoo.coco_game.archs.heads import Flat, HeadModule, get_head, get_out_features
+from egg.zoo.coco_game.archs import Flat, HeadModule, get_out_features, get_head
 
 
 def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
-    head_module = get_head(opts.head_choice)
-    num_features = get_out_features() + opts.sender_hidden
+    head_module: HeadModule = get_head(opts.head_choice)
 
     head_module = head_module(
-        num_features=num_features,
+        signal_dim=opts.sender_hidden,
+        vision_dim=get_out_features(),
         num_classes=opts.num_classes,
         hidden_dim=opts.box_head_hidden,
     )
@@ -18,40 +17,7 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
         feature_extractor=feature_extractor,
         head_module=head_module,
     )
-
-    # rec = Receiver(
-    #     feature_extractor=feature_extractor,
-    #     num_classes=opts.num_classes,
-    #     hidden_dim=opts.sender_hidden,
-    # )
     return rec
-
-
-class Receiver2(nn.Module):
-    """
-    Recevier  module, directly concatenates the output of the vision module with the signal and pass it to a fc
-    """
-
-    def __init__(
-            self,
-            feature_extractor: nn.Module,
-            num_classes: int,
-            hidden_dim: int,
-    ):
-        super(Receiver, self).__init__()
-        self.feature_extractor = feature_extractor
-        self.cat_flat = Flat()
-
-        self.box_module = nn.Linear(hidden_dim, num_classes)
-
-    def forward(self, signal, image):
-        # signal= torch.rand(signal.shape).to(signal)
-
-        class_logits = self.box_module(signal)
-        # class_logits [batch, num_classes]
-
-        return class_logits
-
 
 class Receiver(nn.Module):
     """
@@ -78,11 +44,7 @@ class Receiver(nn.Module):
         # signal [batch, vocab]
         # signal= torch.rand(signal.shape).to(signal)
 
-        # concat vision_out\signal to aggregate info
-        out = torch.cat((vision_out, signal), dim=1)
-        # out [batch, out_features + sender_hidden]
-
-        class_logits = self.box_module(out)
+        class_logits = self.box_module(signal, vision_out)
         # class_logits [batch, num_classes]
 
         return class_logits

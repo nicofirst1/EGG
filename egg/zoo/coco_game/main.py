@@ -4,10 +4,10 @@ from os.path import join
 from pathlib import Path
 
 import torch
-from torch.optim.sgd import SGD
 
 from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
+from egg.zoo.coco_game.archs import HEAD_CHOICES
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import VisionSender
@@ -70,8 +70,8 @@ def parse_arguments(params=None):
         "--head_choice",
         type=str,
         default="single",
-        help="Choose the receiver box head module: single",
-        choices=["single"],
+        help="Choose the receiver box head module",
+        choices=list(HEAD_CHOICES.keys()),
     )
     parser.add_argument(
         "--image_type",
@@ -394,7 +394,7 @@ def main(params=None):
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
-    #optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
+    # optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
     get_imgs = get_images(train.dataset.get_images, test.dataset.get_images)
 
     callbacks = [
