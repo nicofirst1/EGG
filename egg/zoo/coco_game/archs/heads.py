@@ -8,7 +8,6 @@ import torch.nn as nn
 from torchvision import models
 
 
-
 def initialize_model():
     """
     Get pretrained model. Since we are going to use the frozen pretrained model for both receiver and sender it would
@@ -59,7 +58,6 @@ class HeadModule(nn.Module):
         raise NotImplemented()
 
 
-
 class Flat(nn.Module):
     """
     Module to flatten the output of the feature extraction model.
@@ -94,30 +92,6 @@ class SimpleHead(HeadModule):
         return class_logits
 
 
-class SequentialHead(HeadModule):
-    """
-    Usa single sequential model for  classification
-    """
-
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
-        super(SequentialHead, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
-
-        feature_num = signal_dim + vision_dim
-
-        self.head_class = self.head_class = nn.Sequential(
-            nn.Linear(feature_num, hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(),
-            nn.Linear(hidden_dim, num_classes),
-        )
-
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
-        out = torch.cat((vision_features, signal), dim=1)
-        class_logits = self.head_class(out).clone()
-
-        return class_logits
-
-
 class OnlySignal(HeadModule):
     """
     Usa single sequential model for  classification
@@ -134,13 +108,29 @@ class OnlySignal(HeadModule):
         return class_logits
 
 
-class SignalExpansionMul(HeadModule):
+class OnlyImage(HeadModule):
     """
     Usa single sequential model for  classification
     """
 
     def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
-        super(SignalExpansionMul, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
+        super(OnlyImage, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
+
+        self.head_class = nn.Linear(vision_dim, self.output_size)
+
+    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+        class_logits = self.head_class(vision_features).clone()
+
+        return class_logits
+
+
+class SignalExpansion(HeadModule):
+    """
+    Usa single sequential model for  classification
+    """
+
+    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+        super(SignalExpansion, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.signal_expansion = nn.Linear(signal_dim, vision_dim)
         self.head_class = nn.Linear(vision_dim, num_classes)
@@ -155,13 +145,13 @@ class SignalExpansionMul(HeadModule):
         return class_logits
 
 
-class FeatureReductionMul(HeadModule):
+class FeatureReduction(HeadModule):
     """
     Usa single sequential model for  classification
     """
 
     def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
-        super(FeatureReductionMul, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
+        super(FeatureReduction, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.feature_reduction = nn.Linear(vision_dim, signal_dim)
         self.head_class = nn.Linear(signal_dim, num_classes)
@@ -174,46 +164,3 @@ class FeatureReductionMul(HeadModule):
         class_logits = self.head_class(out).clone()
 
         return class_logits
-
-
-class SignalExpansionCat(HeadModule):
-    """
-    Usa single sequential model for  classification
-    """
-
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
-        super(SignalExpansionCat, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
-
-        self.signal_expansion = nn.Linear(signal_dim, vision_dim)
-        self.head_class = nn.Linear(vision_dim * 2, num_classes)
-
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
-        signal = self.signal_expansion(signal)
-
-        out = torch.cat((vision_features, signal), dim=1)
-
-        class_logits = self.head_class(out).clone()
-
-        return class_logits
-
-
-class FeatureReductionCat(HeadModule):
-    """
-    Usa single sequential model for  classification
-    """
-
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
-        super(FeatureReductionMul, self).__init__(signal_dim, vision_dim, num_classes, hidden_dim)
-
-        self.feature_reduction = nn.Linear(vision_dim, signal_dim)
-        self.head_class = nn.Linear(signal_dim * 2, num_classes)
-
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
-        vision_features = self.feature_reduction(vision_features)
-
-        out = torch.cat((vision_features, signal), dim=1)
-
-        class_logits = self.head_class(out).clone()
-
-        return class_logits
-

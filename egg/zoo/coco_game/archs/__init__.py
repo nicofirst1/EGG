@@ -2,12 +2,10 @@ from egg.zoo.coco_game.archs.heads import *
 
 HEAD_CHOICES = dict(
     simple=SimpleHead,
-    sequential=SequentialHead,
     only_signal=OnlySignal,
-    signal_expansion_mul=SignalExpansionMul,
-    feature_reduction_mul=FeatureReductionMul,
-    signal_expansion_cat=SignalExpansionCat,
-    feature_reduction_cat=FeatureReductionCat
+    only_image=OnlyImage,
+    signal_expansion_mul=SignalExpansion,
+    feature_reduction__mul=FeatureReduction,
 )
 
 
