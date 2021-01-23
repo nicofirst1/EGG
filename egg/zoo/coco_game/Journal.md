@@ -142,7 +142,7 @@ said the best results were given by the product `*_mul` of the image-features ti
 expansion and feature reduction cases. On the other hand the `*_cat` models performed worse
 
 Moreover, while the `only_singal` and `simple` yielded similar results, it is important to higlight that, during
-training, the modle with `only_signal` shows a sharp increase in the first epochs (+40%) starting from a random
+training, the model with `only_signal` shows a sharp increase in the first epochs (+40%) starting from a random
 baseline, while the `simple` model takes far less time to converge to the same value. This shows how the model with no
 image information has to rely solely on the signal, on the other hand the model using both has no need for redundant
 information about the image in the sender message.
@@ -152,5 +152,10 @@ The `*_cat` models performed worse than the `*_mul` ones achieving a similar res
 Finally, the `only_image` model which discards completely the message sent from the receiver achieves +50% than the
 random signal. This result is fundamental since it shows that without the sender message the receiver is still abel to
 correctly classify the image with a 60% accuracy
+
+
+Optimal value: `head_choice= signal_expansion_mul`
+
+## Embeddings ***
 
 
