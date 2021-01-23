@@ -22,7 +22,6 @@ def parse_arguments(params=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data_root",
-        default="/home/dizzi/Desktop/coco",
         help="Data root folder to coco",
     )
 
