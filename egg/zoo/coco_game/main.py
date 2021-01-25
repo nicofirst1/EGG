@@ -7,10 +7,10 @@ import torch
 
 from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
-from egg.zoo.coco_game.archs import HEAD_CHOICES
+from egg.zoo.coco_game.archs import HEAD_CHOICES, FLAT_CHOICES
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
-from egg.zoo.coco_game.archs.sender import VisionSender
+from egg.zoo.coco_game.archs.sender import VisionSender, build_sender
 from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
@@ -72,6 +72,15 @@ def parse_arguments(params=None):
         help="Choose the receiver box head module",
         choices=list(HEAD_CHOICES.keys()),
     )
+
+    parser.add_argument(
+        "--flat_choice",
+        type=str,
+        default="AvgPool",
+        help="Choose the flat module type",
+        choices=list(FLAT_CHOICES.keys()),
+    )
+
     parser.add_argument(
         "--image_type",
         type=str,
@@ -281,15 +290,10 @@ def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Sender receiver modules
     ######################################
-    sender = VisionSender(
-        feat_extractor,
-        image_size=opts.image_resize,
-        image_type=opts.image_type,
-        image_union=opts.image_union,
-        n_hidden=opts.sender_hidden,
-    )
+
 
     receiver = build_receiver(feature_extractor=feat_extractor, opts=opts)
+    sender = build_sender(feature_extractor=feat_extractor, opts=opts)
 
     ######################################
     #   Sender receiver wrappers

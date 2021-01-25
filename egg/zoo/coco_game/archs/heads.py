@@ -26,10 +26,6 @@ def initialize_model():
     return model
 
 
-def get_out_features():
-    return 512
-
-
 class HeadModule(nn.Module):
     """
     Common implementation for the box modules, must take as input the given args
@@ -56,21 +52,6 @@ class HeadModule(nn.Module):
 
         """
         raise NotImplemented()
-
-
-class Flat(nn.Module):
-    """
-    Module to flatten the output of the feature extraction model.
-    """
-
-    def __init__(self, sz=(1, 1)):
-        super().__init__()
-        self.aap = nn.AdaptiveAvgPool2d(sz)
-
-    def forward(self, x):
-        x = self.aap(x)
-        flat = x.view([x.shape[0], -1])
-        return flat
 
 
 class SimpleHead(HeadModule):

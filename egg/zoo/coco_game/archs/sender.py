@@ -1,7 +1,22 @@
 import torch
 from torch import nn
 
-from egg.zoo.coco_game.archs.heads import Flat, get_out_features
+from egg.zoo.coco_game.archs import get_flat, FlatModule
+
+
+def build_sender(feature_extractor, opts):
+    flat_module = get_flat(opts.flat_choice)
+
+    sender = VisionSender(
+        feature_extractor,
+        flat_module=flat_module,
+        image_size=opts.image_resize,
+        image_type=opts.image_type,
+        image_union=opts.image_union,
+        n_hidden=opts.sender_hidden,
+    )
+
+    return sender
 
 
 class VisionSender(nn.Module):
@@ -40,7 +55,7 @@ class VisionSender(nn.Module):
     """
 
     def __init__(
-            self, model, image_size: int, image_type: str, image_union: str, n_hidden=10
+            self, model, flat_module: FlatModule, image_size: int, image_type: str, image_union: str, n_hidden=10
     ):
         super(VisionSender, self).__init__()
 
@@ -48,10 +63,10 @@ class VisionSender(nn.Module):
         self.image_size = image_size
         self.image_type = image_type
         self.image_union = image_union
-        self.out_features = get_out_features()
+        self.out_features = flat_module.out_dim
 
         self.fc = nn.Linear(self.out_features, n_hidden)
-        self.cat_flat = Flat()
+        self.cat_flat = flat_module()
 
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
