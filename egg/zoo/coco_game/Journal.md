@@ -169,4 +169,5 @@ correctly classify the image with a 60% accuracy
 Optimal value: `head_choice= signal_expansion_mul`
 
 ## Embeddings ***
+
 todo
