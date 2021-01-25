@@ -48,9 +48,13 @@ similar results to adam in x25 epochs.
 
 Optimal value : adam
 
-## Cell Types ***
+## Cell Types 
 
 In this part the parameters `sender/receiver_cell_type` were varied independently.
+From the results it emerges how the value `sender_cell_type=gru` seems to influence the outcome the most (+4%).
+On the other hand the `receiver_cell_type` does not seem to be as influential but performs best when not `=rnn`.
+
+Optimal values: `sender/receiver_cell_type=gru`
 
 ## Loss
 
@@ -127,7 +131,7 @@ These two methods then are split by the type of merging done between the single 
 - `head_choice= *_mul` : the two vectors are multiplied together
 - `head_choice= *_cat` : the two vectors are concatenated together
 
-Finally, other implementations are avaiable which consider both the inputs:
+Finally, other implementations are available which consider both the inputs:
 
 - `head_choice= simple` : cat together signal and image-features and pass them to a linear (signal_dim + feature_dim,
   num classes)
