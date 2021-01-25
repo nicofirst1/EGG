@@ -48,11 +48,11 @@ similar results to adam in x25 epochs.
 
 Optimal value : adam
 
-## Cell Types 
+## Cell Types
 
-In this part the parameters `sender/receiver_cell_type` were varied independently.
-From the results it emerges how the value `sender_cell_type=gru` seems to influence the outcome the most (+4%).
-On the other hand the `receiver_cell_type` does not seem to be as influential but performs best when not `=rnn`.
+In this part the parameters `sender/receiver_cell_type` were varied independently. From the results it emerges how the
+value `sender_cell_type=gru` seems to influence the outcome the most (+4%). On the other hand the `receiver_cell_type`
+does not seem to be as influential but performs best when not `=rnn`.
 
 Optimal values: `sender/receiver_cell_type=gru`
 
@@ -61,10 +61,11 @@ Optimal values: `sender/receiver_cell_type=gru`
 In here the parameters `cross/kl_lambda` and `use_class_weights` where modified. It is clear that kl loss cannot
 compensate for the cross entropy, indeed when `cross_lambda=0` no values for the other two parameters can compensate a
 loss in 40% performance. On the other hand `kl_lambda` seems to help slightly (3%) when present with a linear
-contribute.
-*** use_class_weights
+contribution.
 
-Optimal value : `cross_lambda=1` `kl_lambda=0.3`
+Moreover, when setting `use_class_weights=True` a slight increase in accuracy (+2%) is achieved.
+
+Optimal value : `cross_lambda=1` & `kl_lambda=1.0` & `use_class_weights=True`
 
 ## Number of Layers
 
@@ -131,13 +132,18 @@ These two methods then are split by the type of merging done between the single 
 - `head_choice= *_mul` : the two vectors are multiplied together
 - `head_choice= *_cat` : the two vectors are concatenated together
 
-Finally, other implementations are available which consider both the inputs:
+Moreover, other implementations are available which consider both the inputs:
 
 - `head_choice= simple` : cat together signal and image-features and pass them to a linear (signal_dim + feature_dim,
   num classes)
 - `head_choice= sequential` : cat together signal and image-features and pass them to a sequential model
   with [nn.Linear(
   signal_dim + feature_dim, hidden_dim), nn.ReLU(), nn.Dropout(), nn.Linear(hidden_dim, num_classes)]
+
+Finally, in order to test random configurations, two additional heads are provided:
+
+- `RandomSignal`: keeps the same architecture as `only_signal` but generates a random signal instead
+- `RandomSignalImg`: uses the same arch as `simple` but with a randomly generated signal.
 
 ### Results
 
@@ -153,13 +159,14 @@ information about the image in the sender message.
 
 The `*_cat` models performed worse than the `*_mul` ones achieving a similar results to the `sequential` model.
 
-Finally, the `only_image` model which discards completely the message sent from the receiver achieves +50% than the
-random signal. This result is fundamental since it shows that without the sender message the receiver is still abel to
-correctly classify the image with a 60% accuracy
+On the other hand, `RandomSignal` achieves the same results as blindly guessing the (biased) class (12% with 15 classes)
+, while `RandomSignalImg` yields similar results to `only_image` defined below.
 
+Finally, the `only_image` model which discards completely the message sent from the receiver achieves +50% than the
+random signal. This result is fundamental since it shows that without the sender message the receiver is still able to
+correctly classify the image with a 60% accuracy
 
 Optimal value: `head_choice= signal_expansion_mul`
 
 ## Embeddings ***
-
-
+todo
