@@ -4,9 +4,9 @@ from glob import glob
 
 import abbreviate
 import numpy as np
-from rich.console import Console
-from rich.progress import track
 from tensorboard.backend.event_processing import event_accumulator
+
+UUID_LEN = 8
 
 
 def get_accumulator(path2accumulator, tag, mean_elem=5):
@@ -66,9 +66,8 @@ def filter_params(res_dict):
     return res_dict
 
 
-def find_accumulators(path2logs):
+def find_logs(path2logs):
     logs = list(glob(path2logs + "/*"))
-
     res = {}
     for idx in range(len(logs)):
         log = logs[idx]
@@ -82,23 +81,53 @@ def find_accumulators(path2logs):
     return res
 
 
-
 def rename_logs(path, res_dict):
+    if len(res_dict) == 0:
+        return
+
     abbr = abbreviate.Abbreviate()
     for k, v in res_dict.items():
-        v={abbr.abbreviate(k1, target_len=5):v1 for k1,v1 in v.items()}
+        v = {abbr.abbreviate(k1, target_len=5): v1 for k1, v1 in v.items()}
         new_name = str(v).replace("'", "") + "_" + k
         new_name = os.path.join(path, new_name)
-        old_name = os.path.join(path, k)
-        os.rename(old_name, new_name)
+        old_name = list(glob(path + f"/*{k}"))[0]
+        try:
+            os.rename(old_name, new_name)
+        except FileNotFoundError:
+            continue
+
+
+def check_uid_name(log_path: str):
+    logs = list(glob(log_path + "/*"))
+    is_processed = False
+    for lg in logs:
+        lg = lg.split("/")[-1]
+
+        if len(lg) == UUID_LEN:
+            return 1
+        elif "}" in lg:
+            is_processed = True
+    if is_processed:
+        return -1
+    else:
+        return 0
+
+
+def change_pipeline(log_path):
+    check = check_uid_name(log_path)
+
+    if check > 0:
+        res = find_logs(log_path)
+        res = filter_params(res)
+        rename_logs(log_path, res)
+    elif check == 0:
+        logs = list(glob(log_path + "/*"))
+        for lg in logs:
+            change_pipeline(lg)
+    else:
+        return
 
 
 if __name__ == '__main__':
-    main_path = "./AllLogs"
-    logs = list(glob(main_path + "/*"))
-
-    for lg in track(logs, description="Processing events..."):
-        res = find_accumulators(lg)
-        res = filter_params(res)
-        #Console().log(sorted(res.items(), reverse=True))
-        rename_logs(lg, res)
+    main_path = "./Logs"
+    change_pipeline(main_path)
