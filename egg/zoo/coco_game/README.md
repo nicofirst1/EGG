@@ -1,25 +1,30 @@
+# Intro
+
+The goal of this project is to study how a sender and receiver behaves in a classification task with images. For more
+information about the experiment results check the [Journal](Journal.md).
+
+## Repo Structure
+
+The structure of the repos unfolds as follows:
+
+- [main](main.py): main python file, collects args, init classes and starts training
+- [dataset](dataset.py): handle the coco dataset pipeline
+- [custom logging](custom_logging.py): contains the callback necessary for the logging such as Tensorboard
+- [losses](losses.py): define the custom losses used during the train
+- [architectures](archs): contains the model architectures for the sender and receiver
+- [utils](utils): a container of utility functions
+
 ## Setup
 
 - Download COCO with [this script](https://gist.github.com/mkocabas/a6177fc00315403d31572e17700d7fd9) in $path2coco.
 
 ## Running
 
-To run the trainig use:
+To run the training you can either use the [bash script](train.sh) by changing the parameters inside the script or with
+python as:
 
 ```
-python main.py --root $path2coco
-```
-
-My training paramteres:
-
-```
-python main.py --batch_size 64 --max_len 10\
---train_data_perc 0.25 --image_type both\
---image_union cat --simple_receiver\
---train_log_prob 0.001 --test_log_prob 0.05\
---checkpoint_dir ./checkpoints --checkpoint_freq 1\
---tensorboard --resume_training\
---giou_lambda 0.7 --l1_lambda 1.0
+python main.py --data_root $path2coco
 ```
 
 # TODO

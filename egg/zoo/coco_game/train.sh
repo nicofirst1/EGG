@@ -20,6 +20,8 @@ train_args=(
   "4"
   "--lr"
   "0.001"
+  "--data_root"
+  "/home/dizzi/Desktop/coco/"
 )
 
 log_args=(
