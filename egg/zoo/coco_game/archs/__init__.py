@@ -6,6 +6,8 @@ HEAD_CHOICES = dict(
     only_image=OnlyImage,
     signal_expansion_mul=SignalExpansion,
     feature_reduction__mul=FeatureReduction,
+    RandomSignal=RandomSignal,
+    RandomSignalImg=RandomSignalImg,
 )
 
 

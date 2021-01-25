@@ -89,7 +89,7 @@ loss_args=(
   "--cross_lambda"
   "1.0"
   "--kl_lambda"
-  "0.3"
+  "1.0"
   "--use_class_weights"
   "True"
 
