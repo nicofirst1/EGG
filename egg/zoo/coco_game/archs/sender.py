@@ -5,7 +5,7 @@ from egg.zoo.coco_game.archs import get_flat, FlatModule
 
 
 def build_sender(feature_extractor, opts):
-    flat_module = get_flat(opts.flat_choice)
+    flat_module = get_flat(opts.flat_choice)(opts.sender_flat_size)
 
     sender = VisionSender(
         feature_extractor,
@@ -66,7 +66,7 @@ class VisionSender(nn.Module):
         self.out_features = flat_module.out_dim
 
         self.fc = nn.Linear(self.out_features, n_hidden)
-        self.cat_flat = flat_module()
+        self.flat_module = flat_module
 
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
@@ -122,18 +122,18 @@ class VisionSender(nn.Module):
 
         if self.image_type == "seg":
             out = self.vision(seg)
-            out = self.cat_flat(out)
+            out = self.flat_module(out)
 
         elif self.image_type == "img":
             out = self.vision(img)
-            out = self.cat_flat(out)
+            out = self.flat_module(out)
 
         else:
             # both, apply vision to both
             segment_out = self.vision(seg)
             image_out = self.vision(img)
-            segment_out = self.cat_flat(segment_out)
-            image_out = self.cat_flat(image_out)
+            segment_out = self.flat_module(segment_out)
+            image_out = self.flat_module(image_out)
             out = self.combine_images(segment_out, image_out)
 
         return out

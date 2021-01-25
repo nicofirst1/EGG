@@ -5,7 +5,7 @@ from egg.zoo.coco_game.archs import HeadModule, get_head, get_flat, FlatModule
 
 def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     head_module: HeadModule = get_head(opts.head_choice)
-    flat_module: FlatModule = get_flat(opts.flat_choice)
+    flat_module: FlatModule = get_flat(opts.flat_choice)(opts.receiver_flat_size)
 
     head_module = head_module(
         signal_dim=opts.sender_hidden,
@@ -36,7 +36,7 @@ class Receiver(nn.Module):
     ):
         super(Receiver, self).__init__()
         self.feature_extractor = feature_extractor
-        self.flat_module = flat_module()
+        self.flat_module = flat_module
 
         self.box_module = head_module
 

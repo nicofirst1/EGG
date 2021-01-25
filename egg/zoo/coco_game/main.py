@@ -10,7 +10,7 @@ from egg.core import CheckpointSaver, ProgressBarLogger
 from egg.zoo.coco_game.archs import HEAD_CHOICES, FLAT_CHOICES
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
-from egg.zoo.coco_game.archs.sender import VisionSender, build_sender
+from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
@@ -79,6 +79,18 @@ def parse_arguments(params=None):
         default="AvgPool",
         help="Choose the flat module type",
         choices=list(FLAT_CHOICES.keys()),
+    )
+    parser.add_argument(
+        "--sender_flat_size",
+        type=int,
+        default=1,
+        help="Choose the flat module size",
+    )
+    parser.add_argument(
+        "--receiver_flat_size",
+        type=int,
+        default=1,
+        help="Choose the flat module size",
     )
 
     parser.add_argument(
@@ -290,7 +302,6 @@ def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Sender receiver modules
     ######################################
-
 
     receiver = build_receiver(feature_extractor=feat_extractor, opts=opts)
     sender = build_sender(feature_extractor=feat_extractor, opts=opts)

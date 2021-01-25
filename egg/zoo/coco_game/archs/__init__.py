@@ -1,5 +1,5 @@
-from egg.zoo.coco_game.archs.heads import *
 from egg.zoo.coco_game.archs.flats import *
+from egg.zoo.coco_game.archs.heads import *
 
 HEAD_CHOICES = dict(
     simple=SimpleHead,
@@ -17,7 +17,6 @@ FLAT_CHOICES = dict(
     AvgMaxPoolCat=AvgMaxPoolCat,
     AvgMaxPoolMul=AvgMaxPoolMul,
 
-
 )
 
 
@@ -28,7 +27,7 @@ def get_head(head_choice: str) -> HeadModule:
         raise KeyError(f"No head module '{head_choice}' found")
 
 
-def get_flat(flat_choice: str)-> FlatModule:
+def get_flat(flat_choice: str) -> FlatModule:
     if flat_choice in FLAT_CHOICES.keys():
         return FLAT_CHOICES[flat_choice]
     else:

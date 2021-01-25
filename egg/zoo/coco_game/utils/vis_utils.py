@@ -74,7 +74,7 @@ def visualize_bbox(img, bbox, class_name, color, thickness=2):
         img = np.array(img)
 
     TEXT_COLOR = (255, 255, 255)  # White
-    bbox = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3],]
+    bbox = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3], ]
     x_min, y_min, x_max, y_max = [int(x) for x in bbox]
 
     cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color, thickness)
