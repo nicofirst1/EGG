@@ -11,7 +11,7 @@ from egg.zoo.coco_game.archs import HEAD_CHOICES, FLAT_CHOICES
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging
+from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging, RlScheduler
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.utils.hypertune import hypertune
@@ -207,6 +207,12 @@ def parse_arguments(params=None):
     # rnn params
     #################################################
 
+    parser.add_argument(
+        "--decay_rate",
+        type=float,
+        default=1,
+        help="Decay rate for lr ",
+    )
     parser.add_argument(
         "--sender_hidden",
         type=int,
@@ -408,6 +414,8 @@ def main(params=None):
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
+    rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=opts.decay_rate)
+
     # optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
     get_imgs = get_images(train.dataset.get_images, test.dataset.get_images)
 
@@ -435,6 +443,7 @@ def main(params=None):
             get_image_method=get_imgs,
             hparams=vars(opts),
         ),
+        RlScheduler(rl_optimizer=rl_optimizer),
     ]
 
     trainer = core.Trainer(

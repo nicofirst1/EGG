@@ -339,7 +339,7 @@ class TensorboardLogger(Callback):
         Logs the messages as an embedding
         """
 
-        image_size=(200,200)
+        image_size = (200, 200)
 
         if global_step % self.embeddings_log_step != 0:
             return
@@ -358,7 +358,7 @@ class TensorboardLogger(Callback):
             messages = logs.message[to_log]
 
             if is_train:
-                imgs = self.get_images(image_id.tolist(), ann_id.tolist(),True, image_size)
+                imgs = self.get_images(image_id.tolist(), ann_id.tolist(), True, image_size)
             else:
                 imgs = self.get_images(image_id.tolist(), ann_id.tolist(), False, image_size)
 
@@ -435,3 +435,12 @@ class TensorboardLogger(Callback):
         self.log_receiver_output(logs.receiver_output, phase, global_step)
         self.log_labels(logs, phase, global_step)
         self.log_messages_distribution(logs, phase, global_step)
+
+
+class RlScheduler(Callback):
+
+    def __init__(self, rl_optimizer):
+        self.rl_optimizer = rl_optimizer
+
+    def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
+        self.rl_optimizer.step()
