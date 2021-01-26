@@ -2,7 +2,7 @@
 checkpoint_path="checkpoints"
 interactions_path="interactions"
 tensorboard_path="tensorboard"
-log_dir="HyperLogs"
+log_dir="Logs"
 home="/home/dizzi/Desktop/EGG/"
 
 export PYTHONPATH="$home/egg/zoo/coco_game/:$home"
@@ -20,6 +20,8 @@ train_args=(
   "4"
   "--lr"
   "0.001"
+  "--decay_rate"
+  "0.8"
   "--data_root"
   "/home/dizzi/Desktop/coco/"
 )

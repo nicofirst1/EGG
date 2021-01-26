@@ -78,22 +78,22 @@ def main(params=None):
     dump_params(opts)
     model = initialize_model()
 
-    train, test = get_data(opts)
+    train_data, test_datat = get_data(opts)
 
-    class_weights = get_class_weight(train, opts)
+    class_weights = get_class_weight(train_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
     rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=opts.decay_rate)
 
     # optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
-    get_imgs = get_images(train.dataset.get_images, test.dataset.get_images)
+    get_imgs = get_images(train_data.dataset.get_images, test_datat.dataset.get_images)
 
     callbacks = [
         ProgressBarLogger(
             n_epochs=opts.n_epochs,
-            train_data_len=len(train),
-            test_data_len=len(test),
+            train_data_len=len(train_data),
+            test_data_len=len(test_datat),
             use_info_table=False,
         ),
         CheckpointSaver(
@@ -109,7 +109,7 @@ def main(params=None):
             resume_training=opts.resume_training,
             loggers=loggers,
             game=game,
-            class_map={k: v["name"] for k, v in train.dataset.coco.cats.items()},
+            class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
             get_image_method=get_imgs,
             hparams=vars(opts),
         ),
@@ -119,8 +119,8 @@ def main(params=None):
     trainer = core.Trainer(
         game=game,
         optimizer=optimizer,
-        train_data=train,
-        validation_data=test,
+        train_data=train_data,
+        validation_data=test_datat,
         callbacks=callbacks,
     )
     if opts.resume_training:

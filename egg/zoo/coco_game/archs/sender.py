@@ -1,11 +1,15 @@
+from pathlib import Path
+
 import torch
 from torch import nn
 
 from egg.zoo.coco_game.archs import get_flat, FlatModule
+from egg.zoo.coco_game.utils.utils import load_pretrained_sender
 
 
 def build_sender(feature_extractor, opts, pretrain=False):
     flat_module = get_flat(opts.flat_choice)(opts.sender_flat_size)
+
 
     sender = VisionSender(
         feature_extractor,
@@ -18,6 +22,8 @@ def build_sender(feature_extractor, opts, pretrain=False):
         pretrain=pretrain,
     )
 
+    if opts.sender_pretrain != "":
+        load_pretrained_sender(Path(opts.sender_pretrain), sender)
     return sender
 
 

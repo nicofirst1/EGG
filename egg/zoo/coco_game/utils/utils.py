@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import re
 import uuid
 from copy import copy
@@ -9,9 +10,9 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import torch
-from egg import core
 from rich.console import Console
 
+from egg import core
 from egg.core.callbacks import Checkpoint
 from egg.zoo.coco_game.archs import FLAT_CHOICES, HEAD_CHOICES
 
@@ -154,6 +155,12 @@ def parse_arguments(params=None):
         "--resume_training", type=str2bool, nargs='?',
         const=True, default=True,
         help="Resume training loading models from '--checkpoint_dir'",
+    )
+
+    parser.add_argument(
+        "--sender_pretrain", type=str, nargs='?',
+        const=True, default="",
+        help="Path for pretrained sender weights",
     )
 
     #################################################
@@ -420,3 +427,21 @@ def parse_arguments(params=None):
 
     assert opt.image_resize >= 224, "The size of the image must be minimum 224"
     return opt
+
+
+def load_pretrained_sender(path, sender: torch.nn.Module):
+    latest_file, latest_time = None, None
+
+    for file in path.glob("*.tar"):
+        creation_time = os.stat(file).st_ctime
+        if latest_time is None or creation_time > latest_time:
+            latest_file, latest_time = file, creation_time
+
+    if latest_file is not None:
+        """
+        Loads the game, agents, and optimizer state from a file
+        :param path: Path to the file
+        """
+        console.log(f"# loading trainer state from {path}")
+        checkpoint = torch.load(path)
+        sender.load_state_dict(checkpoint.model_state_dict)

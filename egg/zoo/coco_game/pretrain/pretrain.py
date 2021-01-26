@@ -65,7 +65,7 @@ def pretrain(params=None):
             resume_training=opts.resume_training,
             loggers=loggers,
             game=None,
-            class_map={},
+            class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
             get_image_method=None,
             hparams=vars(opts),
         ),
