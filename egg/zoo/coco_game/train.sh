@@ -57,7 +57,7 @@ arch_args=(
   "--image_resize"
   "224"
   "--head_choice"
-  "single"
+  "simple"
   "--sender_hidden"
   "64"
   "--receiver_hidden"
@@ -83,6 +83,8 @@ data_args=(
   "0"
   "--num_classes"
   "15"
+  "--skip_first"
+  "5"
 )
 
 loss_args=(
