@@ -4,7 +4,7 @@ from torch import nn
 from egg.zoo.coco_game.archs import get_flat, FlatModule
 
 
-def build_sender(feature_extractor, opts):
+def build_sender(feature_extractor, opts, pretrain=False):
     flat_module = get_flat(opts.flat_choice)(opts.sender_flat_size)
 
     sender = VisionSender(
@@ -14,6 +14,8 @@ def build_sender(feature_extractor, opts):
         image_type=opts.image_type,
         image_union=opts.image_union,
         n_hidden=opts.sender_hidden,
+        num_classes=opts.num_classes,
+        pretrain=pretrain,
     )
 
     return sender
@@ -55,7 +57,8 @@ class VisionSender(nn.Module):
     """
 
     def __init__(
-            self, model, flat_module: FlatModule, image_size: int, image_type: str, image_union: str, n_hidden=10
+            self, model, flat_module: FlatModule, image_size: int, image_type: str, image_union: str, num_classes: int,
+            n_hidden: int = 10, pretrain: bool = False,
     ):
         super(VisionSender, self).__init__()
 
@@ -71,6 +74,9 @@ class VisionSender(nn.Module):
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
 
+        self.class_fc = nn.Linear(n_hidden, num_classes)
+        self.pretrain = pretrain
+
     def forward(self, inp):
         """
         inp : tuple (image, segmented): containing original image and segmented part
@@ -83,6 +89,11 @@ class VisionSender(nn.Module):
         # vision out [batch , vision out]
         # then fc on vision out
         fc_out = self.fc(vision_out)
+
+        # if pretrain then train the sender to recognize the class based on the fc_out
+        if self.pretrain:
+            class_logit = self.class_fc(fc_out)
+            return class_logit
 
         # fc_out [batch, hidden size]
         return fc_out
