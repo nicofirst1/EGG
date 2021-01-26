@@ -1,5 +1,6 @@
 ## Ideas
 
+
 ### Game mechanics
 
 - Multi step game (task & talk), allow receiver to ask questions and sender to answer
