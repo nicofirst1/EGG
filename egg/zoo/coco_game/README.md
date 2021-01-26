@@ -21,18 +21,18 @@ The structure of the repos unfolds as follows:
 
 ## Running
 
-To run the training you can either use the [bash script](train.sh)  or with python as:
+To run the training you can either use the [bash script](bash_train.sh)  or with python as:
 
 ## Bash 
 
-The [bash script](train.sh) sources the arguments from the [args script](args.sh), so be sure to launch it inside the [coco game](./) dir.
+The [bash script](bash_train.sh) sources the arguments from the [args script](args.sh), so be sure to launch it inside the [coco game](./) dir.
 Or you can remove the source line and call it with
 ```shell
 source args.sh
 ```
 Once this is done you can train with 
 ```shell
-bash train.sh
+bash bash_train.sh
 ```
 
 Be sure to change the paths value inside the [args script](args.sh)
