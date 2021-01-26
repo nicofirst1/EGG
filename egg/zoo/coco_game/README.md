@@ -21,9 +21,24 @@ The structure of the repos unfolds as follows:
 
 ## Running
 
-To run the training you can either use the [bash script](train.sh) by changing the parameters inside the script or with
-python as:
+To run the training you can either use the [bash script](train.sh)  or with python as:
 
+## Bash 
+
+The [bash script](train.sh) sources the arguments from the [args script](args.sh), so be sure to launch it inside the [coco game](./) dir.
+Or you can remove the source line and call it with
+```shell
+source args.sh
 ```
+Once this is done you can train with 
+```shell
+bash train.sh
+```
+
+Be sure to change the paths value inside the [args script](args.sh)
+
+## Python 
+To run with python simply use:
+```shell
 python main.py --data_root $path2coco
 ```

@@ -5,15 +5,15 @@ from os.path import join
 import torch
 
 from egg import core
-from egg.core import ProgressBarLogger, CheckpointSaver
-from egg.zoo.coco_game.archs import HEAD_CHOICES, FLAT_CHOICES
+from egg.core import CheckpointSaver, ProgressBarLogger
+from egg.zoo.coco_game.archs import FLAT_CHOICES, HEAD_CHOICES
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import TensorboardLogger
+from egg.zoo.coco_game.custom_logging import RandomLogging, TensorboardLogger
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.support import PretrainGame
-from egg.zoo.coco_game.utils.utils import console, dump_params, str2bool, get_images
+from egg.zoo.coco_game.utils.utils import console, dump_params, get_images, str2bool
 
 
 def parse_arguments(params=None):
@@ -349,7 +349,7 @@ def get_class_weight(train, opts):
     return class_weights
 
 
-def main(params=None):
+def pretrain(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
     dump_params(opts)
@@ -369,6 +369,14 @@ def main(params=None):
     )
     get_imgs = get_images(train_data.dataset.get_images, test_data.dataset.get_images)
 
+    train_log = RandomLogging(
+        logging_step=opts.train_logging_step, store_prob=opts.train_log_prob
+    )
+    test_log = RandomLogging(
+        logging_step=opts.test_logging_step, store_prob=opts.test_log_prob
+    )
+    loggers = dict(train=train_log, test=test_log)
+
     callbacks = [
         ProgressBarLogger(
             n_epochs=opts.n_epochs,
@@ -387,7 +395,7 @@ def main(params=None):
             train_logging_step=opts.train_logging_step,
             test_logging_step=opts.test_logging_step,
             resume_training=opts.resume_training,
-            loggers=None,
+            loggers=loggers,
             game=None,
             class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
             get_image_method=get_imgs,
@@ -396,7 +404,7 @@ def main(params=None):
         # RlScheduler(rl_optimizer=rl_optimizer),
     ]
 
-    game = PretrainGame(sender, criterion, opts)
+    game = PretrainGame(sender, criterion, opts, train_log, test_log)
 
     trainer = core.Trainer(
         game=game,
@@ -407,8 +415,8 @@ def main(params=None):
     )
 
     trainer.train(n_epochs=opts.n_epochs)
-    console.log("Train is over")
+    console.log("Sender Pretrain is over")
 
 
 if __name__ == "__main__":
-    main()
+    pretrain()
