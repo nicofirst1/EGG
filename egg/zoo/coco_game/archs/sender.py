@@ -83,7 +83,7 @@ class VisionSender(nn.Module):
         self.class_fc = nn.Linear(n_hidden, num_classes)
         self.pretrain = pretrain
 
-    def model_receiver(self, inp):
+    def model_receiver(self, message, receiver_input):
         # discard input and use prev fc output
         class_logit = self.class_fc(self.fc_out)
 

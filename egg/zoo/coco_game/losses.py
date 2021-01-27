@@ -67,8 +67,10 @@ class Losses:
 
         kl_modeling= get_kl_divergence(receiver_output, receiver_model)
         metrics["kl_modeling"] = acc
+        if kl_modeling.grad_fn is not None:
+            kl_modeling.mean().backward(retain_graph=True)
 
-        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda+ kl_modeling
+        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda
 
         metrics["custom_loss"] = loss
         return loss, metrics

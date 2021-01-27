@@ -144,7 +144,7 @@ class CommunicationRnnReinforceModeling(nn.Module):
             self, sender, receiver, loss, sender_input, labels, receiver_input=None
     ):
         message, log_prob_s, entropy_s = sender(sender_input)
-        receiver_model = sender.agent.model_receiver(sender_input)
+        receiver_model = sender.agent.model_receiver(message, receiver_input)
         message_length = find_lengths(message)
         receiver_output, log_prob_r, entropy_r = receiver(
             message, receiver_input, message_length
