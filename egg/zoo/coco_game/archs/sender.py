@@ -10,7 +10,6 @@ from egg.zoo.coco_game.utils.utils import load_pretrained_sender
 def build_sender(feature_extractor, opts, pretrain=False):
     flat_module = get_flat(opts.flat_choice)(opts.sender_flat_size)
 
-
     sender = VisionSender(
         feature_extractor,
         flat_module=flat_module,
@@ -76,12 +75,19 @@ class VisionSender(nn.Module):
 
         self.fc = nn.Linear(self.out_features, n_hidden)
         self.flat_module = flat_module
+        self.fc_out = None
 
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
 
         self.class_fc = nn.Linear(n_hidden, num_classes)
         self.pretrain = pretrain
+
+    def model_receiver(self, inp):
+        # discard input and use prev fc output
+        class_logit = self.class_fc(self.fc_out)
+
+        return class_logit
 
     def forward(self, inp):
         """
@@ -95,12 +101,15 @@ class VisionSender(nn.Module):
         # vision out [batch , vision out]
         # then fc on vision out
         fc_out = self.fc(vision_out)
+        self.fc_out = fc_out
 
         # if pretrain then train the sender to recognize the class based on the fc_out
-        class_logit = self.class_fc(fc_out)
+        if self.pretrain:
+            class_logit = self.class_fc(fc_out)
+            return class_logit
 
         # fc_out [batch, hidden size]
-        return fc_out, class_logit
+        return fc_out
 
     def combine_images(self, segment_out, image_out):
         """

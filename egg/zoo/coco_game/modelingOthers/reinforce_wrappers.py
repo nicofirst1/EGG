@@ -15,128 +15,6 @@ from egg.core import LoggingStrategy, find_lengths
 from egg.core.baselines import Baseline, MeanBaseline
 
 
-class RnnSenderReinforceModeling(nn.Module):
-    """
-    Reinforce Wrapper for Sender in variable-length message game. Assumes that during the forward,
-    the wrapped agent returns the initial hidden state for a RNN cell. This cell is the unrolled by the wrapper.
-    During training, the wrapper samples from the cell, getting the output message. Evaluation-time, the sampling
-    is replaced by argmax.
-
-    >>> agent = nn.Linear(10, 3)
-    >>> agent = RnnSenderReinforce(agent, vocab_size=5, embed_dim=5, hidden_size=3, max_len=10, cell='lstm')
-    >>> input = torch.FloatTensor(16, 10).uniform_(-0.1, 0.1)
-    >>> message, logprob, entropy = agent(input)
-    >>> message.size()  # batch size x max_len+1
-    torch.Size([16, 11])
-    >>> (entropy[:, -1] > 0).all().item()  # EOS symbol will have 0 entropy
-    False
-    """
-
-    def __init__(
-            self,
-            agent,
-            vocab_size,
-            embed_dim,
-            hidden_size,
-            max_len,
-            num_layers=1,
-            cell="rnn",
-    ):
-        """
-        :param agent: the agent to be wrapped
-        :param vocab_size: the communication vocabulary size
-        :param embed_dim: the size of the embedding used to embed the output symbols
-        :param hidden_size: the RNN cell's hidden state size
-        :param max_len: maximal length of the output messages
-        :param cell: type of the cell used (rnn, gru, lstm)
-        """
-        super(RnnSenderReinforceModeling, self).__init__()
-        self.agent = agent
-
-        assert max_len >= 1, "Cannot have a max_len below 1"
-        self.max_len = max_len
-
-        self.hidden_to_output = nn.Linear(hidden_size, vocab_size)
-        self.embedding = nn.Embedding(vocab_size, embed_dim)
-        self.sos_embedding = nn.Parameter(torch.zeros(embed_dim))
-        self.embed_dim = embed_dim
-        self.vocab_size = vocab_size
-        self.num_layers = num_layers
-        self.cells = None
-
-        cell = cell.lower()
-        cell_types = {"rnn": nn.RNNCell, "gru": nn.GRUCell, "lstm": nn.LSTMCell}
-
-        if cell not in cell_types:
-            raise ValueError(f"Unknown RNN Cell: {cell}")
-
-        cell_type = cell_types[cell]
-        self.cells = nn.ModuleList(
-            [
-                cell_type(input_size=embed_dim, hidden_size=hidden_size)
-                if i == 0
-                else cell_type(input_size=hidden_size, hidden_size=hidden_size)
-                for i in range(self.num_layers)
-            ]
-        )  # noqa: E502
-
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.normal_(self.sos_embedding, 0.0, 0.01)
-
-    def forward(self, x):
-        prev_hidden, receiver_model = self.agent(x)
-        prev_hidden=[prev_hidden]
-        prev_hidden.extend(
-            [torch.zeros_like(prev_hidden[0]) for _ in range(self.num_layers - 1)]
-        )
-
-        prev_c = [
-            torch.zeros_like(prev_hidden[0]) for _ in range(self.num_layers)
-        ]  # only used for LSTM
-
-        input = torch.stack([self.sos_embedding] * x.size(0))
-
-        sequence = []
-        logits = []
-        entropy = []
-
-        for step in range(self.max_len):
-            for i, layer in enumerate(self.cells):
-                if isinstance(layer, nn.LSTMCell):
-                    h_t, c_t = layer(input, (prev_hidden[i], prev_c[i]))
-                    prev_c[i] = c_t
-                else:
-                    h_t = layer(input, prev_hidden[i])
-                prev_hidden[i] = h_t
-                input = h_t
-
-            step_logits = F.log_softmax(self.hidden_to_output(h_t), dim=1)
-            distr = Categorical(logits=step_logits)
-            entropy.append(distr.entropy())
-
-            if self.training:
-                x = distr.sample()
-            else:
-                x = step_logits.argmax(dim=1)
-            logits.append(distr.log_prob(x))
-
-            input = self.embedding(x)
-            sequence.append(x)
-
-        sequence = torch.stack(sequence).permute(1, 0)
-        logits = torch.stack(logits).permute(1, 0)
-        entropy = torch.stack(entropy).permute(1, 0)
-
-        zeros = torch.zeros((sequence.size(0), 1)).to(sequence.device)
-
-        sequence = torch.cat([sequence, zeros.long()], dim=1)
-        logits = torch.cat([logits, zeros], dim=1)
-        entropy = torch.cat([entropy, zeros], dim=1)
-
-        return sequence, logits, receiver_model, entropy
-
 
 class SenderReceiverRnnReinforceModeling(nn.Module):
     """
@@ -265,7 +143,8 @@ class CommunicationRnnReinforceModeling(nn.Module):
     def forward(
             self, sender, receiver, loss, sender_input, labels, receiver_input=None
     ):
-        message, log_prob_s, receiver_model, entropy_s = sender(sender_input)
+        message, log_prob_s, entropy_s = sender(sender_input)
+        receiver_model = sender.agent.model_receiver(sender_input)
         message_length = find_lengths(message)
         receiver_output, log_prob_r, entropy_r = receiver(
             message, receiver_input, message_length
