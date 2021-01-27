@@ -102,4 +102,5 @@ def get_kl(pred_classes: torch.Tensor, targets, weights=None):
         kl *= weights
 
     kl = kl.mean(dim=1)
+    assert all(kl>=0),"Some parametrs of the KL are <0"
     return kl
