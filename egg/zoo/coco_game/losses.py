@@ -90,7 +90,7 @@ def get_kl(pred_classes: torch.Tensor, targets, weights=None):
     """
     Return kl divergence loss
     """
-    pred_classes = F.softmax(pred_classes, dim=1)
+    pred_classes = F.log_softmax(pred_classes, dim=1)
 
     targets = targets.unsqueeze(dim=1)
     target_dist = torch.zeros(pred_classes.shape).to(targets)
