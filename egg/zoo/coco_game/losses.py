@@ -42,6 +42,7 @@ class Losses:
             sender_input,
             message,
             receiver_input,
+            receiver_model,
             receiver_output,
             labels,
     ):
@@ -64,12 +65,26 @@ class Losses:
         acc = acc.unsqueeze(dim=-1)
         metrics["class_accuracy"] = acc
 
-        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda
+        kl_modeling= get_kl_divergence(receiver_output, receiver_model)
+        metrics["kl_modeling"] = acc
+
+        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda+ kl_modeling
 
         metrics["custom_loss"] = loss
         return loss, metrics
 
 
+def get_kl_divergence(receiver_out: torch.Tensor, receiver_model):
+    """
+    Return kl divergence loss
+    """
+    receiver_model = F.log_softmax(receiver_model, dim=1)
+    receiver_out = F.log_softmax(receiver_out, dim=1)
+
+    kl = F.kl_div(receiver_model, receiver_out, log_target=True, reduction="none")
+    kl = kl.mean(dim=1)
+
+    return kl
 
 
 def get_accuracy(pred_class: torch.Tensor, true_class: torch.Tensor) -> torch.Tensor:

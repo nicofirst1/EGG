@@ -97,12 +97,10 @@ class VisionSender(nn.Module):
         fc_out = self.fc(vision_out)
 
         # if pretrain then train the sender to recognize the class based on the fc_out
-        if self.pretrain:
-            class_logit = self.class_fc(fc_out)
-            return class_logit
+        class_logit = self.class_fc(fc_out)
 
         # fc_out [batch, hidden size]
-        return fc_out
+        return fc_out, class_logit
 
     def combine_images(self, segment_out, image_out):
         """

@@ -425,7 +425,7 @@ def parse_arguments(params=None):
             opt.num_classes + opt.skip_first <= 80
     ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
 
-    assert opt.image_resize >= 224, "The size of the image must be minimum 224"
+    assert opt.image_resize >= 224, f"The size of the image must be minimum 224, received : {opt.image_resize}"
     return opt
 
 
