@@ -70,8 +70,6 @@ class Losses:
         return loss, metrics
 
 
-def weight_loss(loss_tensor, weights):
-    a = 1
 
 
 def get_accuracy(pred_class: torch.Tensor, true_class: torch.Tensor) -> torch.Tensor:
@@ -99,7 +97,7 @@ def get_kl(pred_classes: torch.Tensor, targets, weights=None):
     target_dist.scatter_(1, targets, 1)
     target_dist = target_dist.float()
 
-    kl = F.kl_div(pred_classes, target_dist, reduction="none")
+    kl = F.kl_div(pred_classes, target_dist, reduction="none", log_target=True)
     if weights is not None:
         kl *= weights
 
