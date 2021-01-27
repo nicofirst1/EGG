@@ -110,6 +110,8 @@ venv.bak/
 .mypy_cache/
 
 egg/zoo/coco_game/*Logs/
+egg/zoo/coco_game/pretrain/*Logs/
+
 
 
 egg/zoo/coco_game/pretrain/*Logs/

@@ -54,7 +54,7 @@ class TensorboardLogger(Callback):
     def __init__(
             self,
             tensorboard_dir: str,
-            loggers: Dict[str, LoggingStrategy],
+            loggers: Dict[str, LoggingStrategy]=None,
             train_logging_step: int = 50,
             test_logging_step: int = 20,
             resume_training: bool = False,
@@ -135,7 +135,8 @@ class TensorboardLogger(Callback):
             self.log_graph = False
 
         self.writer.add_scalar("epoch", epoch, global_step=self.train_gs)
-        self.loggers["train"].cur_batch = 0
+        if self.loggers is not None:
+            self.loggers["train"].cur_batch = 0
 
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         self.log_precision_recall(logs, phase="test", global_step=epoch)
@@ -143,8 +144,9 @@ class TensorboardLogger(Callback):
         self.log_hparams(logs, loss)
         if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
+        if self.loggers is not None:
+            self.loggers["test"].cur_batch = 0
 
-        self.loggers["test"].cur_batch = 0
         self.log_conv = False
 
     def on_batch_end(

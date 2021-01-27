@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 import re
+import uuid
 from copy import copy
 from os import listdir
 from os.path import isfile, join
@@ -10,7 +12,9 @@ from typing import Dict, List, Tuple
 import torch
 from rich.console import Console
 
+from egg import core
 from egg.core.callbacks import Checkpoint
+from egg.zoo.coco_game.archs import FLAT_CHOICES, HEAD_CHOICES
 
 console = Console()
 
@@ -90,3 +94,354 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def define_project_dir(opts):
+    """
+    Define the dir tree as:
+    -log_dir
+
+    --log_dir_uid-1
+    ---checkpoint_dir
+    ---tensorboard_dir
+    ---interactions_path
+
+    --log_dir_uid-2
+    ---checkpoint_dir
+    ---tensorboard_dir
+    ---interactions_path
+
+    ...
+
+    """
+
+    console.log(f"New experiment with uuid: '{opts.log_dir_uid}' created ")
+
+    opts.log_dir_uid = join(opts.log_dir, opts.log_dir_uid)
+    # make log dir root for logging paths
+    opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
+    opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
+
+
+def get_class_weight(train, opts):
+    if opts.use_class_weights:
+        class_weights = train.dataset.get_class_weights()
+        # transform from dict to sorted tensor
+        class_weights = [x[1] for x in sorted(class_weights.items())]
+        class_weights = torch.Tensor(class_weights)
+        class_weights = class_weights.to(opts.device)
+
+    else:
+        class_weights = None
+
+    return class_weights
+
+
+def parse_arguments(params=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--data_root",
+        help="Data root folder to coco",
+    )
+
+    parser.add_argument(
+        "--use_rich_traceback",
+        default=False,
+        action="store_true",
+        help="If to use the traceback provided by the rich library",
+    )
+
+    parser.add_argument(
+        "--resume_training", type=str2bool, nargs='?',
+        const=True, default=True,
+        help="Resume training loading models from '--checkpoint_dir'",
+    )
+
+    parser.add_argument(
+        "--sender_pretrain", type=str, nargs='?',
+        const=True, default="",
+        help="Path for pretrained sender weights",
+    )
+
+    #################################################
+    # Loss
+    #################################################
+
+    parser.add_argument(
+        "--cross_lambda",
+        type=float,
+        default=1,
+        help="Weight for cross entropy loss for classification task.",
+    )
+
+    parser.add_argument(
+        "--kl_lambda",
+        type=float,
+        default=1,
+        help="Weight for cross Kullback-Leibler divergence loss for classification task.",
+    )
+
+    parser.add_argument(
+        "--use_class_weights", type=str2bool, nargs='?',
+        const=True, default=False,
+        help="Extract class weights from the dataset and pass them to the loss function",
+    )
+
+    #################################################
+    # Vision model
+    #################################################
+    parser.add_argument(
+        "--head_choice",
+        type=str,
+        default="simple",
+        help="Choose the receiver box head module",
+        choices=list(HEAD_CHOICES.keys()),
+    )
+
+    parser.add_argument(
+        "--flat_choice",
+        type=str,
+        default="AvgPool",
+        help="Choose the flat module type",
+        choices=list(FLAT_CHOICES.keys()),
+    )
+    parser.add_argument(
+        "--sender_flat_size",
+        type=int,
+        default=1,
+        help="Choose the flat module size",
+    )
+    parser.add_argument(
+        "--receiver_flat_size",
+        type=int,
+        default=1,
+        help="Choose the flat module size",
+    )
+
+    parser.add_argument(
+        "--image_type",
+        type=str,
+        default="seg",
+        help="Choose the sender input type: seg(mented), image, both",
+        choices=["seg", "img", "both"],
+    )
+
+    parser.add_argument(
+        "--image_union",
+        type=str,
+        default="mul",
+        help="When 'image_type==both', how to aggregate infos from both images",
+        choices=["cat", "mul"],
+    )
+    parser.add_argument(
+        "--image_resize",
+        type=int,
+        default=224,
+        help="Size of pretrain input image. Minimum is 224",
+    )
+
+    #################################################
+    # LOG
+    #################################################
+
+    parser.add_argument(
+        "--log_dir",
+        default="./Logs",
+        help="Log dir to save all logs",
+    )
+
+    parser.add_argument(
+        "--log_dir_uid",
+        default=f"{str(uuid.uuid4())[:8]}",
+        help="Log subdir name where to save single runs",
+    )
+
+    parser.add_argument(
+        "--train_log_prob",
+        type=float,
+        default=0.01,
+        help="Percentage of training interaction to save",
+    )
+
+    parser.add_argument(
+        "--test_log_prob",
+        type=float,
+        default=0.03,
+        help="Percentage of test interaction to save",
+    )
+
+    parser.add_argument(
+        "--train_logging_step",
+        type=int,
+        default=50,
+        help="Number of steps (in batches) before logging during training ",
+    )
+
+    parser.add_argument(
+        "--test_logging_step",
+        type=int,
+        default=20,
+        help="Number of steps (in batches) before logging during testing",
+    )
+
+    #################################################
+    # dataLoader args
+    #################################################
+
+    parser.add_argument(
+        "--min_area",
+        type=float,
+        default=0,
+        help="Minimum percentage of the total image area for object. ",
+    )
+
+    parser.add_argument(
+        "--skip_first",
+        type=int,
+        default=5,
+        help="Number of first classes to skip. Default 5 bc the first 5 classes are over represented in coco",
+    )
+
+    parser.add_argument(
+        "--num_classes",
+        type=int,
+        default=75,
+        help="Number of classes to use, 80 for all",
+    )
+
+    parser.add_argument(
+        "--train_data_perc",
+        type=float,
+        default=1,
+        help="Size of the coco train dataset to be used",
+    )
+    parser.add_argument(
+        "--test_data_perc",
+        type=float,
+        default=1,
+        help="Size of the coco test dataset to be used",
+    )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=4,
+        help="Number of workers in the dataloader",
+    )
+
+    #################################################
+    # rnn params
+    #################################################
+
+    parser.add_argument(
+        "--decay_rate",
+        type=float,
+        default=1,
+        help="Decay rate for lr ",
+    )
+    parser.add_argument(
+        "--sender_hidden",
+        type=int,
+        default=16,
+        help="Size of the hidden layer of Sender (default: 10)",
+    )
+    parser.add_argument(
+        "--receiver_hidden",
+        type=int,
+        default=16,
+        help="Size of the hidden layer of Receiver (default: 10)",
+    )
+
+    parser.add_argument(
+        "--receiver_num_layers",
+        type=int,
+        default=2,
+        help="Number of rnn layers for receiver",
+    )
+
+    parser.add_argument(
+        "--receiver_cell_type",
+        type=str,
+        default="lstm",
+        choices=["rnn", "lstm", "gru"],
+        help="Type of RNN cell for receiver",
+    )
+
+    parser.add_argument(
+        "--sender_num_layers",
+        type=int,
+        default=2,
+        help="Number of rnn layers for sender",
+    )
+
+    parser.add_argument(
+        "--sender_cell_type",
+        type=str,
+        default="lstm",
+        choices=["rnn", "lstm", "gru"],
+        help="Type of RNN cell for sender",
+    )
+
+    parser.add_argument(
+        "--box_head_hidden",
+        type=int,
+        default=32,
+        help="Size of the hidden layer of Receiver (default: 10)",
+    )
+    parser.add_argument(
+        "--sender_embedding",
+        type=int,
+        default=16,
+        help="Output dimensionality of the layer that embeds symbols produced at previous step in Sender (default: 10)",
+    )
+    parser.add_argument(
+        "--receiver_embedding",
+        type=int,
+        default=16,
+        help="Output dimensionality of the layer that embeds the message symbols for Receiver (default: 10)",
+    )
+
+    parser.add_argument(
+        "--sender_entropy_coeff",
+        type=float,
+        default=1e-1,
+        help="Reinforce entropy regularization coefficient for Sender, only relevant in Reinforce (rf) mode (default: 1e-1)",
+    )
+
+    #################################################
+    # parser manipulation
+    #################################################
+
+    # add core opt and print
+    opt = core.init(parser, params=params)
+    console.log(sorted(vars(opt).items()))
+
+    if opt.use_rich_traceback:
+        from rich.traceback import install
+
+        install()
+
+    # assert the number of classes is less than 90-skip_first
+    assert (
+            opt.num_classes + opt.skip_first <= 80
+    ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
+
+    assert opt.image_resize >= 224, "The size of the image must be minimum 224"
+    return opt
+
+
+def load_pretrained_sender(path, sender: torch.nn.Module):
+    latest_file, latest_time = None, None
+
+    for file in path.glob("*.tar"):
+        creation_time = os.stat(file).st_ctime
+        if latest_time is None or creation_time > latest_time:
+            latest_file, latest_time = file, creation_time
+
+    if latest_file is not None:
+        """
+        Loads the game, agents, and optimizer state from a file
+        :param path: Path to the file
+        """
+        console.log(f"# loading trainer state from {path}")
+        checkpoint = torch.load(path)
+        sender.load_state_dict(checkpoint.model_state_dict)

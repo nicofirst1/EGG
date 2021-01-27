@@ -2,14 +2,14 @@
 checkpoint_path="checkpoints"
 interactions_path="interactions"
 tensorboard_path="tensorboard"
-log_dir="HyperLogs"
+log_dir="Logs"
 home="/home/dizzi/Desktop/EGG/"
 
 export PYTHONPATH="$home/egg/zoo/coco_game/:$home"
 
 train_args=(
   "--batch_size"
-  "64"
+  "128"
   "--n_epochs"
   "4"
   "--train_data_perc"
@@ -20,6 +20,8 @@ train_args=(
   "4"
   "--lr"
   "0.001"
+  "--decay_rate"
+  "0.8"
   "--data_root"
   "/home/dizzi/Desktop/coco/"
 )
@@ -53,13 +55,13 @@ arch_args=(
   "--image_type"
   "both"
   "--image_union"
-  "mul"
+  "cat"
   "--image_resize"
   "224"
   "--head_choice"
   "simple"
   "--sender_hidden"
-  "64"
+  "128"
   "--receiver_hidden"
   "64"
   "--receiver_num_layers"
@@ -98,5 +100,3 @@ loss_args=(
 )
 
 all_args=("${train_args[@]}" "${log_args[@]}" "${arch_args[@]}" "${data_args[@]}" "${loss_args[@]}")
-
-python main.py "${all_args[@]}" --sweep_file parameters.json # --log_dir_uid a61c6aaa --resume_training #
