@@ -42,7 +42,6 @@ class Losses:
             sender_input,
             message,
             receiver_input,
-            receiver_model,
             receiver_output,
             labels,
     ):
