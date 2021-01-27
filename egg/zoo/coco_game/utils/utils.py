@@ -442,6 +442,6 @@ def load_pretrained_sender(path, sender: torch.nn.Module):
         Loads the game, agents, and optimizer state from a file
         :param path: Path to the file
         """
-        console.log(f"# loading trainer state from {path}")
-        checkpoint = torch.load(path)
+        console.log(f"# loading trainer state from {latest_file}")
+        checkpoint = torch.load(latest_file)
         sender.load_state_dict(checkpoint.model_state_dict)

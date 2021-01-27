@@ -1,4 +1,10 @@
+import pathlib
+import sys
+from typing import Union
+
 import torch
+
+from egg.core.callbacks import Checkpoint, CheckpointSaver
 
 
 class PretrainGame(torch.nn.Module):
@@ -29,3 +35,29 @@ class PretrainGame(torch.nn.Module):
         )
 
         return loss, interaction
+
+
+class SenderSaver(CheckpointSaver):
+    def __init__(
+            self,
+            sender: torch.nn.Module,
+            checkpoint_path: Union[str, pathlib.Path],
+            checkpoint_freq: int = 1,
+            prefix: str = "",
+            max_checkpoints: int = sys.maxsize,
+    ):
+        """Saves a checkpoint file for training.
+        :param checkpoint_path:  path to checkpoint directory, will be created if not present
+        :param checkpoint_freq:  Number of epochs for checkpoint saving
+        :param prefix: Name of checkpoint file, will be {prefix}{current_epoch}.tar
+        :param max_checkpoints: Max number of concurrent checkpoint files in the directory.
+        """
+        super(SenderSaver, self).__init__(checkpoint_path, checkpoint_freq, prefix, max_checkpoints)
+        self.sender = sender
+
+    def get_checkpoint(self):
+        return Checkpoint(
+            epoch=self.epoch_counter,
+            model_state_dict=self.sender.state_dict(),
+            optimizer_state_dict={},
+        )

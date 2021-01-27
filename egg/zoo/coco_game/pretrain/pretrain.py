@@ -9,7 +9,7 @@ from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import RandomLogging, TensorboardLogger, RlScheduler
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
-from egg.zoo.coco_game.pretrain.game import PretrainGame
+from egg.zoo.coco_game.pretrain.game import PretrainGame, SenderSaver
 from egg.zoo.coco_game.utils.hypertune import hypertune
 from egg.zoo.coco_game.utils.utils import console, dump_params, parse_arguments, \
     define_project_dir, get_class_weight
@@ -54,6 +54,13 @@ def pretrain(params=None):
         ),
         CheckpointSaver(
             checkpoint_path=opts.checkpoint_dir,
+            checkpoint_freq=opts.checkpoint_freq,
+            prefix="epoch",
+            max_checkpoints=10,
+        ),
+        SenderSaver(
+            sender=sender,
+            checkpoint_path=opts.checkpoint_dir+"/Sender",
             checkpoint_freq=opts.checkpoint_freq,
             prefix="epoch",
             max_checkpoints=10,

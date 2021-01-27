@@ -63,7 +63,7 @@ arch_args=(
   "--sender_hidden"
   "128"
   "--receiver_hidden"
-  "64"
+  "128"
   "--receiver_num_layers"
   "1"
   "--sender_num_layers"
