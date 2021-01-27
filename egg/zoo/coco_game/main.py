@@ -10,6 +10,7 @@ from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging, RlScheduler
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
+from egg.zoo.coco_game.modeligOthers.reinforce_wrappers import SenderReceiverRnnReinforceModeling
 from egg.zoo.coco_game.utils.hypertune import hypertune
 from egg.zoo.coco_game.utils.utils import console, dump_params, get_images, define_project_dir, \
     get_class_weight, parse_arguments
@@ -26,7 +27,7 @@ def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Sender receiver wrappers
     ######################################
-    sender = core.RnnSenderReinforce(
+    sender = RnnSenderReinforceModeling(
         sender,
         vocab_size=opts.vocab_size,
         embed_dim=opts.sender_embedding,
@@ -54,7 +55,7 @@ def get_game(feat_extractor, opts, class_weights=None):
         logging_step=opts.test_logging_step, store_prob=opts.test_log_prob
     )
 
-    game = core.SenderReceiverRnnReinforce(
+    game = SenderReceiverRnnReinforceModeling(
         sender,
         receiver,
         loss=loss_init(
