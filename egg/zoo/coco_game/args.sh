@@ -55,7 +55,7 @@ arch_args=(
   "--image_type"
   "both"
   "--image_union"
-  "cat"
+  "mul"
   "--image_resize"
   "224"
   "--head_choice"
