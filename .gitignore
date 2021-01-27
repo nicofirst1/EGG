@@ -111,3 +111,5 @@ venv.bak/
 
 egg/zoo/coco_game/*Logs/
 
+
+egg/zoo/coco_game/pretrain/*Logs/
