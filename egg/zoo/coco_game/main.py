@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+from egg.core.baselines import BuiltInBaseline, MeanBaseline
 
 from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
@@ -67,6 +68,7 @@ def get_game(feat_extractor, opts, class_weights=None):
         receiver_entropy_coeff=0,
         train_logging_strategy=train_log,
         test_logging_strategy=test_log,
+        baseline_type=MeanBaseline,
     )
     return game, dict(train=train_log, test=test_log)
 
