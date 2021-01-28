@@ -70,8 +70,6 @@ class Losses:
         return loss, metrics
 
 
-
-
 def get_accuracy(pred_class: torch.Tensor, true_class: torch.Tensor) -> torch.Tensor:
     acc = (torch.argmax(pred_class, dim=1) == true_class).sum()
     acc = torch.div(acc, pred_class.shape[0])
@@ -102,5 +100,5 @@ def get_kl(pred_classes: torch.Tensor, targets, weights=None):
         kl *= weights
 
     kl = kl.mean(dim=1)
-    assert all(kl>=0),"Some parametrs of the KL are <0"
+    assert all(kl >= 0), "Some parametrs of the KL are <0"
     return kl
