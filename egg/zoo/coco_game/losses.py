@@ -44,6 +44,8 @@ class Losses:
             receiver_input,
             receiver_output,
             labels,
+            sender_output=None,
+
     ):
         """
         Estimate l1 and cross entropy loss. Adds it to final loss
@@ -60,9 +62,14 @@ class Losses:
         kl_loss = get_kl(receiver_output, label_class, weights=self.class_weights)
         metrics["kl_loss"] = kl_loss
 
-        acc = get_accuracy(receiver_output, label_class)
-        acc = acc.unsqueeze(dim=-1)
-        metrics["class_accuracy"] = acc
+        rec_acc = get_accuracy(receiver_output, label_class)
+        rec_acc = rec_acc.unsqueeze(dim=-1)
+        metrics["receiver_accuracy"] = rec_acc
+
+        if sender_output is not None:
+            send_acc = get_accuracy(sender_output, label_class)
+            send_acc = send_acc.unsqueeze(dim=-1)
+            metrics["sender_accuracy"] = send_acc
 
         loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda
 

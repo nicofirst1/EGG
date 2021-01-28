@@ -98,14 +98,15 @@ class CustomCommunication(CommunicationRnnReinforce):
     def forward(
             self, sender, receiver, loss, sender_input, labels, receiver_input=None
     ):
-        message, log_prob_s, entropy_s, sender_out = sender(sender_input)
+        message, log_prob_s, entropy_s, sender_output = sender(sender_input)
         message_length = find_lengths(message)
         receiver_output, log_prob_r, entropy_r = receiver(
             message, receiver_input, message_length
         )
 
         loss, aux_info = loss(
-            sender_input, message, receiver_input, receiver_output, labels
+            sender_input=sender_input, sender_output=sender_output, message=message, receiver_input=receiver_input,
+            receiver_output=receiver_output, labels=labels
         )
 
         # the entropy of the outputs of S before and including the eos symbol - as we don't care about what's after
