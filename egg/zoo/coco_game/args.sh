@@ -11,7 +11,7 @@ train_args=(
   "--batch_size"
   "128"
   "--n_epochs"
-  "4"
+  "20"
   "--train_data_perc"
   "1"
   "--test_data_perc"

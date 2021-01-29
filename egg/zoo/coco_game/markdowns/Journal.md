@@ -168,6 +168,19 @@ correctly classify the image with a 60% accuracy
 
 Optimal value: `head_choice= signal_expansion_mul`
 
-## Embeddings ***
+## Pretrained
 
-todo
+In this setting the pretrained module is taken into consideration. Such modules trains the sender on the classification
+task using an additional linear layer of size [hidden dim, num classes] which is basically a map from the internal
+hidden size (which will later form the message) and the class.
+
+As for the first result: training the sender for 40 epochs achieves an accuracy of 75% with conventional architectures.
+Although a slight increase can be observed when using `image_type=both & image_union= cat` the `image_union = mul` has
+been chosen since it performs better in cooperation with the receiver.
+
+Using this pretrained sender vs a new one achieves better scores on the sender-receiver game (+4%) bringing the receiver
+accuracy to a stable 72% (the highest value so far). The information coming from the sender class accuracy further
+highlights this difference. Indeed when the sender has not been pretrained on the task its accuracy does not surpass the
+pure random change (7% with 15 classes). On the other hand it must be said that no training is performed in order to
+increase such accuracy ***.
+ 
