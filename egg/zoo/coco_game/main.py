@@ -62,6 +62,7 @@ def get_game(feat_extractor, opts, class_weights=None):
         loss=loss_init(
             cross_lambda=opts.cross_lambda,
             kl_lambda=opts.kl_lambda,
+            f_lambda=opts.f_lambda,
             batch_size=opts.batch_size,
             class_weights=class_weights,
         ),

@@ -178,7 +178,14 @@ def parse_arguments(params=None):
         "--kl_lambda",
         type=float,
         default=1,
-        help="Weight for cross Kullback-Leibler divergence loss for classification task.",
+        help="Weight for Kullback-Leibler divergence loss for classification task.",
+    )
+
+    parser.add_argument(
+        "--f_lambda",
+        type=float,
+        default=1,
+        help="Weight for Focal loss for classification task.",
     )
 
     parser.add_argument(

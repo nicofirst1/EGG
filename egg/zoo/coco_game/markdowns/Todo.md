@@ -2,8 +2,14 @@
 
 ## Preprocessing
 
-- The sender is learning to predict the classes with the receiver, it should be that the sender alrready know how to
-  predict the classes with some degree of accuracy. So a pretraining of the sender model should be done first
+- The sender is learning to predict the classes with the receiver, it should be that the sender already know how to
+  predict the classes with some degree of accuracy. So a pretraining of the sender model should be done first [X]
+  
+## FlatHead
+- Following the papers FCOS and E2E Detection with FCN there should be at least 4 convolutional heads in the flathead
+
+## Loss
+- use focal loss
 
 # Old TODO
 ## Input

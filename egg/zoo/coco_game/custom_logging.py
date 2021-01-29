@@ -85,7 +85,7 @@ class TensorboardLogger(Callback):
         self.class_map = class_map
         self.get_images = get_image_method
 
-        self.embeddings_log_step = 2
+        self.embeddings_log_step = 4
         self.log_conv = False
         self.log_graph = False
         self.embedding_num = 300

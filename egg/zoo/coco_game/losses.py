@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 from egg.zoo.coco_game.utils.utils import get_labels
 
@@ -9,6 +10,7 @@ from egg.zoo.coco_game.utils.utils import get_labels
 def loss_init(
         cross_lambda: float,
         kl_lambda: float,
+        f_lambda: float,
         batch_size: int,
         class_weights: torch.Tensor,
 ):
@@ -16,14 +18,48 @@ def loss_init(
     Init loss and return function
     """
 
+    focal_loss = FocalLoss(gamma=2)
+
     losses = Losses(
         cross_lambda=cross_lambda,
         kl_lambda=kl_lambda,
+        f_lambda=f_lambda,
         batch_size=batch_size,
         class_weights=class_weights,
+        focal_loss=focal_loss
     )
 
     return losses.final_loss
+
+
+class FocalLoss(torch.nn.Module):
+    def __init__(self, gamma=0, alpha=None):
+        super(FocalLoss, self).__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+        if isinstance(alpha, (float, int)): self.alpha = torch.Tensor([alpha, 1 - alpha])
+        if isinstance(alpha, list): self.alpha = torch.Tensor(alpha)
+
+    def forward(self, input, target):
+        if input.dim() > 2:
+            input = input.view(input.size(0), input.size(1), -1)  # N,C,H,W => N,C,H*W
+            input = input.transpose(1, 2)  # N,C,H*W => N,H*W,C
+            input = input.contiguous().view(-1, input.size(2))  # N,H*W,C => N*H*W,C
+        target = target.view(-1, 1)
+
+        logpt = F.log_softmax(input, dim=1)
+        logpt = logpt.gather(1, target)
+        logpt = logpt.view(-1)
+        pt = Variable(logpt.data.exp())
+
+        if self.alpha is not None:
+            if self.alpha.type() != input.data.type():
+                self.alpha = self.alpha.type_as(input.data)
+            at = self.alpha.gather(0, target.data.view(-1))
+            logpt = logpt * Variable(at)
+
+        loss = -1 * (1 - pt) ** self.gamma * logpt
+        return loss
 
 
 @dataclass
@@ -34,8 +70,10 @@ class Losses:
 
     cross_lambda: float
     kl_lambda: float
+    f_lambda: float
     batch_size: int
     class_weights: torch.Tensor
+    focal_loss: FocalLoss
 
     def final_loss(
             self,
@@ -66,6 +104,9 @@ class Losses:
         else:
             output = receiver_output
 
+        f_loss = self.focal_loss(output, label_class)
+        metrics["f_loss"] = f_loss
+
         x_loss = get_cross_entropy(output, label_class, weights=self.class_weights)
         metrics["x_loss"] = x_loss
 
@@ -82,7 +123,7 @@ class Losses:
             send_acc = send_acc.unsqueeze(dim=-1)
             metrics["sender_accuracy"] = send_acc
 
-        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda
+        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda + f_loss * self.f_lambda
 
         metrics["custom_loss"] = loss
         return loss, metrics

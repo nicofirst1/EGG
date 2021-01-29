@@ -15,6 +15,7 @@
 
 ### Input
 
+- Use multi-scale feature map coming from pretrained vision model. 
 - Use video
 - Use biased test/train
     - Bias on objects dimensions
@@ -22,7 +23,7 @@
     - Bias on object colors (?)
     - Bias on object category
 
-- Reduce number of classes
+- Reduce number of classes [X]
 
 ### Modeling others
 

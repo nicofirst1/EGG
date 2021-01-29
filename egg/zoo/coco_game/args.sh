@@ -94,6 +94,8 @@ loss_args=(
   "1.0"
   "--kl_lambda"
   "1.0"
+  "--f_lambda"
+  "1.0"
   "--use_class_weights"
   "True"
 
