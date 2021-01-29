@@ -48,7 +48,7 @@ class Losses:
 
     ):
         """
-        Estimate l1 and cross entropy loss. Adds it to final loss
+        Estimate complete loss, logs accuracy
         """
 
         metrics = {}
@@ -56,15 +56,26 @@ class Losses:
         res_dict = get_labels(labels)
         label_class = res_dict['class_id']
 
-        x_loss = get_cross_entropy(receiver_output, label_class, weights=self.class_weights)
+        # assert that we have an output to work on
+        if receiver_output is None and sender_output is None:
+            raise RuntimeError("Both sender and receiver output are None")
+        # either sender
+        elif receiver_output is None:
+            output = sender_output
+        # or receiver or both
+        else:
+            output = receiver_output
+
+        x_loss = get_cross_entropy(output, label_class, weights=self.class_weights)
         metrics["x_loss"] = x_loss
 
-        kl_loss = get_kl(receiver_output, label_class, weights=self.class_weights)
+        kl_loss = get_kl(output, label_class, weights=self.class_weights)
         metrics["kl_loss"] = kl_loss
 
-        rec_acc = get_accuracy(receiver_output, label_class)
-        rec_acc = rec_acc.unsqueeze(dim=-1)
-        metrics["receiver_accuracy"] = rec_acc
+        if receiver_output is not None:
+            rec_acc = get_accuracy(output, label_class)
+            rec_acc = rec_acc.unsqueeze(dim=-1)
+            metrics["receiver_accuracy"] = rec_acc
 
         if sender_output is not None:
             send_acc = get_accuracy(sender_output, label_class)

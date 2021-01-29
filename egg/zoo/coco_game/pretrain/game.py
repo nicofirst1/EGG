@@ -5,10 +5,11 @@ from typing import Union
 import torch
 
 from egg.core.callbacks import Checkpoint, CheckpointSaver
+from egg.zoo.coco_game.losses import Losses
 
 
 class PretrainGame(torch.nn.Module):
-    def __init__(self, sender, loss, opts, train_strategy, test_strategy):
+    def __init__(self, sender, loss: Losses.final_loss, opts, train_strategy, test_strategy):
         super().__init__()
         self.sender = sender
         self.criterion = loss
@@ -18,7 +19,9 @@ class PretrainGame(torch.nn.Module):
 
     def forward(self, sender_input, labels, receiver_input=None):
         outputs = self.sender(sender_input)
-        loss, metrics = self.criterion(sender_input, None, None, outputs, labels)
+
+        loss, metrics = self.criterion(sender_input=sender_input, message=None, receiver_input=None,
+                                       receiver_output=None, labels=labels, sender_output=outputs)
         loss = loss.mean()
 
         logging_strategy = (
