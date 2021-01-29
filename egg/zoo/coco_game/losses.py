@@ -8,9 +8,9 @@ from egg.zoo.coco_game.utils.utils import get_labels
 
 
 def loss_init(
-        cross_lambda: float,
-        kl_lambda: float,
-        f_lambda: float,
+        lambda_cross: float,
+        lambda_kl: float,
+        lambda_f: float,
         batch_size: int,
         class_weights: torch.Tensor,
 ):
@@ -21,9 +21,9 @@ def loss_init(
     focal_loss = FocalLoss(gamma=2)
 
     losses = Losses(
-        cross_lambda=cross_lambda,
-        kl_lambda=kl_lambda,
-        f_lambda=f_lambda,
+        lambda_cross=lambda_cross,
+        lambda_kl=lambda_kl,
+        lambda_f=lambda_f,
         batch_size=batch_size,
         class_weights=class_weights,
         focal_loss=focal_loss
@@ -68,9 +68,9 @@ class Losses:
     Stores losses functions together with weights
     """
 
-    cross_lambda: float
-    kl_lambda: float
-    f_lambda: float
+    lambda_cross: float
+    lambda_kl: float
+    lambda_f: float
     batch_size: int
     class_weights: torch.Tensor
     focal_loss: FocalLoss
@@ -123,7 +123,7 @@ class Losses:
             send_acc = send_acc.unsqueeze(dim=-1)
             metrics["sender_accuracy"] = send_acc
 
-        loss = x_loss * self.cross_lambda + kl_loss * self.kl_lambda + f_loss * self.f_lambda
+        loss = x_loss * self.lambda_cross + kl_loss * self.lambda_kl + f_loss * self.lambda_f
 
         metrics["custom_loss"] = loss
         return loss, metrics

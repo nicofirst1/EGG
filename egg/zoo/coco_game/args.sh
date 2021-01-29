@@ -11,7 +11,7 @@ train_args=(
   "--batch_size"
   "128"
   "--n_epochs"
-  "20"
+  "10"
   "--train_data_perc"
   "1"
   "--test_data_perc"
@@ -90,11 +90,11 @@ data_args=(
 )
 
 loss_args=(
-  "--cross_lambda"
+  "--lambda_cross"
   "1.0"
-  "--kl_lambda"
+  "--lambda_kl"
   "1.0"
-  "--f_lambda"
+  "--lambda_f"
   "1.0"
   "--use_class_weights"
   "True"

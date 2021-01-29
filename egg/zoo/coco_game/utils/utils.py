@@ -168,21 +168,21 @@ def parse_arguments(params=None):
     #################################################
 
     parser.add_argument(
-        "--cross_lambda",
+        "--lambda_cross",
         type=float,
         default=1,
         help="Weight for cross entropy loss for classification task.",
     )
 
     parser.add_argument(
-        "--kl_lambda",
+        "--lambda_kl",
         type=float,
         default=1,
         help="Weight for Kullback-Leibler divergence loss for classification task.",
     )
 
     parser.add_argument(
-        "--f_lambda",
+        "--lambda_f",
         type=float,
         default=1,
         help="Weight for Focal loss for classification task.",

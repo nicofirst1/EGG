@@ -31,8 +31,9 @@ def pretrain(params=None):
     rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=opts.decay_rate)
 
     criterion = loss_init(
-        cross_lambda=opts.cross_lambda,
-        kl_lambda=opts.kl_lambda,
+        lambda_cross=opts.lambda_cross,
+        lambda_kl=opts.lambda_kl,
+        lambda_f=opts.lambda_f,
         batch_size=opts.batch_size,
         class_weights=class_weights,
     )
