@@ -114,14 +114,14 @@ class Losses:
         metrics["kl_loss"] = kl_loss
 
         if receiver_output is not None:
-            rec_acc = get_accuracy(output, label_class)
+            rec_acc = get_accuracy(receiver_output, label_class)
             rec_acc = rec_acc.unsqueeze(dim=-1)
-            metrics["receiver_accuracy"] = rec_acc
+            metrics["accuracy_receiver"] = rec_acc
 
         if sender_output is not None:
             send_acc = get_accuracy(sender_output, label_class)
             send_acc = send_acc.unsqueeze(dim=-1)
-            metrics["sender_accuracy"] = send_acc
+            metrics["accuracy_sender"] = send_acc
 
         loss = x_loss * self.lambda_cross + kl_loss * self.lambda_kl + f_loss * self.lambda_f
 

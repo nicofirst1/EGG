@@ -206,23 +206,19 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
-        "--flat_choice",
+        "--flat_choice_sender",
         type=str,
         default="AvgPool",
         help="Choose the flat module type",
         choices=list(FLAT_CHOICES.keys()),
     )
+
     parser.add_argument(
-        "--sender_flat_size",
-        type=int,
-        default=1,
-        help="Choose the flat module size",
-    )
-    parser.add_argument(
-        "--receiver_flat_size",
-        type=int,
-        default=1,
-        help="Choose the flat module size",
+        "--flat_choice_receiver",
+        type=str,
+        default="AvgPool",
+        help="Choose the flat module type",
+        choices=list(FLAT_CHOICES.keys()),
     )
 
     parser.add_argument(

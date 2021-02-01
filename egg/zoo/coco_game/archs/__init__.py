@@ -14,8 +14,7 @@ HEAD_CHOICES = dict(
 FLAT_CHOICES = dict(
     AvgPool=AvgPool,
     MaxPool=MaxPool,
-    AvgMaxPoolCat=AvgMaxPoolCat,
-    AvgMaxPoolMul=AvgMaxPoolMul,
+    Conv1Sigmoid=Conv1Sigmoid,
 
 )
 
