@@ -183,4 +183,46 @@ accuracy to a stable 72% (the highest value so far). The information coming from
 highlights this difference. Indeed when the sender has not been pretrained on the task its accuracy does not surpass the
 pure random change (7% with 15 classes). On the other hand it must be said that no training is performed in order to
 increase such accuracy ***.
- 
+
+## Flat Head Choice
+
+The flat head choice refers to the class in [flats](../archs/flats.py). The most basic version is a simple average
+pooling which takes as input the 3D data coming from the pretrained vision model and performs an average poo (as if it
+was the last original layer of resnet).
+
+Most of the experiments were done in the pretrain framework, where the sender is pretrained on the classification task
+without the receiver, but some were performed on the communication task too.
+
+### Pretrain Framework
+
+Various architectures were tested in this framework, for everyone the feature size was 256 (more experiments with
+different sizes are necessary ***), for those with more than one conv the stride increased in the following way 1,2,3,4:
+
+- Simple convolutions of various depth: in this category the networks are simple convolution one after the other such as
+  Conv1/Conv2/Conv3/Conv4
+- Convolution with batch norm: adds a batch normalization after each convolution Conv1BatchNorm
+- Convolution with sigmoid: as reported in the paper FCOS, a sigmoid operation after the convolution helps with the
+  classification task.
+- Other types of arch aimed at understanding the relevance of some parameters
+
+From the experiments it is clear that adding a sigmoid helps with the overall performance (+3%). No significant
+improvement is seen with more convolutions, so keeping the number to one both reduces the total parameters and the
+training time. Batch normalization does not help even when multiple convolutions are present, moreover the combination
+of batch norm, and a sigmoid layer yields worse result than the two separate (it is important to notice how the agent
+performs better when the sigmoid is place after the batch norm). Finally, keeping the stride constant yields the worst
+results so far.
+
+Optimal Value: Single convolution with sigmoid
+
+### Communication Framework
+
+Experimenting with a reduced set of archs on the communication framework resulted in:
+
+- Random classification when using the conv1Sigmoid on the sender without pretraining
+- +6% when the sender uses average pool and the receiver Conv1Sigmoid
+- Best results so far (+2% ) with a pretrained sender , independently of the receiver arch.
+
+On the other hand it is interesting to notice that the sender accuracy does not reach the performance yielded in the
+pretraining phase (-30%). Indeed, the sender performance does not even start from the previous one. It must be specified
+that there is no optimization in respect to the sender performance in this framework.
+

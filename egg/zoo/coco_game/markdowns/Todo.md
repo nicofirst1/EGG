@@ -7,9 +7,16 @@
   
 ## FlatHead
 - Following the papers FCOS and E2E Detection with FCN there should be at least 4 convolutional heads in the flathead
+- Use sigmoid after conv [X]
+- Test recevier with multiple convs
+
+
 
 ## Loss
-- use focal loss
+- use focal loss [X]
+- try sender class prediction 
+- try sender receiver prediction 
+
 
 # Old TODO
 ## Input
