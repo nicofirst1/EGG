@@ -8,7 +8,7 @@ from egg.zoo.coco_game.utils.utils import load_pretrained_sender
 
 
 def build_sender(feature_extractor, opts, pretrain=False):
-    flat_module = get_flat(opts.sender_flat_choice)()
+    flat_module = get_flat(opts.flat_choice_sender)()
 
     sender = VisionSender(
         feature_extractor,

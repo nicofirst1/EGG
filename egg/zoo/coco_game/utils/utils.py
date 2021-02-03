@@ -448,3 +448,5 @@ def load_pretrained_sender(path, sender: torch.nn.Module):
         console.log(f"# loading trainer state from {latest_file}")
         checkpoint = torch.load(latest_file)
         sender.load_state_dict(checkpoint.model_state_dict)
+    else:
+        console.log(f"Could not state from {path}")
