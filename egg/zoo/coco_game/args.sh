@@ -11,13 +11,13 @@ train_args=(
   "--batch_size"
   "128"
   "--n_epochs"
-  "50"
+  "4"
   "--train_data_perc"
   "1"
   "--test_data_perc"
   "1.0"
   "--num_workers"
-  "4"
+  "8"
   "--lr"
   "0.001"
   "--decay_rate"
@@ -40,9 +40,9 @@ log_args=(
   "--checkpoint_freq"
   "1"
   "--train_logging_step"
-  "50"
+  "300"
   "--test_logging_step"
-  "5"
+  "30"
   "--use_rich_traceback"
 
 )
@@ -84,9 +84,9 @@ data_args=(
   "--min_area"
   "0"
   "--num_classes"
-  "15"
+  "80"
   "--skip_first"
-  "5"
+  "0"
 )
 
 loss_args=(
