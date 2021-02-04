@@ -230,6 +230,7 @@ class TensorboardLogger(Callback):
         metrics = logs.aux
         metrics = {k: v.mean() for k, v in metrics.items()}
         metrics['loss'] = loss
+        metrics = {f"hparams/{k}": v for k, v in metrics.items()}
 
         self.writer.add_hparams(hparam_dict=self.hparam, metric_dict=metrics, run_name="hparams")
 
