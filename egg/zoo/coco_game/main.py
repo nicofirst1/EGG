@@ -8,7 +8,7 @@ from egg.core import CheckpointSaver, ProgressBarLogger
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging, RlScheduler
+from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging, RlScheduler, EarlyStopperAccuracy
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.sender_reinforce import CustomSenderReceiverRnnReinforce, CustomSenderReinforce
@@ -119,6 +119,7 @@ def main(params=None):
             test_coco=test_data.dataset.coco
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
+        EarlyStopperAccuracy(min_threshold=0.3, min_increase=0.05),
     ]
 
     trainer = core.Trainer(

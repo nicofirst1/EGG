@@ -10,6 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 from egg.core import Callback, Interaction, LoggingStrategy
+from egg.core.early_stopping import EarlyStopper
 from egg.zoo.coco_game.utils.utils import get_labels, console
 
 
@@ -515,3 +516,49 @@ class RlScheduler(Callback):
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
         self.rl_optimizer.step()
+
+
+class EarlyStopperAccuracy(EarlyStopper):
+    """
+    Implements early stopping logic that stops training when a threshold on a metric
+    is achieved.
+    """
+
+    def __init__(
+            self, min_threshold: float, min_increase: float
+    ) -> None:
+        """
+        :param threshold: early stopping threshold for the validation set accuracy
+            (assumes that the loss function returns the accuracy under name `field_name`)
+        :param field_name: the name of the metric return by loss function which should be evaluated against stopping
+            criterion (default: "acc")
+        :param validation: whether the statistics on the validation (or training, if False) data should be checked
+        """
+        super(EarlyStopperAccuracy, self).__init__(True)
+        self.min_threshold = min_threshold
+        self.min_increase = min_increase
+        self.field_name = "accuracy_receiver"
+
+    def should_stop(self) -> bool:
+
+        if len(self.validation_stats) < 2:
+            # wait at least two epochs for end
+            return False
+
+        loss, logs = self.validation_stats[-1]
+        loss, prev_logs = self.validation_stats[-2]
+
+        mean = logs.aux[self.field_name].mean()
+        prev_mean = prev_logs.aux[self.field_name].mean()
+
+        if mean < self.min_threshold:
+            # if the mean is still below the minimum thrs, dont stop
+            return False
+
+        if mean - prev_mean > self.min_increase:
+            # if the increase is above the min thr, dont stop
+
+            return False
+
+        console.log(f"Early stopping! Current val {mean}, prev val {prev_mean}")
+        return True
