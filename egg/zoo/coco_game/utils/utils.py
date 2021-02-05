@@ -119,7 +119,8 @@ def define_project_dir(opts):
 
     opts.log_dir_uid = join(opts.log_dir, opts.log_dir_uid)
     # make log dir root for logging paths
-    opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
+    if opts.checkpoint_dir is not None:
+        opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
 
 
@@ -355,6 +356,13 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
+        "--sender_receiver_hidden",
+        type=int,
+        default=None,
+        help="Size of the hidden layer of both Sender Receiver (default: None)",
+    )
+
+    parser.add_argument(
         "--receiver_num_layers",
         type=int,
         default=2,
@@ -416,6 +424,11 @@ def parse_arguments(params=None):
 
     # add core opt and print
     opt = core.init(parser, params=params)
+
+    if opt.sender_receiver_hidden is not None:
+        opt.sender_hidden = opt.sender_receiver_hidden
+        opt.receiver_hidden = opt.sender_receiver_hidden
+
     console.log(sorted(vars(opt).items()))
 
     if opt.use_rich_traceback:

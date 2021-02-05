@@ -69,6 +69,7 @@ class SimpleHead(HeadModule):
     def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
         out = torch.cat((vision_features, signal), dim=1)
         class_logits = self.head_class(out).clone()
+        class_logits = torch.relu(class_logits)
 
         return class_logits
 
