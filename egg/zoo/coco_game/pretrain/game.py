@@ -9,13 +9,13 @@ from egg.zoo.coco_game.losses import Losses
 
 
 class PretrainGame(torch.nn.Module):
-    def __init__(self, sender, loss: Losses.final_loss, opts, train_strategy, test_strategy):
+    def __init__(self, sender, loss: Losses.final_loss, opts, train_strategy, val_strategy):
         super().__init__()
         self.sender = sender
         self.criterion = loss
         self.opts = opts
         self.train_logging_strategy = train_strategy
-        self.test_logging_strategy = test_strategy
+        self.val_logging_strategy = val_strategy
 
     def forward(self, sender_input, labels, receiver_input=None):
         outputs = self.sender(sender_input)
@@ -25,7 +25,7 @@ class PretrainGame(torch.nn.Module):
         loss = loss.mean()
 
         logging_strategy = (
-            self.train_logging_strategy if self.training else self.test_logging_strategy
+            self.train_logging_strategy if self.training else self.val_logging_strategy
         )
         interaction = logging_strategy.filtered_interaction(
             sender_input=sender_input,

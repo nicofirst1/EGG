@@ -14,7 +14,7 @@ train_args=(
   "4"
   "--train_data_perc"
   "1"
-  "--test_data_perc"
+  "--val_data_perc"
   "1.0"
   "--num_workers"
   "8"
@@ -29,7 +29,7 @@ train_args=(
 log_args=(
   "--train_log_prob"
   "0.0"
-  "--test_log_prob"
+  "--val_log_prob"
   "0.0"
   "--log_dir"
   "$log_dir"
@@ -41,7 +41,7 @@ log_args=(
   "1"
   "--train_logging_step"
   "300"
-  "--test_logging_step"
+  "--val_logging_step"
   "30"
   "--use_rich_traceback"
 

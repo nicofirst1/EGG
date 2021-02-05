@@ -524,7 +524,7 @@ class CommunicationRnnReinforce(nn.Module):
             if train_logging_strategy is None
             else train_logging_strategy
         )
-        self.test_logging_strategy = (
+        self.val_logging_strategy = (
             LoggingStrategy()
             if test_logging_strategy is None
             else test_logging_strategy
@@ -588,7 +588,7 @@ class CommunicationRnnReinforce(nn.Module):
         aux_info["weighted_entropy"] = weighted_entropy.unsqueeze(dim=0).float() # will be averaged
 
         logging_strategy = (
-            self.train_logging_strategy if self.training else self.test_logging_strategy
+            self.train_logging_strategy if self.training else self.val_logging_strategy
         )
         interaction = logging_strategy.filtered_interaction(
             sender_input=sender_input,

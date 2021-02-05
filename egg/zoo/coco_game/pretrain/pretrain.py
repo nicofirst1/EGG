@@ -50,7 +50,7 @@ def pretrain(params=None):
         ProgressBarLogger(
             n_epochs=opts.n_epochs,
             train_data_len=len(train_data),
-            test_data_len=len(test_data),
+            val_data_len=len(test_data),
             use_info_table=False,
         ),
         CheckpointSaver(
@@ -69,7 +69,7 @@ def pretrain(params=None):
         TensorboardLogger(
             tensorboard_dir=opts.tensorboard_dir,
             train_logging_step=opts.train_logging_step,
-            test_logging_step=opts.test_logging_step,
+            val_logging_step=opts.test_logging_step,
             resume_training=opts.resume_training,
             loggers=loggers,
             game=None,

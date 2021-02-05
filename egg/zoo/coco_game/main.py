@@ -52,8 +52,8 @@ def get_game(feat_extractor, opts, class_weights=None):
     train_log = RandomLogging(
         logging_step=opts.train_logging_step, store_prob=opts.train_log_prob
     )
-    test_log = RandomLogging(
-        logging_step=opts.test_logging_step, store_prob=opts.test_log_prob
+    val_log = RandomLogging(
+        logging_step=opts.val_logging_step, store_prob=opts.val_log_prob
     )
 
     game = CustomSenderReceiverRnnReinforce(
@@ -69,10 +69,10 @@ def get_game(feat_extractor, opts, class_weights=None):
         sender_entropy_coeff=opts.sender_entropy_coeff,
         receiver_entropy_coeff=0,
         train_logging_strategy=train_log,
-        test_logging_strategy=test_log,
+        val_logging_strategy=val_log,
         baseline_type=MeanBaseline,
     )
-    return game, dict(train=train_log, test=test_log)
+    return game, dict(train=train_log, val=val_log)
 
 
 @hypertune
@@ -82,7 +82,7 @@ def main(params=None):
     dump_params(opts)
     model = initialize_model()
 
-    train_data, test_data = get_data(opts)
+    train_data, val_data = get_data(opts)
 
     class_weights = get_class_weight(train_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)
@@ -91,13 +91,13 @@ def main(params=None):
     rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=opts.decay_rate)
 
     # optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
-    get_imgs = get_images(train_data.dataset.get_images, test_data.dataset.get_images)
+    get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
 
     callbacks = [
         ProgressBarLogger(
             n_epochs=opts.n_epochs,
             train_data_len=len(train_data),
-            test_data_len=len(test_data),
+            val_data_len=len(val_data),
             use_info_table=False,
         ),
         CheckpointSaver(
@@ -109,14 +109,14 @@ def main(params=None):
         TensorboardLogger(
             tensorboard_dir=opts.tensorboard_dir,
             train_logging_step=opts.train_logging_step,
-            test_logging_step=opts.test_logging_step,
+            val_logging_step=opts.val_logging_step,
             resume_training=opts.resume_training,
             loggers=loggers,
             game=game,
             class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
             get_image_method=get_imgs,
             hparams=vars(opts),
-            test_coco=test_data.dataset.coco
+            val_coco=val_data.dataset.coco
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
         EarlyStopperAccuracy(min_threshold=0.3, min_increase=0.05),
@@ -126,7 +126,7 @@ def main(params=None):
         game=game,
         optimizer=optimizer,
         train_data=train_data,
-        validation_data=test_data,
+        validation_data=val_data,
         callbacks=callbacks,
     )
     if opts.resume_training:

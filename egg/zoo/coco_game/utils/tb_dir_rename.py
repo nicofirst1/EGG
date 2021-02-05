@@ -12,7 +12,7 @@ UUID_LEN = 8
 LOG_DIR_NAME_SKIP = ["random_signal", "best"]
 PARAMS_SKIP = set(
     ['num_workers', "tensorboard_dir", "random_seed", "resume_training", "checkpoint_dir", "log_dir", "n_epochs",
-     "checkpoint_freq", "use_rich_traceback", "log_dir_uid", "train_log_prob", "test_log_prob", "test_logging_step",
+     "checkpoint_freq", "use_rich_traceback", "log_dir_uid", "train_log_prob", "val_log_prob", "val_logging_step",
      "train_logging_step", "data_root"])
 
 

@@ -51,7 +51,7 @@ class CustomSenderReceiverRnnReinforce(torch.nn.Module):
             length_cost: float = 0.0,
             baseline_type: Baseline = MeanBaseline,
             train_logging_strategy: LoggingStrategy = None,
-            test_logging_strategy: LoggingStrategy = None,
+            val_logging_strategy: LoggingStrategy = None,
     ):
         """
         :param sender: sender agent
@@ -70,7 +70,7 @@ class CustomSenderReceiverRnnReinforce(torch.nn.Module):
         :param receiver_entropy_coeff: entropy regularization coeff for receiver
         :param length_cost: the penalty applied to Sender for each symbol produced
         :param baseline_type: Callable, returns a baseline instance (eg a class specializing core.baselines.Baseline)
-        :param train_logging_strategy, test_logging_strategy: specify what parts of interactions to persist for
+        :param train_logging_strategy, val_logging_strategy: specify what parts of interactions to persist for
             later analysis in callbacks
         """
         super(CustomSenderReceiverRnnReinforce, self).__init__()
@@ -84,7 +84,7 @@ class CustomSenderReceiverRnnReinforce(torch.nn.Module):
             length_cost,
             baseline_type,
             train_logging_strategy,
-            test_logging_strategy,
+            val_logging_strategy,
         )
 
     def forward(self, sender_input, labels, receiver_input=None):
@@ -154,7 +154,7 @@ class CustomCommunication(CommunicationRnnReinforce):
         aux_info["weighted_entropy"] = weighted_entropy.unsqueeze(dim=0).float()  # will be averaged
 
         logging_strategy = (
-            self.train_logging_strategy if self.training else self.test_logging_strategy
+            self.train_logging_strategy if self.training else self.val_logging_strategy
         )
         interaction = logging_strategy.filtered_interaction(
             sender_input=sender_input,

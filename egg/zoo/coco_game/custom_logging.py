@@ -59,13 +59,13 @@ class TensorboardLogger(Callback):
             tensorboard_dir: str,
             loggers: Dict[str, LoggingStrategy] = None,
             train_logging_step: int = 50,
-            test_logging_step: int = 20,
+            val_logging_step: int = 20,
             resume_training: bool = False,
             game: torch.nn.Module = None,
             class_map: Dict[int, str] = {},
             get_image_method=None,
             hparams=None,
-            test_coco: COCO = None,
+            val_coco: COCO = None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -73,7 +73,7 @@ class TensorboardLogger(Callback):
             tensorboard_dir: path to where to write metrics
             loggers: Dictionary containing the RandomLoggingStrategy, use to update the current batch value
             train_logging_step: number of batches to log in training
-            test_logging_step:  number of batches to log in testing
+            val_logging_step:  number of batches to log in validation
             resume_training: if the train is resumed, load previous global steps
             game: A torch module used to log the graph
         """
@@ -81,11 +81,11 @@ class TensorboardLogger(Callback):
         self.gs_file = join(tensorboard_dir, "gs.txt")
         self.message_file = Path(join(tensorboard_dir, "messages.csv"))
         self.train_log_step = train_logging_step
-        self.test_log_step = test_logging_step
+        self.val_log_step = val_logging_step
         self.train_gs = 0
-        self.test_gs = 0
+        self.val_gs = 0
         self.loggers = loggers
-        self.test_coco = test_coco
+        self.val_coco = val_coco
 
         self.game = game
         self.class_map = class_map
@@ -128,14 +128,14 @@ class TensorboardLogger(Callback):
             line = f.read()
 
         self.train_gs = int(line.split(",")[0])
-        self.test_gs = int(line.split(",")[1])
+        self.val_gs = int(line.split(",")[1])
 
     def save_gs(self):
         """
         Dump global steps from file
         """
         with open(self.gs_file, "w+") as f:
-            f.write(f"{self.train_gs},{self.test_gs}")
+            f.write(f"{self.train_gs},{self.val_gs}")
 
     def on_train_end(self):
         self.writer.close()
@@ -155,14 +155,14 @@ class TensorboardLogger(Callback):
             self.loggers["train"].cur_batch = 0
 
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
-        self.log_precision_recall(logs, phase="test", global_step=epoch)
+        self.log_precision_recall(logs, phase="val", global_step=epoch)
         self.log_messages_embedding(logs, is_train=False, global_step=epoch)
         self.log_message_file(logs, global_step=epoch)
         self.log_hparams(logs, loss)
         if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
         if self.loggers is not None:
-            self.loggers["test"].cur_batch = 0
+            self.loggers["val"].cur_batch = 0
 
         self.log_conv = False
 
@@ -173,7 +173,7 @@ class TensorboardLogger(Callback):
         if batch_id != 0:
             if batch_id % self.train_log_step == 0 and is_training:
                 self.log(loss.detach(), logs, is_training)
-            if batch_id % self.test_log_step == 0 and not is_training:
+            if batch_id % self.val_log_step == 0 and not is_training:
                 self.log(loss.detach(), logs, is_training)
 
     def log_receiver_output(
@@ -394,7 +394,7 @@ class TensorboardLogger(Callback):
         except KeyError:
             class_labels = None
 
-        phase = "train" if is_train else "test"
+        phase = "train" if is_train else "val"
 
         self.writer.add_embedding(
             messages,
@@ -409,7 +409,7 @@ class TensorboardLogger(Callback):
         Logs the csv with message
         """
 
-        if self.test_coco is None:
+        if self.val_coco is None:
             return
 
         res_dict = get_labels(logs.labels)
@@ -420,10 +420,10 @@ class TensorboardLogger(Callback):
         predictions = torch.softmax(predictions, dim=1)
         predictions = torch.argmax(predictions, dim=1)
 
-        true_class = [self.test_coco.cats[idx]['name'] for idx in true_class.tolist()]
+        true_class = [self.val_coco.cats[idx]['name'] for idx in true_class.tolist()]
 
         # get all other objects in image
-        other_ans = [self.test_coco.getAnnIds(x) for x in image_id.tolist()]
+        other_ans = [self.val_coco.getAnnIds(x) for x in image_id.tolist()]
 
         def get_cat_name(annotations):
             """
@@ -433,8 +433,8 @@ class TensorboardLogger(Callback):
             result = []
 
             for ann in annotations:
-                ann_id = self.test_coco.anns[ann]['category_id']
-                ann_name = self.test_coco.cats[ann_id]['name']
+                ann_id = self.val_coco.anns[ann]['category_id']
+                ann_name = self.val_coco.cats[ann_id]['name']
                 result.append(ann_name)
             return result
 
@@ -498,9 +498,9 @@ class TensorboardLogger(Callback):
             phase = "train"
             self.train_gs += 1
         else:
-            global_step = self.test_gs
-            phase = "test"
-            self.test_gs += 1
+            global_step = self.val_gs
+            phase = "val"
+            self.val_gs += 1
 
         self.save_gs()
         self.log_metrics(logs, phase, global_step, loss)

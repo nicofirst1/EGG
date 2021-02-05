@@ -336,7 +336,7 @@ def get_data(
     coco_val = CocoDetection(
         root=path2imgs + "val2017",
         ann_file=path2json + "instances_val2017.json",
-        perc_ids=opts.test_data_perc,
+        perc_ids=opts.val_data_perc,
         base_transform=base_trans,
         num_classes=opts.num_classes,
         skip_first=opts.skip_first,

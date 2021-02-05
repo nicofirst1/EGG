@@ -341,19 +341,19 @@ class ProgressBarLogger(Callback):
         self,
         n_epochs: int,
         train_data_len: int = 0,
-        test_data_len: int = 0,
+        val_data_len: int = 0,
         use_info_table: bool = True,
     ):
         """
         :param n_epochs: total number of epochs
         :param train_data_len: length of the dataset generation for training
-        :param test_data_len: length of the dataset generation for testing
+        :param val_data_len: length of the dataset generation for testing
         :param use_info_table: true to add an information table on top of the progress bar
         """
 
         self.n_epochs = n_epochs
         self.train_data_len = train_data_len
-        self.test_data_len = test_data_len
+        self.test_data_len = val_data_len
         self.progress = CustomProgress(
             TextColumn(
                 "[bold]Epoch {task.fields[cur_epoch]}/{task.fields[n_epochs]} | [blue]{task.fields[mode]}",

@@ -75,12 +75,12 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     return res
 
 
-def get_images(train_method, test_method):
+def get_images(train_method, val_method):
     def inner(image_ids: List[int], image_ann_ids: List[int], is_training: bool, img_size: Tuple[int, int]):
         if is_training:
             return train_method(image_ids, image_ann_ids, img_size)
         else:
-            return test_method(image_ids, image_ann_ids, img_size)
+            return val_method(image_ids, image_ann_ids, img_size)
 
     return inner
 
@@ -268,10 +268,10 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
-        "--test_log_prob",
+        "--val_log_prob",
         type=float,
         default=0.03,
-        help="Percentage of test interaction to save",
+        help="Percentage of val interaction to save",
     )
 
     parser.add_argument(
@@ -282,10 +282,10 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
-        "--test_logging_step",
+        "--val_logging_step",
         type=int,
         default=20,
-        help="Number of steps (in batches) before logging during testing",
+        help="Number of steps (in batches) before logging during validaiton",
     )
 
     #################################################
@@ -320,10 +320,10 @@ def parse_arguments(params=None):
         help="Size of the coco train dataset to be used",
     )
     parser.add_argument(
-        "--test_data_perc",
+        "--val_data_perc",
         type=float,
         default=1,
-        help="Size of the coco test dataset to be used",
+        help="Size of the coco val dataset to be used",
     )
     parser.add_argument(
         "--num_workers",
