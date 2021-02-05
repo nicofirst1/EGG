@@ -188,14 +188,14 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--lambda_kl",
         type=float,
-        default=1,
+        default=0,
         help="Weight for Kullback-Leibler divergence loss for classification task.",
     )
 
     parser.add_argument(
         "--lambda_f",
         type=float,
-        default=1,
+        default=0,
         help="Weight for Focal loss for classification task.",
     )
 
@@ -204,7 +204,7 @@ def parse_arguments(params=None):
         type=str2bool,
         nargs="?",
         const=True,
-        default=False,
+        default=True,
         help="Extract class weights from the dataset and pass them to the loss function",
     )
 
@@ -238,7 +238,7 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--image_type",
         type=str,
-        default="seg",
+        default="both",
         help="Choose the sender input type: seg(mented), image, both",
         choices=["seg", "img", "both"],
     )
@@ -276,28 +276,28 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--train_log_prob",
         type=float,
-        default=0.01,
+        default=0.0,
         help="Percentage of training interaction to save",
     )
 
     parser.add_argument(
         "--val_log_prob",
         type=float,
-        default=0.03,
+        default=0.0,
         help="Percentage of val interaction to save",
     )
 
     parser.add_argument(
         "--train_logging_step",
         type=int,
-        default=50,
+        default=300,
         help="Number of steps (in batches) before logging during training ",
     )
 
     parser.add_argument(
         "--val_logging_step",
         type=int,
-        default=20,
+        default=30,
         help="Number of steps (in batches) before logging during validaiton",
     )
 
@@ -315,14 +315,14 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--skip_first",
         type=int,
-        default=5,
+        default=0,
         help="Number of first classes to skip. Default 5 bc the first 5 classes are over represented in coco",
     )
 
     parser.add_argument(
         "--num_classes",
         type=int,
-        default=75,
+        default=80,
         help="Number of classes to use, 80 for all",
     )
 
@@ -352,19 +352,19 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--decay_rate",
         type=float,
-        default=1,
+        default=0.8,
         help="Decay rate for lr ",
     )
     parser.add_argument(
         "--sender_hidden",
         type=int,
-        default=16,
+        default=128,
         help="Size of the hidden layer of Sender (default: 10)",
     )
     parser.add_argument(
         "--receiver_hidden",
         type=int,
-        default=16,
+        default=128,
         help="Size of the hidden layer of Receiver (default: 10)",
     )
 
@@ -378,14 +378,14 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--receiver_num_layers",
         type=int,
-        default=2,
+        default=1,
         help="Number of rnn layers for receiver",
     )
 
     parser.add_argument(
         "--receiver_cell_type",
         type=str,
-        default="lstm",
+        default="gru",
         choices=["rnn", "lstm", "gru"],
         help="Type of RNN cell for receiver",
     )
@@ -393,14 +393,14 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--sender_num_layers",
         type=int,
-        default=2,
+        default=1,
         help="Number of rnn layers for sender",
     )
 
     parser.add_argument(
         "--sender_cell_type",
         type=str,
-        default="lstm",
+        default="gru",
         choices=["rnn", "lstm", "gru"],
         help="Type of RNN cell for sender",
     )
