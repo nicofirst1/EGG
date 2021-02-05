@@ -11,7 +11,7 @@ from torchvision.utils import make_grid
 
 from egg.core import Callback, Interaction, LoggingStrategy
 from egg.core.early_stopping import EarlyStopper
-from egg.zoo.coco_game.utils.utils import get_labels, console
+from egg.zoo.coco_game.utils.utils import console, get_labels
 
 
 class RandomLogging(LoggingStrategy):
@@ -26,14 +26,14 @@ class RandomLogging(LoggingStrategy):
         super().__init__(*args)
 
     def filtered_interaction(
-            self,
-            sender_input,
-            receiver_input,
-            labels,
-            message,
-            receiver_output,
-            message_length,
-            aux,
+        self,
+        sender_input,
+        receiver_input,
+        labels,
+        message,
+        receiver_output,
+        message_length,
+        aux,
     ):
         rnd = random.random()
         should_store = rnd < self.store_prob
@@ -55,17 +55,17 @@ class RandomLogging(LoggingStrategy):
 
 class TensorboardLogger(Callback):
     def __init__(
-            self,
-            tensorboard_dir: str,
-            loggers: Dict[str, LoggingStrategy] = None,
-            train_logging_step: int = 50,
-            val_logging_step: int = 20,
-            resume_training: bool = False,
-            game: torch.nn.Module = None,
-            class_map: Dict[int, str] = {},
-            get_image_method=None,
-            hparams=None,
-            val_coco: COCO = None,
+        self,
+        tensorboard_dir: str,
+        loggers: Dict[str, LoggingStrategy] = None,
+        train_logging_step: int = 50,
+        val_logging_step: int = 20,
+        resume_training: bool = False,
+        game: torch.nn.Module = None,
+        class_map: Dict[int, str] = {},
+        get_image_method=None,
+        hparams=None,
+        val_coco: COCO = None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -108,7 +108,9 @@ class TensorboardLogger(Callback):
         header = ["Epoch", "Message", "Pred Class", "True Class", "Other Classes"]
 
         if self.message_file.exists():
-            console.log(f"File {self.message_file} already exists, data will be appended")
+            console.log(
+                f"File {self.message_file} already exists, data will be appended"
+            )
         else:
             with open(self.message_file, "w+") as f:
                 f.write(",".join(header))
@@ -117,7 +119,11 @@ class TensorboardLogger(Callback):
     @staticmethod
     def filter_hparam(hparam):
         allowed_types = [int, float, str, bool, torch.Tensor]
-        hparam = {k: v for k, v in hparam.items() if any([isinstance(v, t) for t in allowed_types])}
+        hparam = {
+            k: v
+            for k, v in hparam.items()
+            if any([isinstance(v, t) for t in allowed_types])
+        }
         return hparam
 
     def get_gs(self):
@@ -167,7 +173,7 @@ class TensorboardLogger(Callback):
         self.log_conv = False
 
     def on_batch_end(
-            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
 
         if batch_id != 0:
@@ -177,7 +183,7 @@ class TensorboardLogger(Callback):
                 self.log(loss.detach(), logs, is_training)
 
     def log_receiver_output(
-            self, receiver_output: torch.Tensor, phase: str, global_step: int
+        self, receiver_output: torch.Tensor, phase: str, global_step: int
     ):
         """
         Add information about receiver output to tensorboard.
@@ -199,11 +205,11 @@ class TensorboardLogger(Callback):
         )
 
     def log_metrics(
-            self,
-            logs: Interaction,
-            phase: str,
-            global_step: int,
-            loss: float,
+        self,
+        logs: Interaction,
+        phase: str,
+        global_step: int,
+        loss: float,
     ):
 
         metrics = logs.aux
@@ -246,10 +252,12 @@ class TensorboardLogger(Callback):
             return
         metrics = logs.aux
         metrics = {k: v.mean() for k, v in metrics.items()}
-        metrics['loss'] = loss
+        metrics["loss"] = loss
         metrics = {f"hparams/{k}": v for k, v in metrics.items()}
 
-        self.writer.add_hparams(hparam_dict=self.hparam, metric_dict=metrics, run_name="hparams")
+        self.writer.add_hparams(
+            hparam_dict=self.hparam, metric_dict=metrics, run_name="hparams"
+        )
 
     def log_labels(self, logs: Interaction, phase: str, global_step: int):
         """
@@ -259,7 +267,7 @@ class TensorboardLogger(Callback):
 
         # classes
         res_dict = get_labels(labels)
-        true_classes = res_dict['class_id']
+        true_classes = res_dict["class_id"]
 
         self.writer.add_histogram(
             tag=f"{phase}/true_class",
@@ -305,7 +313,9 @@ class TensorboardLogger(Callback):
                 for j in range(len(pretrained[i])):
                     for child in pretrained[i][j].children():
                         if type(child) == torch.nn.Conv2d:
-                            pretrained[i][j].register_forward_hook(get_activation(f"conv{i + j}"))
+                            pretrained[i][j].register_forward_hook(
+                                get_activation(f"conv{i + j}")
+                            )
 
         # run trough pretrained
         pretrained(sender_img)
@@ -330,7 +340,7 @@ class TensorboardLogger(Callback):
 
         # extract classification info
         res_dict = get_labels(logs.labels)
-        true_classes = res_dict['class_id']
+        true_classes = res_dict["class_id"]
         predictions = logs.receiver_output
         predictions = torch.softmax(predictions, dim=1)
 
@@ -354,7 +364,9 @@ class TensorboardLogger(Callback):
                 global_step=global_step,
             )
 
-    def log_messages_embedding(self, logs: Interaction, is_train: bool, global_step: int):
+    def log_messages_embedding(
+        self, logs: Interaction, is_train: bool, global_step: int
+    ):
         """
         Logs the messages as an embedding
         """
@@ -365,22 +377,29 @@ class TensorboardLogger(Callback):
             return
 
         res_dict = get_labels(logs.labels)
-        true_class = res_dict['class_id']
-        image_id = res_dict['image_id']
-        ann_id = res_dict['ann_id']
+        true_class = res_dict["class_id"]
+        image_id = res_dict["image_id"]
+        ann_id = res_dict["ann_id"]
 
         if self.get_images is not None:
             # sample down the number of images to load to 200
-            to_log = random.sample(range(true_class.shape[0]), k=min(self.embedding_num, true_class.shape[0]))
+            to_log = random.sample(
+                range(true_class.shape[0]),
+                k=min(self.embedding_num, true_class.shape[0]),
+            )
             image_id = image_id[to_log]
             true_class = true_class[to_log]
             ann_id = ann_id[to_log]
             messages = logs.message[to_log]
 
             if is_train:
-                imgs = self.get_images(image_id.tolist(), ann_id.tolist(), True, image_size)
+                imgs = self.get_images(
+                    image_id.tolist(), ann_id.tolist(), True, image_size
+                )
             else:
-                imgs = self.get_images(image_id.tolist(), ann_id.tolist(), False, image_size)
+                imgs = self.get_images(
+                    image_id.tolist(), ann_id.tolist(), False, image_size
+                )
 
             imgs = torch.Tensor(imgs)
             imgs = imgs.permute(0, 3, 1, 2)
@@ -413,14 +432,14 @@ class TensorboardLogger(Callback):
             return
 
         res_dict = get_labels(logs.labels)
-        true_class = res_dict['class_id']
-        image_id = res_dict['image_id']
+        true_class = res_dict["class_id"]
+        image_id = res_dict["image_id"]
         messages = logs.message
         predictions = logs.receiver_output
         predictions = torch.softmax(predictions, dim=1)
         predictions = torch.argmax(predictions, dim=1)
 
-        true_class = [self.val_coco.cats[idx]['name'] for idx in true_class.tolist()]
+        true_class = [self.val_coco.cats[idx]["name"] for idx in true_class.tolist()]
 
         # get all other objects in image
         other_ans = [self.val_coco.getAnnIds(x) for x in image_id.tolist()]
@@ -433,8 +452,8 @@ class TensorboardLogger(Callback):
             result = []
 
             for ann in annotations:
-                ann_id = self.val_coco.anns[ann]['category_id']
-                ann_name = self.val_coco.cats[ann_id]['name']
+                ann_id = self.val_coco.anns[ann]["category_id"]
+                ann_name = self.val_coco.cats[ann_id]["name"]
                 result.append(ann_name)
             return result
 
@@ -457,7 +476,7 @@ class TensorboardLogger(Callback):
                 file.write(line)
 
     def log_messages_distribution(
-            self, logs: Interaction, phase: str, global_step: int
+        self, logs: Interaction, phase: str, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -510,7 +529,6 @@ class TensorboardLogger(Callback):
 
 
 class RlScheduler(Callback):
-
     def __init__(self, rl_optimizer):
         self.rl_optimizer = rl_optimizer
 
@@ -524,9 +542,7 @@ class EarlyStopperAccuracy(EarlyStopper):
     is achieved.
     """
 
-    def __init__(
-            self, min_threshold: float, min_increase: float
-    ) -> None:
+    def __init__(self, min_threshold: float, min_increase: float) -> None:
         """
         :param threshold: early stopping threshold for the validation set accuracy
             (assumes that the loss function returns the accuracy under name `field_name`)

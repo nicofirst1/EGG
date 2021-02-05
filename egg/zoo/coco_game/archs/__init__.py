@@ -15,7 +15,6 @@ FLAT_CHOICES = dict(
     AvgPool=AvgPool,
     MaxPool=MaxPool,
     Conv1Sigmoid=Conv1Sigmoid,
-
 )
 
 

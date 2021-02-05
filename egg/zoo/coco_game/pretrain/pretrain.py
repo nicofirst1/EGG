@@ -6,13 +6,22 @@ from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import RandomLogging, TensorboardLogger, RlScheduler
+from egg.zoo.coco_game.custom_logging import (
+    RandomLogging,
+    RlScheduler,
+    TensorboardLogger,
+)
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.game import PretrainGame, SenderSaver
 from egg.zoo.coco_game.utils.hypertune import hypertune
-from egg.zoo.coco_game.utils.utils import console, dump_params, parse_arguments, \
-    define_project_dir, get_class_weight
+from egg.zoo.coco_game.utils.utils import (
+    console,
+    define_project_dir,
+    dump_params,
+    get_class_weight,
+    parse_arguments,
+)
 
 
 @hypertune
@@ -28,7 +37,9 @@ def pretrain(params=None):
     class_weights = get_class_weight(train_data, opts)
 
     optimizer = core.build_optimizer(sender.parameters())
-    rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=opts.decay_rate)
+    rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(
+        optimizer=optimizer, gamma=opts.decay_rate
+    )
 
     criterion = loss_init(
         lambda_cross=opts.lambda_cross,
@@ -61,7 +72,7 @@ def pretrain(params=None):
         ),
         SenderSaver(
             sender=sender,
-            checkpoint_path=opts.checkpoint_dir+"/Sender",
+            checkpoint_path=opts.checkpoint_dir + "/Sender",
             checkpoint_freq=opts.checkpoint_freq,
             prefix="epoch",
             max_checkpoints=10,

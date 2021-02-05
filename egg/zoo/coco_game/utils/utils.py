@@ -70,13 +70,17 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
         class_id=label_class,
         image_id=label_img_id,
         ann_id=ann_id,
-
     )
     return res
 
 
 def get_images(train_method, val_method):
-    def inner(image_ids: List[int], image_ann_ids: List[int], is_training: bool, img_size: Tuple[int, int]):
+    def inner(
+        image_ids: List[int],
+        image_ann_ids: List[int],
+        is_training: bool,
+        img_size: Tuple[int, int],
+    ):
         if is_training:
             return train_method(image_ids, image_ann_ids, img_size)
         else:
@@ -88,12 +92,12 @@ def get_images(train_method, val_method):
 def str2bool(v):
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def define_project_dir(opts):
@@ -153,14 +157,20 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
-        "--resume_training", type=str2bool, nargs='?',
-        const=True, default=True,
+        "--resume_training",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=True,
         help="Resume training loading models from '--checkpoint_dir'",
     )
 
     parser.add_argument(
-        "--sender_pretrain", type=str, nargs='?',
-        const=True, default="",
+        "--sender_pretrain",
+        type=str,
+        nargs="?",
+        const=True,
+        default="",
         help="Path for pretrained sender weights",
     )
 
@@ -190,8 +200,11 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
-        "--use_class_weights", type=str2bool, nargs='?',
-        const=True, default=False,
+        "--use_class_weights",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
         help="Extract class weights from the dataset and pass them to the loss function",
     )
 
@@ -438,7 +451,7 @@ def parse_arguments(params=None):
 
     # assert the number of classes is less than 90-skip_first
     assert (
-            opt.num_classes + opt.skip_first <= 80
+        opt.num_classes + opt.skip_first <= 80
     ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
 
     assert opt.image_resize >= 224, "The size of the image must be minimum 224"

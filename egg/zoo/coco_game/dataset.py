@@ -1,7 +1,7 @@
 import os
 import random
 from argparse import Namespace
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 import albumentations as album
 import cv2
@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
 from egg.zoo.coco_game.utils.utils import console
-from egg.zoo.coco_game.utils.vis_utils import visualize_bbox, show_img
+from egg.zoo.coco_game.utils.vis_utils import show_img, visualize_bbox
 
 
 class CocoDetection(VisionDataset):
@@ -28,14 +28,14 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-            self,
-            root: str,
-            ann_file: str,
-            base_transform: album.Compose,
-            perc_ids: float = 1,
-            num_classes: int = 90,
-            min_area: float = 0,
-            skip_first: int = 5,
+        self,
+        root: str,
+        ann_file: str,
+        base_transform: album.Compose,
+        perc_ids: float = 1,
+        num_classes: int = 90,
+        min_area: float = 0,
+        skip_first: int = 5,
     ):
         """
         Custom Dataset
@@ -108,7 +108,7 @@ class CocoDetection(VisionDataset):
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
-        cats = cats[over_presented: num_classes + over_presented]
+        cats = cats[over_presented : num_classes + over_presented]
         ans = dataset["annotations"]
         ids = [elem["id"] for elem in cats]
         cat_map = {}
@@ -150,10 +150,10 @@ class CocoDetection(VisionDataset):
 
             # get normalized area
             area = (
-                    (an["bbox"][2] + eps)
-                    / img["width"]
-                    * (an["bbox"][3] + eps)
-                    / img["height"]
+                (an["bbox"][2] + eps)
+                / img["width"]
+                * (an["bbox"][3] + eps)
+                / img["height"]
             )
             if area < min_area:
                 self.anns_ids[idx] = None
@@ -166,27 +166,33 @@ class CocoDetection(VisionDataset):
             f"Area filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
         )
 
-    def get_images(self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]) -> List[np.array]:
+    def get_images(
+        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+    ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
         """
 
         infos = self.coco.loadImgs(img_id)
-        paths = [os.path.join(self.root, pt['file_name']) for pt in infos]
+        paths = [os.path.join(self.root, pt["file_name"]) for pt in infos]
         anns = self.coco.loadAnns(image_anns)
-        cats_name = [self.coco.cats[x['category_id']]['name'] for x in anns]
-        bboxs = [x['bbox'] for x in anns]
+        cats_name = [self.coco.cats[x["category_id"]]["name"] for x in anns]
+        bboxs = [x["bbox"] for x in anns]
 
         imgs = [lycon.load(pt) for pt in paths]
-        imgs = [visualize_bbox(img, bbox, class_name, (0, 255, 0)) for img, bbox, class_name in
-                zip(imgs, bboxs, cats_name)]
+        imgs = [
+            visualize_bbox(img, bbox, class_name, (0, 255, 0))
+            for img, bbox, class_name in zip(imgs, bboxs, cats_name)
+        ]
 
-        imgs = [cv2.resize(img, dsize=size, interpolation=cv2.INTER_CUBIC) for img in imgs]
+        imgs = [
+            cv2.resize(img, dsize=size, interpolation=cv2.INTER_CUBIC) for img in imgs
+        ]
 
         return imgs
 
     def __getitem__(
-            self, index: int
+        self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -215,13 +221,11 @@ class CocoDetection(VisionDataset):
             # Resize and normalize images
             resized_image = self.base_transform(
                 image=img_original,
-            )['image']
+            )["image"]
 
             sgm = self.base_transform(
                 image=sgm,
-            )['image']
-
-
+            )["image"]
 
         except cv2.error:
             print(f"Faulty image at index {index}")
@@ -251,7 +255,7 @@ class CocoDetection(VisionDataset):
         bbox = [int(elem) for elem in bbox]
         # order bbox for numpy crop
         bbox = [bbox[1], bbox[0], bbox[1] + bbox[3], bbox[0] + bbox[2]]
-        sgm = img[bbox[0]: bbox[2], bbox[1]: bbox[3]]
+        sgm = img[bbox[0] : bbox[2], bbox[1] : bbox[3]]
 
         return sgm
 
@@ -269,7 +273,9 @@ def transformations(input_size: int) -> album.Compose:
     base_transform = album.Compose(
         [
             album.Resize(input_size, input_size),
-            album.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225], max_pixel_value=255),
+            album.Normalize(
+                [0.485, 0.456, 0.406], [0.229, 0.224, 0.225], max_pixel_value=255
+            ),
         ],
     )
 
@@ -277,7 +283,7 @@ def transformations(input_size: int) -> album.Compose:
 
 
 def collate(
-        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -303,7 +309,7 @@ def collate(
 
 
 def get_data(
-        opts: Namespace,
+    opts: Namespace,
 ):
     """
     Get train and validation data loader
@@ -355,7 +361,7 @@ def get_data(
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
-        timeout=timeout
+        timeout=timeout,
     )
     coco_val = DataLoader(
         coco_val,
@@ -363,8 +369,7 @@ def get_data(
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
-        timeout=timeout
-
+        timeout=timeout,
     )
 
     return coco_train, coco_val

@@ -1,6 +1,6 @@
 from torch import nn
 
-from egg.zoo.coco_game.archs import HeadModule, get_head, get_flat, FlatModule
+from egg.zoo.coco_game.archs import FlatModule, HeadModule, get_flat, get_head
 
 
 def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
@@ -17,7 +17,7 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     rec = Receiver(
         feature_extractor=feature_extractor,
         head_module=head_module,
-        flat_module=flat_module
+        flat_module=flat_module,
     )
     return rec
 
@@ -28,11 +28,10 @@ class Receiver(nn.Module):
     """
 
     def __init__(
-            self,
-            feature_extractor: nn.Module,
-            head_module: HeadModule,
-            flat_module,
-
+        self,
+        feature_extractor: nn.Module,
+        head_module: HeadModule,
+        flat_module,
     ):
         super(Receiver, self).__init__()
         self.feature_extractor = feature_extractor

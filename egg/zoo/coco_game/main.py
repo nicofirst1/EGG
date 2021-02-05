@@ -1,20 +1,34 @@
 from pathlib import Path
 
 import torch
-from egg.core.baselines import BuiltInBaseline, MeanBaseline
 
 from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
+from egg.core.baselines import BuiltInBaseline, MeanBaseline
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import TensorboardLogger, RandomLogging, RlScheduler, EarlyStopperAccuracy
+from egg.zoo.coco_game.custom_logging import (
+    EarlyStopperAccuracy,
+    RandomLogging,
+    RlScheduler,
+    TensorboardLogger,
+)
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
-from egg.zoo.coco_game.pretrain.sender_reinforce import CustomSenderReceiverRnnReinforce, CustomSenderReinforce
+from egg.zoo.coco_game.pretrain.sender_reinforce import (
+    CustomSenderReceiverRnnReinforce,
+    CustomSenderReinforce,
+)
 from egg.zoo.coco_game.utils.hypertune import hypertune
-from egg.zoo.coco_game.utils.utils import console, dump_params, get_images, define_project_dir, \
-    get_class_weight, parse_arguments
+from egg.zoo.coco_game.utils.utils import (
+    console,
+    define_project_dir,
+    dump_params,
+    get_class_weight,
+    get_images,
+    parse_arguments,
+)
 
 
 def get_game(feat_extractor, opts, class_weights=None):
@@ -75,7 +89,7 @@ def get_game(feat_extractor, opts, class_weights=None):
     return game, dict(train=train_log, val=val_log)
 
 
-@hypertune
+# @hypertune
 def main(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
@@ -88,7 +102,9 @@ def main(params=None):
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
-    rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=opts.decay_rate)
+    rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(
+        optimizer=optimizer, gamma=opts.decay_rate
+    )
 
     # optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
     get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
@@ -116,7 +132,7 @@ def main(params=None):
             class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
             get_image_method=get_imgs,
             hparams=vars(opts),
-            val_coco=val_data.dataset.coco
+            val_coco=val_data.dataset.coco,
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
         EarlyStopperAccuracy(min_threshold=0.3, min_increase=0.05),

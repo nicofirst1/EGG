@@ -9,7 +9,9 @@ from egg.zoo.coco_game.losses import Losses
 
 
 class PretrainGame(torch.nn.Module):
-    def __init__(self, sender, loss: Losses.final_loss, opts, train_strategy, val_strategy):
+    def __init__(
+        self, sender, loss: Losses.final_loss, opts, train_strategy, val_strategy
+    ):
         super().__init__()
         self.sender = sender
         self.criterion = loss
@@ -20,8 +22,14 @@ class PretrainGame(torch.nn.Module):
     def forward(self, sender_input, labels, receiver_input=None):
         outputs = self.sender(sender_input)
 
-        loss, metrics = self.criterion(sender_input=sender_input, message=None, receiver_input=None,
-                                       receiver_output=None, labels=labels, sender_output=outputs)
+        loss, metrics = self.criterion(
+            sender_input=sender_input,
+            message=None,
+            receiver_input=None,
+            receiver_output=None,
+            labels=labels,
+            sender_output=outputs,
+        )
         loss = loss.mean()
 
         logging_strategy = (
@@ -42,12 +50,12 @@ class PretrainGame(torch.nn.Module):
 
 class SenderSaver(CheckpointSaver):
     def __init__(
-            self,
-            sender: torch.nn.Module,
-            checkpoint_path: Union[str, pathlib.Path],
-            checkpoint_freq: int = 1,
-            prefix: str = "",
-            max_checkpoints: int = sys.maxsize,
+        self,
+        sender: torch.nn.Module,
+        checkpoint_path: Union[str, pathlib.Path],
+        checkpoint_freq: int = 1,
+        prefix: str = "",
+        max_checkpoints: int = sys.maxsize,
     ):
         """Saves a checkpoint file for training.
         :param checkpoint_path:  path to checkpoint directory, will be created if not present
@@ -55,7 +63,9 @@ class SenderSaver(CheckpointSaver):
         :param prefix: Name of checkpoint file, will be {prefix}{current_epoch}.tar
         :param max_checkpoints: Max number of concurrent checkpoint files in the directory.
         """
-        super(SenderSaver, self).__init__(checkpoint_path, checkpoint_freq, prefix, max_checkpoints)
+        super(SenderSaver, self).__init__(
+            checkpoint_path, checkpoint_freq, prefix, max_checkpoints
+        )
         self.sender = sender
 
     def get_checkpoint(self):

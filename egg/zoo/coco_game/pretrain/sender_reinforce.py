@@ -2,8 +2,13 @@ from collections import Callable
 
 import torch
 
-from egg.core import RnnSenderReinforce, find_lengths, CommunicationRnnReinforce, LoggingStrategy
-from egg.core.baselines import MeanBaseline, Baseline
+from egg.core import (
+    CommunicationRnnReinforce,
+    LoggingStrategy,
+    RnnSenderReinforce,
+    find_lengths,
+)
+from egg.core.baselines import Baseline, MeanBaseline
 
 
 class CustomSenderReceiverRnnReinforce(torch.nn.Module):
@@ -42,16 +47,16 @@ class CustomSenderReceiverRnnReinforce(torch.nn.Module):
     """
 
     def __init__(
-            self,
-            sender: torch.nn.Module,
-            receiver: torch.nn.Module,
-            loss: Callable,
-            sender_entropy_coeff: float = 0.0,
-            receiver_entropy_coeff: float = 0.0,
-            length_cost: float = 0.0,
-            baseline_type: Baseline = MeanBaseline,
-            train_logging_strategy: LoggingStrategy = None,
-            val_logging_strategy: LoggingStrategy = None,
+        self,
+        sender: torch.nn.Module,
+        receiver: torch.nn.Module,
+        loss: Callable,
+        sender_entropy_coeff: float = 0.0,
+        receiver_entropy_coeff: float = 0.0,
+        length_cost: float = 0.0,
+        baseline_type: Baseline = MeanBaseline,
+        train_logging_strategy: LoggingStrategy = None,
+        val_logging_strategy: LoggingStrategy = None,
     ):
         """
         :param sender: sender agent
@@ -94,9 +99,8 @@ class CustomSenderReceiverRnnReinforce(torch.nn.Module):
 
 
 class CustomCommunication(CommunicationRnnReinforce):
-
     def forward(
-            self, sender, receiver, loss, sender_input, labels, receiver_input=None
+        self, sender, receiver, loss, sender_input, labels, receiver_input=None
     ):
         message, log_prob_s, entropy_s, sender_output = sender(sender_input)
         message_length = find_lengths(message)
@@ -105,8 +109,12 @@ class CustomCommunication(CommunicationRnnReinforce):
         )
 
         loss, aux_info = loss(
-            sender_input=sender_input, sender_output=sender_output, message=message, receiver_input=receiver_input,
-            receiver_output=receiver_output, labels=labels
+            sender_input=sender_input,
+            sender_output=sender_output,
+            message=message,
+            receiver_input=receiver_input,
+            receiver_output=receiver_output,
+            labels=labels,
         )
 
         # the entropy of the outputs of S before and including the eos symbol - as we don't care about what's after
@@ -123,8 +131,8 @@ class CustomCommunication(CommunicationRnnReinforce):
         effective_entropy_s = effective_entropy_s / message_length.float()
 
         weighted_entropy = (
-                effective_entropy_s.mean() * self.sender_entropy_coeff
-                + entropy_r.mean() * self.receiver_entropy_coeff
+            effective_entropy_s.mean() * self.sender_entropy_coeff
+            + entropy_r.mean() * self.receiver_entropy_coeff
         )
 
         log_prob = effective_log_prob_s + log_prob_r
@@ -132,11 +140,11 @@ class CustomCommunication(CommunicationRnnReinforce):
         length_loss = message_length.float() * self.length_cost
 
         policy_length_loss = (
-                (length_loss - self.baselines["length"].predict(length_loss))
-                * effective_log_prob_s
+            (length_loss - self.baselines["length"].predict(length_loss))
+            * effective_log_prob_s
         ).mean()
         policy_loss = (
-                (loss.detach() - self.baselines["loss"].predict(loss.detach())) * log_prob
+            (loss.detach() - self.baselines["loss"].predict(loss.detach())) * log_prob
         ).mean()
 
         optimized_loss = policy_length_loss + policy_loss - weighted_entropy
@@ -150,8 +158,12 @@ class CustomCommunication(CommunicationRnnReinforce):
         aux_info["sender_entropy"] = entropy_s.detach()
         aux_info["receiver_entropy"] = entropy_r.detach()
         aux_info["length"] = message_length.float()  # will be averaged
-        aux_info["policy_loss"] = policy_loss.unsqueeze(dim=0).float()  # will be averaged
-        aux_info["weighted_entropy"] = weighted_entropy.unsqueeze(dim=0).float()  # will be averaged
+        aux_info["policy_loss"] = policy_loss.unsqueeze(
+            dim=0
+        ).float()  # will be averaged
+        aux_info["weighted_entropy"] = weighted_entropy.unsqueeze(
+            dim=0
+        ).float()  # will be averaged
 
         logging_strategy = (
             self.train_logging_strategy if self.training else self.val_logging_strategy

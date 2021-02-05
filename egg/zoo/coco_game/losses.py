@@ -8,11 +8,11 @@ from egg.zoo.coco_game.utils.utils import get_labels
 
 
 def loss_init(
-        lambda_cross: float,
-        lambda_kl: float,
-        lambda_f: float,
-        batch_size: int,
-        class_weights: torch.Tensor,
+    lambda_cross: float,
+    lambda_kl: float,
+    lambda_f: float,
+    batch_size: int,
+    class_weights: torch.Tensor,
 ):
     """
     Init loss and return function
@@ -26,7 +26,7 @@ def loss_init(
         lambda_f=lambda_f,
         batch_size=batch_size,
         class_weights=class_weights,
-        focal_loss=focal_loss
+        focal_loss=focal_loss,
     )
 
     return losses.final_loss
@@ -37,8 +37,10 @@ class FocalLoss(torch.nn.Module):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
-        if isinstance(alpha, (float, int)): self.alpha = torch.Tensor([alpha, 1 - alpha])
-        if isinstance(alpha, list): self.alpha = torch.Tensor(alpha)
+        if isinstance(alpha, (float, int)):
+            self.alpha = torch.Tensor([alpha, 1 - alpha])
+        if isinstance(alpha, list):
+            self.alpha = torch.Tensor(alpha)
 
     def forward(self, input, target):
         if input.dim() > 2:
@@ -76,14 +78,13 @@ class Losses:
     focal_loss: FocalLoss
 
     def final_loss(
-            self,
-            sender_input,
-            message,
-            receiver_input,
-            receiver_output,
-            labels,
-            sender_output=None,
-
+        self,
+        sender_input,
+        message,
+        receiver_input,
+        receiver_output,
+        labels,
+        sender_output=None,
     ):
         """
         Estimate complete loss, logs accuracy
@@ -92,7 +93,7 @@ class Losses:
         metrics = {}
 
         res_dict = get_labels(labels)
-        label_class = res_dict['class_id']
+        label_class = res_dict["class_id"]
 
         # assert that we have an output to work on
         if receiver_output is None and sender_output is None:
@@ -123,7 +124,11 @@ class Losses:
             send_acc = send_acc.unsqueeze(dim=-1)
             metrics["accuracy_sender"] = send_acc
 
-        loss = x_loss * self.lambda_cross + kl_loss * self.lambda_kl + f_loss * self.lambda_f
+        loss = (
+            x_loss * self.lambda_cross
+            + kl_loss * self.lambda_kl
+            + f_loss * self.lambda_f
+        )
 
         metrics["custom_loss"] = loss
         return loss, metrics

@@ -11,9 +11,24 @@ from tensorboard.backend.event_processing import event_accumulator
 UUID_LEN = 8
 LOG_DIR_NAME_SKIP = ["random_signal", "best"]
 PARAMS_SKIP = set(
-    ['num_workers', "tensorboard_dir", "random_seed", "resume_training", "checkpoint_dir", "log_dir", "n_epochs",
-     "checkpoint_freq", "use_rich_traceback", "log_dir_uid", "train_log_prob", "val_log_prob", "val_logging_step",
-     "train_logging_step", "data_root"])
+    [
+        "num_workers",
+        "tensorboard_dir",
+        "random_seed",
+        "resume_training",
+        "checkpoint_dir",
+        "log_dir",
+        "n_epochs",
+        "checkpoint_freq",
+        "use_rich_traceback",
+        "log_dir_uid",
+        "train_log_prob",
+        "val_log_prob",
+        "val_logging_step",
+        "train_logging_step",
+        "data_root",
+    ]
+)
 
 
 def get_accumulator(path2accumulator, tag, mean_elem=5):
@@ -22,7 +37,8 @@ def get_accumulator(path2accumulator, tag, mean_elem=5):
         event_accumulator.IMAGES: 0,
         event_accumulator.AUDIO: 0,
         event_accumulator.SCALARS: 99999,
-        event_accumulator.HISTOGRAMS: 0, }
+        event_accumulator.HISTOGRAMS: 0,
+    }
 
     ea = event_accumulator.EventAccumulator(path2accumulator, size_guidance)
     ea = ea.Reload()
@@ -86,7 +102,7 @@ def find_logs(path2logs: str) -> Dict[str, Dict]:
             continue
 
         params = get_params(log)
-        uid = params['log_dir_uid'].split("/")[-1]
+        uid = params["log_dir_uid"].split("/")[-1]
 
         res[uid] = params
 
@@ -128,7 +144,12 @@ def check_uid_name(log_path: str) -> int:
         lg = lg.split("/")[-1]
 
         # if the dir has not been processed
-        if len(lg) == UUID_LEN and lg.islower() and not lg.isalpha() and not lg.isdigit():
+        if (
+            len(lg) == UUID_LEN
+            and lg.islower()
+            and not lg.isalpha()
+            and not lg.isdigit()
+        ):
             return 1
         # if there are some processed items
         elif "}" in lg:
@@ -159,7 +180,7 @@ def change_pipeline(log_path: str):
         return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--logs_path",

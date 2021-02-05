@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from egg.zoo.coco_game.archs import get_flat, FlatModule
+from egg.zoo.coco_game.archs import FlatModule, get_flat
 from egg.zoo.coco_game.utils.utils import load_pretrained_sender
 
 
@@ -62,8 +62,15 @@ class VisionSender(nn.Module):
     """
 
     def __init__(
-            self, model, flat_module: FlatModule, image_size: int, image_type: str, image_union: str, num_classes: int,
-            n_hidden: int = 10, pretraining: bool = False,
+        self,
+        model,
+        flat_module: FlatModule,
+        image_size: int,
+        image_type: str,
+        image_union: str,
+        num_classes: int,
+        n_hidden: int = 10,
+        pretraining: bool = False,
     ):
         super(VisionSender, self).__init__()
 
@@ -139,7 +146,7 @@ class VisionSender(nn.Module):
 
         # split image and segment
         img = inp[:, :, :, : self.image_size]
-        seg = inp[:, :, :, self.image_size:]
+        seg = inp[:, :, :, self.image_size :]
         # img and seg = [batch, channels, image_size, image_size]
 
         if self.image_type == "seg":

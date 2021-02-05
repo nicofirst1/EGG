@@ -31,7 +31,9 @@ class HeadModule(nn.Module):
     Common implementation for the box modules, must take as input the given args
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         """
         Args:
             signal_dim: length of the signal coming from the sender
@@ -42,7 +44,9 @@ class HeadModule(nn.Module):
         super().__init__()
         self.output_size = num_classes
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         """
         Args:
             signal: The sender signal
@@ -59,14 +63,18 @@ class SimpleHead(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         feature_num = signal_dim + vision_dim
 
         self.head_class = nn.Linear(feature_num, num_classes)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         out = torch.cat((vision_features, signal), dim=1)
         class_logits = self.head_class(out).clone()
         class_logits = torch.relu(class_logits)
@@ -79,12 +87,16 @@ class OnlySignal(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.head_class = nn.Linear(signal_dim, self.output_size)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         class_logits = self.head_class(signal).clone()
 
         return class_logits
@@ -95,12 +107,16 @@ class RandomSignal(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.head_class = nn.Linear(signal_dim, self.output_size)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         signal = torch.rand(signal.shape).to(signal.device)
         class_logits = self.head_class(signal).clone()
 
@@ -112,14 +128,18 @@ class RandomSignalImg(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         feature_num = signal_dim + vision_dim
 
         self.head_class = nn.Linear(feature_num, num_classes)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         signal = torch.rand(signal.shape).to(signal.device)
 
         out = torch.cat((vision_features, signal), dim=1)
@@ -133,12 +153,16 @@ class OnlyImage(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.head_class = nn.Linear(vision_dim, self.output_size)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         class_logits = self.head_class(vision_features).clone()
 
         return class_logits
@@ -149,13 +173,17 @@ class SignalExpansion(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.signal_expansion = nn.Linear(signal_dim, vision_dim)
         self.head_class = nn.Linear(vision_dim, num_classes)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         signal = self.signal_expansion(signal)
 
         out = torch.mul(signal, vision_features)
@@ -170,13 +198,17 @@ class FeatureReduction(HeadModule):
     Usa single sequential model for  classification
     """
 
-    def __init__(self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int):
+    def __init__(
+        self, signal_dim: int, vision_dim: int, num_classes: int, hidden_dim: int
+    ):
         super().__init__(signal_dim, vision_dim, num_classes, hidden_dim)
 
         self.feature_reduction = nn.Linear(vision_dim, signal_dim)
         self.head_class = nn.Linear(signal_dim, num_classes)
 
-    def forward(self, signal: torch.Tensor, vision_features: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
         vision_features = self.feature_reduction(vision_features)
 
         out = torch.mul(signal, vision_features)

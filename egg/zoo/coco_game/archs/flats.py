@@ -9,7 +9,7 @@ class FlatModule(nn.Module):
 
     out_dim: int = 512
 
-    def __init__(self, size: int=1):
+    def __init__(self, size: int = 1):
         super(FlatModule, self).__init__()
         size = tuple([size for _ in range(2)])
         self.out_dim *= size[0] * size[1]
@@ -24,7 +24,7 @@ class AvgPool(FlatModule):
     Module to flatten the output of the feature extraction model.
     """
 
-    def __init__(self ):
+    def __init__(self):
         super().__init__()
         self.aap = nn.AdaptiveAvgPool2d(self.size)
 
@@ -56,7 +56,11 @@ class Conv1Sigmoid(FlatModule):
 
     def __init__(self):
         super().__init__()
-        self.cov1 = nn.Conv2d(self.out_dim, self.out_dim, 1, )
+        self.cov1 = nn.Conv2d(
+            self.out_dim,
+            self.out_dim,
+            1,
+        )
         self.aap = AvgPool()
 
     def forward(self, x):
