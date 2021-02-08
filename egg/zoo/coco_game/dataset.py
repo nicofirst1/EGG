@@ -323,7 +323,7 @@ def get_data(
     --- instances_train2017.json
     """
 
-    path2imgs = opts.data_root + "/images/"
+    path2imgs = opts.data_root + "./"
     path2json = opts.data_root + "/annotations/"
 
     base_trans = transformations(opts.image_resize)
