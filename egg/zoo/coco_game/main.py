@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 
 from egg import core
-from egg.core import CheckpointSaver, ProgressBarLogger
+from egg.core import CheckpointSaver, ProgressBarLogger, ConsoleLogger
 from egg.core.baselines import BuiltInBaseline, MeanBaseline
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
@@ -116,6 +116,7 @@ def main(params=None):
         #     val_data_len=len(val_data),
         #     use_info_table=False,
         # ),
+        ConsoleLogger(),
         CheckpointSaver(
             checkpoint_path=opts.checkpoint_dir,
             checkpoint_freq=opts.checkpoint_freq,
@@ -135,7 +136,7 @@ def main(params=None):
             val_coco=val_data.dataset.coco,
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
-        EarlyStopperAccuracy(min_threshold=0.3, min_increase=0.05),
+        EarlyStopperAccuracy(min_threshold=0.5, min_increase=0.025),
     ]
 
     trainer = core.Trainer(
