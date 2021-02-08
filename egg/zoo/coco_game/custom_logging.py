@@ -10,7 +10,6 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 from egg.core import Callback, Interaction, LoggingStrategy
-from egg.core.early_stopping import EarlyStopper
 from egg.zoo.coco_game.utils.utils import console, get_labels
 
 
@@ -547,10 +546,10 @@ class EarlyStopperAccuracy(Callback):
         self.validation_stats: List[Tuple[float, Interaction]] = []
         self.epoch: int = 0
 
-        self.min_threshold = min_threshold
+        self.max_threshold = min_threshold
         self.min_increase = min_increase
         self.val_field_name = "accuracy_receiver"
-        self.over_min_thr = False
+        self.under_max_thr = False
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int) -> None:
         self.epoch = epoch
@@ -566,7 +565,7 @@ class EarlyStopperAccuracy(Callback):
         if not is_train:
 
             # must first increase past train thrs
-            if not self.over_min_thr:
+            if not self.under_max_thr:
                 return False
 
             if len(self.validation_stats) < 2:
@@ -587,11 +586,11 @@ class EarlyStopperAccuracy(Callback):
             return True
 
         # train and not over min ths
-        elif not self.over_min_thr:
+        elif not self.under_max_thr:
 
             loss, logs = self.train_stats[-1]
 
-            if loss > self.min_threshold:
-                self.over_min_thr = True
+            if loss < self.max_threshold:
+                self.under_max_thr = True
 
 
