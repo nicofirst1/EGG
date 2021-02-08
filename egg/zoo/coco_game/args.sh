@@ -1,6 +1,5 @@
 #!/bin/bash
 checkpoint_path="checkpoints"
-interactions_path="interactions"
 tensorboard_path="tensorboard"
 log_dir="Logs"
 home="/home/dizzi/Desktop/EGG/"

@@ -110,12 +110,12 @@ def main(params=None):
     get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
 
     callbacks = [
-        ProgressBarLogger(
-            n_epochs=opts.n_epochs,
-            train_data_len=len(train_data),
-            val_data_len=len(val_data),
-            use_info_table=False,
-        ),
+        # ProgressBarLogger(
+        #     n_epochs=opts.n_epochs,
+        #     train_data_len=len(train_data),
+        #     val_data_len=len(val_data),
+        #     use_info_table=False,
+        # ),
         CheckpointSaver(
             checkpoint_path=opts.checkpoint_dir,
             checkpoint_freq=opts.checkpoint_freq,
