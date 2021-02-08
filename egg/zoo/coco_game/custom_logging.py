@@ -2,7 +2,7 @@ import copy
 import random
 from os.path import join
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import torch
 from pycocotools.coco import COCO
@@ -26,14 +26,14 @@ class RandomLogging(LoggingStrategy):
         super().__init__(*args)
 
     def filtered_interaction(
-        self,
-        sender_input,
-        receiver_input,
-        labels,
-        message,
-        receiver_output,
-        message_length,
-        aux,
+            self,
+            sender_input,
+            receiver_input,
+            labels,
+            message,
+            receiver_output,
+            message_length,
+            aux,
     ):
         rnd = random.random()
         should_store = rnd < self.store_prob
@@ -55,17 +55,17 @@ class RandomLogging(LoggingStrategy):
 
 class TensorboardLogger(Callback):
     def __init__(
-        self,
-        tensorboard_dir: str,
-        loggers: Dict[str, LoggingStrategy] = None,
-        train_logging_step: int = 50,
-        val_logging_step: int = 20,
-        resume_training: bool = False,
-        game: torch.nn.Module = None,
-        class_map: Dict[int, str] = {},
-        get_image_method=None,
-        hparams=None,
-        val_coco: COCO = None,
+            self,
+            tensorboard_dir: str,
+            loggers: Dict[str, LoggingStrategy] = None,
+            train_logging_step: int = 50,
+            val_logging_step: int = 20,
+            resume_training: bool = False,
+            game: torch.nn.Module = None,
+            class_map: Dict[int, str] = {},
+            get_image_method=None,
+            hparams=None,
+            val_coco: COCO = None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -173,7 +173,7 @@ class TensorboardLogger(Callback):
         self.log_conv = False
 
     def on_batch_end(
-        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
 
         if batch_id != 0:
@@ -183,7 +183,7 @@ class TensorboardLogger(Callback):
                 self.log(loss.detach(), logs, is_training)
 
     def log_receiver_output(
-        self, receiver_output: torch.Tensor, phase: str, global_step: int
+            self, receiver_output: torch.Tensor, phase: str, global_step: int
     ):
         """
         Add information about receiver output to tensorboard.
@@ -205,11 +205,11 @@ class TensorboardLogger(Callback):
         )
 
     def log_metrics(
-        self,
-        logs: Interaction,
-        phase: str,
-        global_step: int,
-        loss: float,
+            self,
+            logs: Interaction,
+            phase: str,
+            global_step: int,
+            loss: float,
     ):
 
         metrics = logs.aux
@@ -365,7 +365,7 @@ class TensorboardLogger(Callback):
             )
 
     def log_messages_embedding(
-        self, logs: Interaction, is_train: bool, global_step: int
+            self, logs: Interaction, is_train: bool, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -476,7 +476,7 @@ class TensorboardLogger(Callback):
                 file.write(line)
 
     def log_messages_distribution(
-        self, logs: Interaction, phase: str, global_step: int
+            self, logs: Interaction, phase: str, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -536,45 +536,62 @@ class RlScheduler(Callback):
         self.rl_optimizer.step()
 
 
-class EarlyStopperAccuracy(EarlyStopper):
+class EarlyStopperAccuracy(Callback):
     """
-    Implements early stopping logic that stops training when a threshold on a metric
-    is achieved.
+    A base class, supports the running statistic which is could be used for early stopping
     """
 
     def __init__(self, min_threshold: float, min_increase: float) -> None:
-        """
-        :param threshold: early stopping threshold for the validation set accuracy
-            (assumes that the loss function returns the accuracy under name `field_name`)
-        :param field_name: the name of the metric return by loss function which should be evaluated against stopping
-            criterion (default: "acc")
-        :param validation: whether the statistics on the validation (or training, if False) data should be checked
-        """
-        super(EarlyStopperAccuracy, self).__init__(True)
+        super(EarlyStopperAccuracy, self).__init__()
+        self.train_stats: List[Tuple[float, Interaction]] = []
+        self.validation_stats: List[Tuple[float, Interaction]] = []
+        self.epoch: int = 0
+
         self.min_threshold = min_threshold
         self.min_increase = min_increase
-        self.field_name = "accuracy_receiver"
+        self.val_field_name = "accuracy_receiver"
+        self.over_min_thr = False
 
-    def should_stop(self) -> bool:
+    def on_epoch_end(self, loss: float, logs: Interaction, epoch: int) -> None:
+        self.epoch = epoch
+        self.train_stats.append((loss, logs))
+        self.trainer.should_stop = self.should_stop(True)
 
-        if len(self.validation_stats) < 2:
-            # wait at least two epochs for end
-            return False
+    def on_test_end(self, loss: float, logs: Interaction, epoch: int) -> None:
 
-        loss, logs = self.validation_stats[-1]
-        loss, prev_logs = self.validation_stats[-2]
+        self.validation_stats.append((loss, logs))
+        self.trainer.should_stop = self.should_stop(False)
 
-        mean = logs.aux[self.field_name].mean()
-        prev_mean = prev_logs.aux[self.field_name].mean()
+    def should_stop(self, is_train:bool) -> bool:
+        if not is_train:
 
-        if mean < self.min_threshold:
-            # if the mean is still below the minimum thrs, dont stop
-            return False
+            # must first increase past train thrs
+            if not self.over_min_thr:
+                return False
 
-        if mean - prev_mean > self.min_increase:
-            # if the increase is above the min thr, dont stop
+            if len(self.validation_stats) < 2:
+                # wait at least two epochs for end
+                return False
 
-            return False
+            loss, logs = self.validation_stats[-1]
+            loss, prev_logs = self.validation_stats[-2]
 
-        console.log(f"Early stopping! Current val {mean}, prev val {prev_mean}")
-        return True
+            mean = logs.aux[self.val_field_name].mean()
+            prev_mean = prev_logs.aux[self.val_field_name].mean()
+
+            if mean - prev_mean > self.min_increase:
+                # if the increase is above the min thr, dont stop
+                return False
+
+            console.log(f"Early stopping! Current val {mean}, prev val {prev_mean}")
+            return True
+
+        # train and not over min ths
+        elif not self.over_min_thr:
+
+            loss, logs = self.train_stats[-1]
+
+            if loss > self.min_threshold:
+                self.over_min_thr = True
+
+
