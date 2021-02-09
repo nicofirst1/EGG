@@ -10,13 +10,13 @@ train_args=(
   "--batch_size"
   "128"
   "--n_epochs"
-  "4"
+  "40"
   "--train_data_perc"
   "1"
   "--val_data_perc"
   "1.0"
   "--num_workers"
-  "8"
+  "4"
   "--lr"
   "0.001"
   "--decay_rate"
@@ -26,10 +26,6 @@ train_args=(
 )
 
 log_args=(
-  "--train_log_prob"
-  "0.0"
-  "--val_log_prob"
-  "0.0"
   "--log_dir"
   "$log_dir"
   "--tensorboard_dir"
@@ -38,10 +34,6 @@ log_args=(
   "$checkpoint_path"
   "--checkpoint_freq"
   "1"
-  "--train_logging_step"
-  "300"
-  "--val_logging_step"
-  "30"
   "--use_rich_traceback"
 
 )

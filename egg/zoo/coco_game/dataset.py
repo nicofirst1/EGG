@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
 from egg.zoo.coco_game.utils.utils import console
-from egg.zoo.coco_game.utils.vis_utils import show_img, visualize_bbox
+from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
 
 class CocoDetection(VisionDataset):
@@ -33,9 +33,7 @@ class CocoDetection(VisionDataset):
         ann_file: str,
         base_transform: album.Compose,
         perc_ids: float = 1,
-        num_classes: int = 90,
-        min_area: float = 0,
-        skip_first: int = 5,
+        distractors: int = 1,
     ):
         """
         Custom Dataset
@@ -44,33 +42,24 @@ class CocoDetection(VisionDataset):
             ann_file: path to coco annotations file
             base_transform: transformation used for the sender input
             perc_ids: percentage of ids to keep
-            num_classes: number of classes to keep
-            skip_first: number of first classes to skip, since the first 5 in coco are over represented
         """
         super(CocoDetection, self).__init__(root, None, None, None)
 
         self.coco = COCO(ann_file)
-        self.anns_ids = list(self.coco.anns.keys())
+        self.ids = list(self.coco.imgs.keys())
+        self.base_transform = base_transform
+        self.distractors = distractors
 
         ############
         # Filtering
         ############
         # filter per number of classes
-        # The first 5 classes are over represented
-        self.over_presented = skip_first
-        self.filter_anns_classes(num_classes, over_presented=self.over_presented)
+        self.filter_anns_coocurence(distractors + 1)
 
         # randomly drop perc_ids
-        self.anns_ids = self.delete_rand_items(
-            self.anns_ids, int((1 - perc_ids) * len(self.anns_ids))
-        )
+        self.ids = self.delete_rand_items(self.ids, int((1 - perc_ids) * len(self.ids)))
 
-        # filter per area
-        self.filter_anns_area(min_area=min_area)
-        # sort anns
-        self.anns_ids = sorted(self.anns_ids)
-
-        self.base_transform = base_transform
+        self.ids = sorted(self.ids)
 
     @staticmethod
     def delete_rand_items(items: list, n: int):
@@ -104,7 +93,7 @@ class CocoDetection(VisionDataset):
         Filter annotations based on minimum (mean) area
         """
 
-        original_len = len(self.anns_ids)
+        original_len = len(self.ids)
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
@@ -129,11 +118,103 @@ class CocoDetection(VisionDataset):
 
         self.coco.dataset = dataset
         self.coco.createIndex()
-        self.anns_ids = list(self.coco.anns.keys())
-        new_len = len(self.anns_ids)
+        self.ids = list(self.coco.anns.keys())
+        new_len = len(self.ids)
 
         console.log(
             f"Classes filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
+        )
+
+    def init_dicts(self):
+        imgToAnns, catToImgs = {}, {}
+
+        for ann in self.coco.anns.values():
+            if ann["image_id"] not in imgToAnns.keys():
+                imgToAnns[ann["image_id"]] = []
+            if ann["category_id"] not in catToImgs.keys():
+                catToImgs[ann["category_id"]] = []
+
+            imgToAnns[ann["image_id"]].append(ann)
+            catToImgs[ann["category_id"]].append(ann["image_id"])
+
+        self.coco.imgToAnns = imgToAnns
+        self.coco.catToImgs = catToImgs
+        self.ids = list(self.coco.imgs.keys())
+
+    def filter_anns_coocurence(self, min_annotations: int, min_perc_valid: float = 0.8):
+        """
+        Filter annotations based on minimum number of co-occurences
+        """
+
+        def filter(self):
+            counter = {id_: dict(total=0, valid=0) for id_ in self.coco.cats.keys()}
+
+            imgs_to_rm = []
+            anns_to_rm = []
+
+            for img_id, anns in self.coco.imgToAnns.items():
+
+                valid = 1 if len(anns) > min_annotations else 0
+
+                if not valid:
+                    imgs_to_rm.append(img_id)
+                    anns_to_rm += [x["id"] for x in anns]
+
+                for anns in anns:
+                    ann_id = anns["category_id"]
+                    counter[ann_id]["total"] += 1
+                    counter[ann_id]["valid"] += valid
+
+            counter = {k: v["valid"] / v["total"] for k, v in counter.items()}
+
+            def log():
+                to_log = {}
+
+                for id_, cat in self.coco.cats.items():
+                    name = cat["name"]
+                    to_log[name] = int(counter[id_] * 100)
+
+                to_log = sorted(to_log.items(), key=lambda item: item[1], reverse=True)
+                console.log(
+                    f"Percentage of valid classes with more than {min_annotations} annotations per image:{to_log}\n"
+                )
+
+            counter = [k for k, v in counter.items() if v < min_perc_valid]
+            anns_to_rm += [
+                k for k, v in self.coco.anns.items() if v["category_id"] in counter
+            ]
+            anns_to_rm = set(anns_to_rm)
+
+            for img_id in imgs_to_rm:
+                self.coco.imgs.pop(img_id)
+
+            for ann_id in anns_to_rm:
+                self.coco.anns.pop(ann_id)
+
+            for cat in counter:
+                self.coco.cats.pop(cat)
+
+            self.init_dicts()
+
+        first_len = len(self.ids)
+        original_len = -1
+        new_len = 0
+
+        # need a while since every time you delete some annotations from images, some images may have not enough annotations anymore
+        while original_len != new_len:
+            original_len = len(self.ids)
+            filter(self)
+            new_len = len(self.ids)
+
+        imgs_to_rm = set(self.coco.imgs.keys()) - set(self.coco.imgToAnns.keys())
+        for img in imgs_to_rm:
+            self.coco.imgs.pop(img)
+
+        self.init_dicts()
+        new_len = len(self.ids)
+
+        console.log(
+            f"Co presence filtered len : {new_len}/{first_len} ({new_len / first_len * 100:.3f}%)"
         )
 
     def filter_anns_area(self, min_area=0.1):
@@ -141,10 +222,10 @@ class CocoDetection(VisionDataset):
         Filter annotations based on minimum (mean) area
         """
         eps = 0.0001
-        original_len = len(self.anns_ids)
+        original_len = len(self.ids)
 
-        for idx in range(len(self.anns_ids)):
-            an_id = self.anns_ids[idx]
+        for idx in range(len(self.ids)):
+            an_id = self.ids[idx]
             an = self.coco.anns[an_id]
             img = self.coco.loadImgs(an["image_id"])[0]
 
@@ -156,11 +237,11 @@ class CocoDetection(VisionDataset):
                 / img["height"]
             )
             if area < min_area:
-                self.anns_ids[idx] = None
+                self.ids[idx] = None
 
-        self.anns_ids = [x for x in self.anns_ids if x is not None]
+        self.ids = [x for x in self.ids if x is not None]
 
-        new_len = len(self.anns_ids)
+        new_len = len(self.ids)
 
         console.log(
             f"Area filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
@@ -200,9 +281,11 @@ class CocoDetection(VisionDataset):
             tuple: Tuple (image, target). target is the object returned by ``coco.loadAnns``.
         """
         # get annotation id-> target -> image id
-        ann_ids = self.anns_ids[index]
-        target = self.coco.loadAnns(ann_ids)[0]
-        img_id = target["image_id"]
+        img_id = self.ids[index]
+        targets = self.coco.imgToAnns[img_id].copy()
+        chosen_target = random.choice(targets)
+        targets.remove(chosen_target)
+        distractors = random.choices(targets, k=self.distractors)
 
         path = self.coco.loadImgs(img_id)[0]["file_name"]
 
@@ -210,10 +293,11 @@ class CocoDetection(VisionDataset):
         path = os.path.join(self.root, path)
         img_original = lycon.load(path)
         # extract segment and choose target
-        sgm = self.extract_segmented(img_original, target)
+        chosen_sgm = self.extract_segmented(img_original, chosen_target)
+        distractors_sgm = [self.extract_segmented(img_original, x) for x in distractors]
 
         # if segmented is empty get next item
-        if len(sgm) == 0:
+        if len(chosen_sgm) == 0:
             return self.__getitem__(index + 1)
 
         try:
@@ -223,28 +307,51 @@ class CocoDetection(VisionDataset):
                 image=img_original,
             )["image"]
 
-            sgm = self.base_transform(
-                image=sgm,
+            chosen_sgm = self.base_transform(
+                image=chosen_sgm,
             )["image"]
+
+            distractors_sgm = [
+                self.base_transform(
+                    image=x,
+                )["image"]
+                for x in distractors_sgm
+            ]
 
         except cv2.error:
             print(f"Faulty image at index {index}")
             return self.__getitem__(index + 1)
 
-        # we save the receiver distorted image and bboxes
-        cat_id = target["category_id"]
-        ann_id = target["id"]
-
+        ### preprocess segments
+        segments = [chosen_sgm] + distractors_sgm
         # the images are of size [h,w, channels] but the model requires [channels,w,h]
-        sgm = np.transpose(sgm, axes=(2, 0, 1))
-        resized_image = np.transpose(resized_image, axes=(2, 0, 1))
+        segments = [np.transpose(x, axes=(2, 0, 1)) for x in segments]
+        segments = [torch.FloatTensor(x) for x in segments]
 
+        ### define sender input
+        resized_image = np.transpose(resized_image, axes=(2, 0, 1))
         # transform  in torch tensor
         resized_image = torch.FloatTensor(resized_image)
-        sgm = torch.FloatTensor(sgm.copy())
-        labels = torch.LongTensor([cat_id, img_id, ann_id])
+        sender_inp = torch.cat((resized_image, segments[0]), dim=-1)
 
-        return resized_image, sgm, labels
+        # shuffle segments
+        segments = [x.unsqueeze(dim=0) for x in segments]
+        indices = list(range(len(segments)))
+        random.shuffle(indices)
+        shuffled_segs = [segments[idx] for idx in indices]
+        segments = torch.cat(shuffled_segs, dim=0)
+
+        labels = [chosen_target] + distractors
+        # labels are : position of true seg, category of segment, image id, annotation id
+        labels = [
+            torch.LongTensor([indices[0], x["category_id"], img_id, x["id"]])
+            for x in labels
+        ]
+        a = [x["id"] for x in self.coco.imgToAnns[img_id]]
+        labels = [x.unsqueeze(dim=0) for x in labels]
+        labels = torch.cat(labels, dim=0)
+
+        return sender_inp, segments, labels
 
     @staticmethod
     def extract_segmented(img: np.array, target: dict):
@@ -260,7 +367,7 @@ class CocoDetection(VisionDataset):
         return sgm
 
     def __len__(self):
-        return len(self.anns_ids)
+        return len(self.ids)
 
 
 def transformations(input_size: int) -> album.Compose:
@@ -293,19 +400,20 @@ def collate(
     """
 
     # extract infos
-    resized_image = [elem[0] for elem in batch]
+    sender_inp = [elem[0] for elem in batch]
     seg = [elem[1] for elem in batch]
     labels = [elem[2] for elem in batch]
 
     # stack on torch tensor
-    resized_image = torch.stack(resized_image).contiguous()
+    sender_inp = torch.stack(sender_inp).contiguous()
     seg = torch.stack(seg).contiguous()
     labels = torch.stack(labels).contiguous()
 
-    # concat image and seg (only way to pass it to sender)
-    sender_inp = torch.cat((resized_image, seg), dim=-1)
+    # transpose to have [batch,discriminants ...]-> [discriminants, batch, ...]
+    # seg= np.transpose(seg, axes=(1, 0, 2, 3, 4))
+    # labels= np.transpose(labels, axes=(1, 0, 2))
 
-    return sender_inp, labels, resized_image
+    return sender_inp, labels, seg
 
 
 def get_data(
@@ -323,7 +431,7 @@ def get_data(
     --- instances_train2017.json
     """
 
-    path2imgs = opts.data_root + "./"
+    path2imgs = opts.data_root + "/"
     path2json = opts.data_root + "/annotations/"
 
     base_trans = transformations(opts.image_resize)
@@ -334,9 +442,6 @@ def get_data(
         ann_file=path2json + "instances_train2017.json",
         perc_ids=opts.train_data_perc,
         base_transform=base_trans,
-        num_classes=opts.num_classes,
-        skip_first=opts.skip_first,
-        min_area=opts.min_area,
     )
 
     coco_val = CocoDetection(
@@ -344,9 +449,6 @@ def get_data(
         ann_file=path2json + "instances_val2017.json",
         perc_ids=opts.val_data_perc,
         base_transform=base_trans,
-        num_classes=opts.num_classes,
-        skip_first=opts.skip_first,
-        min_area=opts.min_area,
     )
 
     if opts.num_workers > 0:

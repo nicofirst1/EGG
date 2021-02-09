@@ -63,10 +63,12 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     """
     Only function to be used to extract labels information
     """
-    label_class = labels[:, 0]
-    label_img_id = labels[:, 1]
-    ann_id = labels[:, 2]
+    true_segment = labels[:, 0, 0]
+    label_class = labels[:, :, 1]
+    label_img_id = labels[:, 0, 2]
+    ann_id = labels[:, :, 3]
     res = dict(
+        true_segment=true_segment,
         class_id=label_class,
         image_id=label_img_id,
         ann_id=ann_id,
@@ -142,6 +144,21 @@ def get_class_weight(train, opts):
     return class_weights
 
 
+def get_true_elems(true_segments, classes, annotations):
+    true_classes = []
+    true_annotations = []
+
+    for idx in range(len(true_segments)):
+        ts = true_segments[idx]
+        tc = classes[idx][ts]
+        ta = annotations[idx][ts]
+
+        true_classes.append(tc)
+        true_annotations.append(ta)
+
+    return true_classes, true_annotations
+
+
 def parse_arguments(params=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -172,6 +189,13 @@ def parse_arguments(params=None):
         const=True,
         default="",
         help="Path for pretrained sender weights",
+    )
+
+    parser.add_argument(
+        "--distractors",
+        type=int,
+        default=1,
+        help="Number of distractors per image",
     )
 
     #################################################
@@ -290,15 +314,15 @@ def parse_arguments(params=None):
     parser.add_argument(
         "--train_logging_step",
         type=int,
-        default=300,
+        default=100,
         help="Number of steps (in batches) before logging during training ",
     )
 
     parser.add_argument(
         "--val_logging_step",
         type=int,
-        default=30,
-        help="Number of steps (in batches) before logging during validaiton",
+        default=5,
+        help="Number of steps (in batches) before logging during validation",
     )
 
     #################################################

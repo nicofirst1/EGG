@@ -93,7 +93,8 @@ class Losses:
         metrics = {}
 
         res_dict = get_labels(labels)
-        label_class = res_dict["class_id"]
+        # label_class = res_dict["class_id"]
+        label_class = res_dict["true_segment"]
 
         # assert that we have an output to work on
         if receiver_output is None and sender_output is None:
@@ -108,10 +109,10 @@ class Losses:
         f_loss = self.focal_loss(output, label_class)
         metrics["f_loss"] = f_loss
 
-        x_loss = get_cross_entropy(output, label_class, weights=self.class_weights)
+        x_loss = get_cross_entropy(output, label_class)  # , weights=self.class_weights)
         metrics["x_loss"] = x_loss
 
-        kl_loss = get_kl(output, label_class, weights=self.class_weights)
+        kl_loss = get_kl(output, label_class)  # , weights=self.class_weights)
         metrics["kl_loss"] = kl_loss
 
         if receiver_output is not None:
