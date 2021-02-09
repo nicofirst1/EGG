@@ -38,6 +38,7 @@ class HeadModule(nn.Module):
         num_classes: int,
         hidden_dim: int,
         distractors: int,
+            batch_size:int,
     ):
         """
         Args:
@@ -52,6 +53,7 @@ class HeadModule(nn.Module):
         self.signal_dim = signal_dim
         self.vision_dim = vision_dim
         self.hidden_dim = hidden_dim
+        self.batch_size=batch_size
         self.model = self.build_model()
 
     def build_model(self) -> torch.nn.Sequential:
@@ -84,13 +86,34 @@ class SimpleHead(HeadModule):
         return nn.Sequential(nn.Linear(feature_num, self.output_size))
 
     def forward(
-        self, signal: torch.Tensor, vision_features: torch.Tensor
+            self, signal: torch.Tensor, vision_features: torch.Tensor
     ) -> torch.Tensor:
         out = torch.cat((vision_features, signal), dim=2)
         # squeeze with product on distractors dimension
         out = torch.prod(out, dim=1)
         class_logits = self.model(out).clone()
-        class_logits = torch.relu(class_logits)
+        # class_logits = torch.relu(class_logits)
+
+        return class_logits
+
+
+class SimpleHeadSigmoid(HeadModule):
+    """
+    Usa single sequential model for  classification
+    """
+
+    def build_model(self) -> torch.nn.Sequential:
+        feature_num = self.signal_dim + self.vision_dim
+        return nn.Sequential(nn.Linear(feature_num, self.output_size), nn.Sigmoid())
+
+    def forward(
+            self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
+        out = torch.cat((vision_features, signal), dim=2)
+        # squeeze with product on distractors dimension
+        out = torch.prod(out, dim=1)
+        class_logits = self.model(out).clone()
+        # class_logits = torch.relu(class_logits)
 
         return class_logits
 
@@ -104,16 +127,64 @@ class Conv(HeadModule):
         feature_num = self.signal_dim + self.vision_dim
         return nn.Sequential(
             nn.Conv2d(self.batch_size, self.batch_size, kernel_size=self.output_size),
-            nn.Squeeze(),
             nn.Linear(feature_num - 1, self.output_size),
         )
 
     def forward(
-        self, signal: torch.Tensor, vision_features: torch.Tensor
+            self, signal: torch.Tensor, vision_features: torch.Tensor
     ) -> torch.Tensor:
         out = torch.cat((vision_features, signal), dim=2)
+        out = out.unsqueeze(dim=0)
         class_logits = self.model(out).clone()
+        class_logits = class_logits.squeeze()
+
+        return class_logits
+
+
+class ConvRelu(HeadModule):
+    """
+    Usa single sequential model for  classification
+    """
+
+    def build_model(self) -> torch.nn.Sequential:
+        feature_num = self.signal_dim + self.vision_dim
+        return nn.Sequential(
+            nn.Conv2d(self.batch_size, self.batch_size, kernel_size=self.output_size),
+            nn.Linear(feature_num - 1, self.output_size),
+        )
+
+    def forward(
+            self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
+        out = torch.cat((vision_features, signal), dim=2)
+        out = out.unsqueeze(dim=0)
+        class_logits = self.model(out).clone()
+        class_logits = class_logits.squeeze()
         class_logits = torch.relu(class_logits)
+
+        return class_logits
+
+
+class ConvSigmoid(HeadModule):
+    """
+    Usa single sequential model for  classification
+    """
+
+    def build_model(self) -> torch.nn.Sequential:
+        feature_num = self.signal_dim + self.vision_dim
+        return nn.Sequential(
+            nn.Conv2d(self.batch_size, self.batch_size, kernel_size=self.output_size),
+            nn.Linear(feature_num - 1, self.output_size),
+            nn.Sigmoid()
+        )
+
+    def forward(
+            self, signal: torch.Tensor, vision_features: torch.Tensor
+    ) -> torch.Tensor:
+        out = torch.cat((vision_features, signal), dim=2)
+        out = out.unsqueeze(dim=0)
+        class_logits = self.model(out).clone()
+        class_logits = class_logits.squeeze()
 
         return class_logits
 

@@ -10,7 +10,7 @@ train_args=(
   "--batch_size"
   "128"
   "--n_epochs"
-  "40"
+  "20"
   "--train_data_perc"
   "1"
   "--val_data_perc"

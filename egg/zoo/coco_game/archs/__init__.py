@@ -9,6 +9,10 @@ HEAD_CHOICES = dict(
     feature_reduction=FeatureReduction,
     RandomSignal=RandomSignal,
     RandomSignalImg=RandomSignalImg,
+    Conv=Conv,
+    SimpleHeadSigmoid=SimpleHeadSigmoid,
+    ConvRelu=ConvRelu,
+    ConvSigmoid=ConvSigmoid
 )
 
 FLAT_CHOICES = dict(

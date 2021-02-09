@@ -15,6 +15,7 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
         num_classes=opts.num_classes,
         hidden_dim=opts.box_head_hidden,
         distractors=opts.distractors,
+        batch_size=opts.batch_size,
     )
 
     rec = Receiver(
