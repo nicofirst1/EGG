@@ -57,9 +57,7 @@ class Receiver(nn.Module):
         vision_out = vision_out.permute((1, 0, 2))
 
         signal = signal.float()
-        # copy the signal N times where N is the number of distractors +1
-        signal = signal.unsqueeze(dim=0).repeat(self.box_module.output_size, 1, 1)
-        signal = signal.permute((1, 0, 2))
+
 
         class_logits = self.box_module(signal, vision_out)
         # class_logits [batch, num_classes]

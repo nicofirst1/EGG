@@ -2,17 +2,17 @@ from egg.zoo.coco_game.archs.flats import *
 from egg.zoo.coco_game.archs.heads import *
 
 HEAD_CHOICES = dict(
-    simple=SimpleHead,
     only_signal=OnlySignal,
     only_image=OnlyImage,
     signal_expansion=SignalExpansion,
     feature_reduction=FeatureReduction,
     RandomSignal=RandomSignal,
     RandomSignalImg=RandomSignalImg,
-    Conv=Conv,
-    SimpleHeadSigmoid=SimpleHeadSigmoid,
-    ConvRelu=ConvRelu,
-    ConvSigmoid=ConvSigmoid
+
+    SimpleHeadExpansion=SimpleHeadExpansion,
+    ConvExpansion=ConvExpansion,
+    SimpleHeadReduction=SimpleHeadReduction,
+
 )
 
 FLAT_CHOICES = dict(

@@ -442,6 +442,7 @@ def get_data(
         ann_file=path2json + "instances_train2017.json",
         perc_ids=opts.train_data_perc,
         base_transform=base_trans,
+        distractors=opts.distractors,
     )
 
     coco_val = CocoDetection(
@@ -449,6 +450,8 @@ def get_data(
         ann_file=path2json + "instances_val2017.json",
         perc_ids=opts.val_data_perc,
         base_transform=base_trans,
+        distractors=opts.distractors,
+
     )
 
     if opts.num_workers > 0:

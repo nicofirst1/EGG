@@ -488,10 +488,10 @@ class TensorboardLogger(Callback):
         other_ans = [get_cat_name_ann(x) for x in other_ans]
 
         # remove obj to predict from other anns
-        for idx in range(len(true_class)):
-            other_ans[idx].remove(true_class[idx])
-            for d in distractors[idx]:
-                other_ans[idx].remove(d)
+        # for idx in range(len(true_class)):
+        #     other_ans[idx].remove(true_class[idx])
+        #     for d in distractors[idx]:
+        #         other_ans[idx].remove(d)
 
         with open(self.message_file, "a+") as file:
             for idx in range(len(true_class)):
