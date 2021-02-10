@@ -8,10 +8,8 @@ HEAD_CHOICES = dict(
     feature_reduction=FeatureReduction,
     random_signal=RandomSignal,
     random_signal_img=RandomSignalImg,
-
     Conv=Conv,
     Conv2=Conv2,
-
 )
 
 FLAT_CHOICES = dict(

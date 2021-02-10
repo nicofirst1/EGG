@@ -58,7 +58,6 @@ class Receiver(nn.Module):
 
         signal = signal.float()
 
-
         class_logits = self.box_module(signal, vision_out)
         # class_logits [batch, num_classes]
 

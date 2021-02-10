@@ -450,7 +450,6 @@ def get_data(
         perc_ids=opts.val_data_perc,
         base_transform=base_trans,
         distractors=opts.distractors,
-
     )
 
     if opts.num_workers > 0:
