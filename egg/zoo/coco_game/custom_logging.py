@@ -478,20 +478,24 @@ class TensorboardLogger(Callback):
         predictions = torch.softmax(predictions, dim=1)
         predictions = torch.argmax(predictions, dim=1)
 
-        true_class = [self.val_coco.cats[idx]["name"] for idx in true_class]
+        true_class = [self.val_coco.cats[idx]["name"]for idx in true_class]
         distractors = [get_cat_name_id(idx) for idx in distractors]
 
         # get all other objects in image
-        other_ans = [self.val_coco.imgToAnns[x] for x in image_id.tolist()]
+        other_ans = [self.val_coco.imgToAnns[x].copy() for x in image_id.tolist()]
 
         # transfrom id to string
         other_ans = [get_cat_name_ann(x) for x in other_ans]
 
-        # remove obj to predict from other anns
-        # for idx in range(len(true_class)):
-        #     other_ans[idx].remove(true_class[idx])
-        #     for d in distractors[idx]:
-        #         other_ans[idx].remove(d)
+        #remove obj to predict from other anns
+        for idx in range(len(true_class)):
+            oa=other_ans[idx]
+            tc=true_class[idx]
+            oa.remove(tc)
+            dis=distractors[idx]
+            for d in dis:
+                if d in oa:
+                    oa.remove(d)
 
         with open(self.message_file, "a+") as file:
             for idx in range(len(true_class)):

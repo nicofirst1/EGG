@@ -347,7 +347,6 @@ class CocoDetection(VisionDataset):
             torch.LongTensor([indices[0], x["category_id"], img_id, x["id"]])
             for x in labels
         ]
-        a = [x["id"] for x in self.coco.imgToAnns[img_id]]
         labels = [x.unsqueeze(dim=0) for x in labels]
         labels = torch.cat(labels, dim=0)
 
