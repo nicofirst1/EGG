@@ -4,12 +4,11 @@ import torch
 
 from egg import core
 from egg.core import CheckpointSaver, ConsoleLogger, ProgressBarLogger
-from egg.core.baselines import BuiltInBaseline, MeanBaseline
+from egg.core.baselines import MeanBaseline
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import (
-    EarlyStopperAccuracy,
     RandomLogging,
     RlScheduler,
     TensorboardLogger,
@@ -89,7 +88,7 @@ def get_game(feat_extractor, opts, class_weights=None):
     return game, dict(train=train_log, val=val_log)
 
 
-@hypertune
+#@hypertune
 def main(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
@@ -110,12 +109,7 @@ def main(params=None):
     get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
 
     callbacks = [
-        ProgressBarLogger(
-            n_epochs=opts.n_epochs,
-            train_data_len=len(train_data),
-            val_data_len=len(val_data),
-            use_info_table=False,
-        ),
+
         CheckpointSaver(
             checkpoint_path=opts.checkpoint_dir,
             checkpoint_freq=opts.checkpoint_freq,
@@ -135,9 +129,19 @@ def main(params=None):
             val_coco=val_data.dataset.coco,
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
-        # EarlyStopperAccuracy(min_threshold=0.6, min_increase=0.025),
+        # EarlyStopperAccuracy(min_threshold=0.5, min_increase=0.01),
         ConsoleLogger(),
     ]
+
+    if opts.use_progress_bar:
+        callbacks.append(
+            ProgressBarLogger(
+                n_epochs=opts.n_epochs,
+                train_data_len=len(train_data),
+                val_data_len=len(val_data),
+                use_info_table=False,
+            )
+        )
 
     trainer = core.Trainer(
         game=game,

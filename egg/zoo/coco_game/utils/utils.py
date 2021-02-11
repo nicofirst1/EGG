@@ -174,6 +174,13 @@ def parse_arguments(params=None):
     )
 
     parser.add_argument(
+        "--use_progress_bar",
+        default=False,
+        action="store_true",
+        help="If to use the traceback provided by the rich library",
+    )
+
+    parser.add_argument(
         "--resume_training",
         type=str2bool,
         nargs="?",

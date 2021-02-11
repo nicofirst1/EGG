@@ -109,7 +109,11 @@ class FeatureReduction(HeadModule):
     It then adds a dimension to the signal
     [batch size, signal length]  -> [batch size, signal length, 1]
 
-    In order to allow for a matrix multiplication between vision feature and signal which yields a class logit of size
+    In order to allow for a matrix multiplication between vision feature and signal
+                vision                          signal
+     [batch size, N, signal length] x  [batch size, signal length, 1]
+
+    which yields a class logit of size
     [batch size, N 1]
 
     Where the last dimension is removed with a squeeze
