@@ -1,8 +1,62 @@
-# Experiments
+# Experiments Discrimination
 
-These experiments where run with 15 classes from the coco dataset (skipped first 5)
-The performance was measured by the test class accuracy. Whenever the `***` is present then more experiments should be
-done.
+These esperiments were ran with 80 classes from the coco dataset on the discrimination task. The sender is shown the
+complete image and a segment of an object inside the image. The receiver is shown the segment plus a number of
+distractors which are segments of objects coming from the same image.
+
+## Architectures
+
+### Sender
+
+The sender stays similar to the previous version (please check the *Image manipulation*  chapter in the **Experiments
+Classification** section ). A new introduction is a linear layer which takes as input the sender hidden state (the one
+which will be later passed to the Reinforce wrapper) and performs a prediction in the output size. This was created for
+the classification task.
+
+### Receiver
+
+The receiver was heavily modified. It now takes as input the sender signal as previously and N (= distractors +1)
+images. The output must be of size N indicating the segment shown to the sender.
+
+The receiver architectures are currently 3 + 4 control ones:
+
+- FeatureReduction: similar to the default discrimination architecture, the feature reduction embeds the vision feature
+  to be of equal size to the signal length. It then performs a multiplication between the two matrices of
+  size   `[batch size, N, signal length] x  [batch size, signal length, 1]`, which then yields a class logit of size
+  `[batch size, N, 1]`
+
+- SignalExpansion: contrary to the previous, the signal expansion embeds the signal dimension to match the vision one
+  and repeats the matrix multiplication above.
+
+- Conv: Similarly to FeatureReduction, Conv reduces the dimension of the vision to the signal one.
+  `[batch size, N, vision features] ->  [batch size, N, signal length]`. It then repeats the signal on the second
+  dimension to match the vision one `[batch size, signal length] ->  [batch size, N, signal length]`. This allow for the
+  matrix multiplication between the signal and the vision vector. The output's dimension is increased to reach 4 (min
+  output for conv2d)
+  `[batch size, N, signal length, 1]`. Finally, the convolution can be applied in order reduce the second dimension
+  from `N` features to `1`  feature and a non-squared kernel of size` (signal length - N,1)`
+  reduces the last dimension to the output. `[batch size, N, signal length, 1] ->[batch size, 1, N, 1]`
+  The result is squeezed to get a class logits of size
+  [batch size, N]
+
+The control ones are:
+
+- Only signal: the receiver uses only the signal to perform the prediction. It is now more difficult to guess using
+  only the signal since the sender has no information on the amount or position of the distractors.
+
+- Random signal: same as before, but the signal is randomized.
+
+- Only image: similar to only signal, but the receiver uses the images only to perform the prediction.
+- Random signal image: the receiver uses both the signal and the image as in FeatureReduction, but the signal is
+  randomized.
+  
+## Results
+coming soon
+
+# Experiments Clasification (old)
+
+These experiments were ran with 15 classes from the coco dataset (skipped first 5) on the classification task. The
+performance was measured by the test class accuracy. Whenever the `***` is present then more experiments should be done.
 
 ## Hidden size
 
