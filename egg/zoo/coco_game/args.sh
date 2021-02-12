@@ -35,6 +35,7 @@ log_args=(
   "--checkpoint_freq"
   "1"
   "--use_rich_traceback"
+  "--use_progress_bar"
 
 )
 
