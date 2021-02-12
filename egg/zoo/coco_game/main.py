@@ -11,7 +11,7 @@ from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import (
     RandomLogging,
     RlScheduler,
-    TensorboardLogger,
+    TensorboardLogger, EarlyStopperAccuracy,
 )
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
@@ -19,14 +19,13 @@ from egg.zoo.coco_game.pretrain.sender_reinforce import (
     CustomSenderReceiverRnnReinforce,
     CustomSenderReinforce,
 )
-from egg.zoo.coco_game.utils.hypertune import hypertune
+from egg.zoo.coco_game.utils.parsers import parse_arguments
 from egg.zoo.coco_game.utils.utils import (
     console,
     define_project_dir,
     dump_params,
     get_class_weight,
     get_images,
-    parse_arguments,
 )
 
 
@@ -88,7 +87,7 @@ def get_game(feat_extractor, opts, class_weights=None):
     return game, dict(train=train_log, val=val_log)
 
 
-#@hypertune
+# @hypertune
 def main(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
