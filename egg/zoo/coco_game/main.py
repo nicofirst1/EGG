@@ -105,7 +105,6 @@ def main(params=None):
         optimizer=optimizer, gamma=opts.decay_rate
     )
 
-    # optimizer= SGD(game.parameters(), lr=opts.lr,momentum=0.9)
     get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
 
     callbacks = [
@@ -129,7 +128,7 @@ def main(params=None):
             val_coco=val_data.dataset.coco,
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
-        # EarlyStopperAccuracy(min_threshold=0.5, min_increase=0.01),
+        EarlyStopperAccuracy(min_threshold=0.5, min_increase=0.01),
         ConsoleLogger(),
     ]
 

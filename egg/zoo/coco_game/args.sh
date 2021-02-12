@@ -50,7 +50,7 @@ arch_args=(
   "--image_resize"
   "224"
   "--head_choice"
-  "simple"
+  "signal_expansion"
   "--sender_hidden"
   "128"
   "--receiver_hidden"
