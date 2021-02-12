@@ -281,7 +281,6 @@ def training_parsing(parser):
         type=str2bool,
         nargs="?",
         const=True,
-        default=True,
         help="Resume training loading models from '--checkpoint_dir'",
     )
 
