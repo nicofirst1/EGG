@@ -127,7 +127,7 @@ def main(params=None):
             val_coco=val_data.dataset.coco,
         ),
         RlScheduler(rl_optimizer=rl_optimizer),
-        EarlyStopperAccuracy(min_threshold=0.5, min_increase=0.01),
+        EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
         ConsoleLogger(),
     ]
 

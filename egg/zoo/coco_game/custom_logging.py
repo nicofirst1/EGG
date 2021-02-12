@@ -575,13 +575,13 @@ class EarlyStopperAccuracy(Callback):
     A base class, supports the running statistic which is could be used for early stopping
     """
 
-    def __init__(self, min_threshold: float, min_increase: float) -> None:
+    def __init__(self, max_threshold: float, min_increase: float) -> None:
         super(EarlyStopperAccuracy, self).__init__()
         self.train_stats: List[Tuple[float, Interaction]] = []
         self.validation_stats: List[Tuple[float, Interaction]] = []
         self.epoch: int = 0
 
-        self.max_threshold = min_threshold
+        self.max_threshold = max_threshold
         self.min_increase = min_increase
         self.val_field_name = "accuracy_receiver"
         self.under_max_thr = False
