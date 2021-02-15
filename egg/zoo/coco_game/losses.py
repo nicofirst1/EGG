@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from egg.zoo.coco_game.utils.utils import get_labels
+from egg.zoo.coco_game.utils.utils import get_labels, get_true_elems
 
 
 def loss_init(
@@ -94,7 +94,7 @@ class Losses:
 
         res_dict = get_labels(labels)
         # label_class = res_dict["class_id"]
-        label_class = res_dict["true_segment"]
+        label_discr = res_dict["true_segment"]
 
         # assert that we have an output to work on
         if receiver_output is None and sender_output is None:
@@ -106,21 +106,25 @@ class Losses:
         else:
             output = receiver_output
 
-        f_loss = self.focal_loss(output, label_class)
+        f_loss = self.focal_loss(output, label_discr)
         metrics["f_loss"] = f_loss
 
-        x_loss = get_cross_entropy(output, label_class)  # , weights=self.class_weights)
+        x_loss = get_cross_entropy(output, label_discr)  # , weights=self.class_weights)
         metrics["x_loss"] = x_loss
 
-        kl_loss = get_kl(output, label_class)  # , weights=self.class_weights)
+        kl_loss = get_kl(output, label_discr)  # , weights=self.class_weights)
         metrics["kl_loss"] = kl_loss
 
         if receiver_output is not None:
-            rec_acc = get_accuracy(receiver_output, label_class)
+            rec_acc = get_accuracy(receiver_output, label_discr)
             rec_acc = rec_acc.unsqueeze(dim=-1)
             metrics["accuracy_receiver"] = rec_acc
 
         if sender_output is not None:
+            label_class, _ = get_true_elems(
+                res_dict["true_segment"], res_dict["class_id"], res_dict["ann_id"]
+            )
+            label_class = torch.Tensor(label_class).to(label_discr.device)
             send_acc = get_accuracy(sender_output, label_class)
             send_acc = send_acc.unsqueeze(dim=-1)
             metrics["accuracy_sender"] = send_acc
