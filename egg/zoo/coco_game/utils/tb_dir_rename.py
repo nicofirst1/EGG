@@ -31,24 +31,6 @@ PARAMS_SKIP = set(
 )
 
 
-def get_accumulator(path2accumulator, tag, mean_elem=5):
-    size_guidance = {  # see below regarding this argument
-        event_accumulator.COMPRESSED_HISTOGRAMS: 0,
-        event_accumulator.IMAGES: 0,
-        event_accumulator.AUDIO: 0,
-        event_accumulator.SCALARS: 99999,
-        event_accumulator.HISTOGRAMS: 0,
-    }
-
-    ea = event_accumulator.EventAccumulator(path2accumulator, size_guidance)
-    ea = ea.Reload()
-    try:
-        ea = ea.Scalars(tag)[-mean_elem:]
-    except KeyError:
-        return None
-    ea = [x.value for x in ea]
-    ea = sum(ea) / mean_elem
-    return ea
 
 
 def get_params(path2params: str) -> Dict:
