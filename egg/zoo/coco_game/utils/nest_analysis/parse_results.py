@@ -67,7 +67,7 @@ def parse_results(nest_path, tag):
         configs = [x for x in lines if "# launching" in x][0]
         configs = get_configs(configs)
         # lines = prov_lines
-        epochs = [x for x in lines if "epoch" in x]
+        epochs = [x for x in lines if tag in x]
         best_vals, max_epoch = get_best_result(epochs, tag)
 
         res.append(
