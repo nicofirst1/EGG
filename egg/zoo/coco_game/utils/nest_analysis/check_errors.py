@@ -4,6 +4,8 @@ from collections import Counter
 
 from tensorboard.backend.event_processing import event_accumulator
 
+from egg.zoo.coco_game.utils.nest_analysis.nest_utils import path_parser
+
 
 def parse_error_args(nest_path, idxs):
     confs = []
@@ -146,24 +148,15 @@ def parse_mean_time(error_epochs, standard_epochs):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--nest_out_path",
-        default="/home/dizzi/Downloads/Both_out_all/",
-        type=str,
-    )
-    p = parser.parse_args()
-
-    pt = pathlib.Path(p.nest_out_path)
+    nest_path = path_parser()
 
     # parse error configurations
     # ids = parse_error_ids(pt)
     # res = parse_error_args(pt, ids)
 
-    ids = parse_error_ids(pt, err_string="oom-kill event")
-    uuids = parse_uuids(pt, ids)
-    error_epochs, standard_epochs = parse_epochs(pt, uuids)
+    ids = parse_error_ids(nest_path, err_string="oom-kill event")
+    uuids = parse_uuids(nest_path, ids)
+    error_epochs, standard_epochs = parse_epochs(nest_path, uuids)
     error_times, standard_times = parse_mean_time(error_epochs, standard_epochs)
 
     print(f"Mean time for one epoch on oom error : {error_times}, while standard is : {standard_times}")
