@@ -117,7 +117,7 @@ def main(params=None):
 
         RlScheduler(rl_optimizer=rl_optimizer),
         EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
-        ConsoleLogger(),
+        ConsoleLogger(print_train_loss=True, as_json=True),
     ]
 
     if opts.use_progress_bar:
