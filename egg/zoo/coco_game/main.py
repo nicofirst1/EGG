@@ -114,32 +114,34 @@ def main(params=None):
             prefix="epoch",
             max_checkpoints=10,
         ),
-        TensorboardLogger(
-            tensorboard_dir=opts.tensorboard_dir,
-            train_logging_step=opts.train_logging_step,
-            val_logging_step=opts.val_logging_step,
-            resume_training=opts.resume_training,
-            loggers=loggers,
-            game=game,
-            class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
-            get_image_method=get_imgs,
-            hparams=vars(opts),
-            val_coco=val_data.dataset.coco,
-        ),
+
         RlScheduler(rl_optimizer=rl_optimizer),
         EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
         ConsoleLogger(),
     ]
 
     if opts.use_progress_bar:
-        callbacks.append(
+        clbs = [
             ProgressBarLogger(
                 n_epochs=opts.n_epochs,
                 train_data_len=len(train_data),
                 val_data_len=len(val_data),
                 use_info_table=False,
-            )
-        )
+            ),
+            TensorboardLogger(
+                tensorboard_dir=opts.tensorboard_dir,
+                train_logging_step=opts.train_logging_step,
+                val_logging_step=opts.val_logging_step,
+                resume_training=opts.resume_training,
+                loggers=loggers,
+                game=game,
+                class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
+                get_image_method=get_imgs,
+                hparams=vars(opts),
+                val_coco=val_data.dataset.coco,
+            ),
+        ]
+        callbacks += clbs
 
     trainer = core.Trainer(
         game=game,
