@@ -1,13 +1,16 @@
 import os
 import random
 from argparse import Namespace
+from functools import reduce
 from typing import Dict, List, Tuple
 
 import albumentations as album
 import cv2
 import lycon
 import numpy as np
+import PIL
 import torch
+import torchvision
 from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
@@ -291,47 +294,37 @@ class CocoDetection(VisionDataset):
 
         # get image
         path = os.path.join(self.root, path)
-        img_original = lycon.load(path)
+        img_original = PIL.Image.open(path)
+
+        # convert to rgb if grayscale
+        if img_original.mode != "RGB":
+            img_original = img_original.convert("RGB")
+
         # extract segment and choose target
         chosen_sgm = self.extract_segmented(img_original, chosen_target)
         distractors_sgm = [self.extract_segmented(img_original, x) for x in distractors]
 
-        # if segmented is empty get next item
-        if len(chosen_sgm) == 0:
+        # if segmented area is empty get next item
+        if reduce(lambda x, y: x * y, chosen_sgm.size) == 0:
             return self.__getitem__(index + 1)
 
         try:
 
             # Resize and normalize images
-            resized_image = self.base_transform(
-                image=img_original,
-            )["image"]
+            resized_image = self.base_transform(img_original)
 
-            chosen_sgm = self.base_transform(
-                image=chosen_sgm,
-            )["image"]
+            chosen_sgm = self.base_transform(chosen_sgm)
 
-            distractors_sgm = [
-                self.base_transform(
-                    image=x,
-                )["image"]
-                for x in distractors_sgm
-            ]
+            distractors_sgm = [self.base_transform(x) for x in distractors_sgm]
 
         except cv2.error:
             print(f"Faulty image at index {index}")
             return self.__getitem__(index + 1)
 
-        ### preprocess segments
+        # preprocess segments
         segments = [chosen_sgm] + distractors_sgm
-        # the images are of size [h,w, channels] but the model requires [channels,w,h]
-        segments = [np.transpose(x, axes=(2, 0, 1)) for x in segments]
-        segments = [torch.FloatTensor(x) for x in segments]
 
-        ### define sender input
-        resized_image = np.transpose(resized_image, axes=(2, 0, 1))
-        # transform  in torch tensor
-        resized_image = torch.FloatTensor(resized_image)
+        # define sender input
         sender_inp = torch.cat((resized_image, segments[0]), dim=-1)
 
         # shuffle segments
@@ -353,15 +346,14 @@ class CocoDetection(VisionDataset):
         return sender_inp, segments, labels
 
     @staticmethod
-    def extract_segmented(img: np.array, target: dict):
+    def extract_segmented(img: PIL.Image, target: dict) -> PIL.Image:
         """
         Choose random target and extract segment
         """
         bbox = target["bbox"]
-        bbox = [int(elem) for elem in bbox]
-        # order bbox for numpy crop
-        bbox = [bbox[1], bbox[0], bbox[1] + bbox[3], bbox[0] + bbox[2]]
-        sgm = img[bbox[0] : bbox[2], bbox[1] : bbox[3]]
+        # from (x,y,w,h) to (x,y,x2,y2)
+        bbox = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]]
+        sgm = img.crop(bbox)
 
         return sgm
 
@@ -369,18 +361,19 @@ class CocoDetection(VisionDataset):
         return len(self.ids)
 
 
-def transformations(input_size: int) -> album.Compose:
+def torch_transformations(input_size: int) -> album.Compose:
     """
     Return transformation for sender and receiver
     Check albumentations site for other transformations
     https://albumentations-demo.herokuapp.com/
     """
 
-    base_transform = album.Compose(
+    base_transform = torchvision.transforms.Compose(
         [
-            album.Resize(input_size, input_size),
-            album.Normalize(
-                [0.485, 0.456, 0.406], [0.229, 0.224, 0.225], max_pixel_value=255
+            torchvision.transforms.Resize((input_size, input_size)),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
             ),
         ],
     )
@@ -433,7 +426,7 @@ def get_data(
     path2imgs = opts.data_root + "/"
     path2json = opts.data_root + "/annotations/"
 
-    base_trans = transformations(opts.image_resize)
+    base_trans = torch_transformations(opts.image_resize)
 
     # generate datasets
     coco_train = CocoDetection(
