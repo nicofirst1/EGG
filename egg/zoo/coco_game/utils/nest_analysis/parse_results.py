@@ -39,8 +39,6 @@ def get_best_result(epochs, tag):
     test = [x for x in epochs if x['mode'] == "test"]
     train = [x for x in epochs if x['mode'] == "train"]
 
-    assert len(test) == len(train), "Train and test have different number of epochs!"
-
     best_idx = -1
     best_tag = -1
     for idx in range(len(test)):
@@ -63,6 +61,9 @@ def parse_results(nest_path, tag):
     for out_file in files:
         with open(out_file, "r") as f:
             lines = f.readlines()
+
+        if "submitit ERROR" in "\n".join(lines):
+            continue
 
         configs = [x for x in lines if "# launching" in x][0]
         configs = get_configs(configs)
