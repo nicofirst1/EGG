@@ -1,9 +1,9 @@
+import ast
 import json
 
 import pandas as pd
 
 from egg.zoo.coco_game.utils.nest_analysis.nest_utils import path_parser
-
 
 # prov_lines = """
 # {"loss": 0.6343242526054382, "f_loss": 0.3030605614185333, "x_loss": 0.7756949663162231, "kl_loss": 2.823378086090088, "accuracy_receiver": 0.5036764740943909, "accuracy_sender": 0.1875, "custom_loss": 0.7756949663162231, "sender_entropy": 0.15114206075668335, "receiver_entropy": 0.0, "length": 3.808823585510254, "policy_loss": -0.28811606764793396, "weighted_entropy": 0.015770524740219116, "mode": "train", "epoch": 1}
@@ -14,30 +14,48 @@ from egg.zoo.coco_game.utils.nest_analysis.nest_utils import path_parser
 # prov_lines = prov_lines.split("\n")
 
 
-def get_configs(confing_line: str) -> str:
-    confing_line = confing_line.split("[", 1)[1].split("]", 1)[0]
-    confing_line = confing_line.split(",")
+def get_configs(lines: list) -> str:
+    def parse_config_lines(lines):
+        start = "parsers.py"
+        stop = "]"
+        skip_start = "("
+        skip_end = "),"
 
-    res = {}
+        configs = []
+        to_append = False
+        for l in lines:
+            l = l.strip()
+            if start in l:
+                to_append = True
+            elif stop == l:
+                break
+            elif l == skip_start:
+                to_append = False
 
-    for c in confing_line:
+            if to_append:
+                configs.append(l)
 
-        if "=" not in c: continue
+            if l == skip_end:
+                to_append = True
 
-        key = c.split("=")[0].replace("--", "").replace('"', '')
-        val = c.split("=")[1].replace('"', '')
+        configs.pop(0)
 
-        res[key] = val
+        configs = [x for x in configs if "device" not in x]
 
-    return res
+        return configs
+
+    configs = parse_config_lines(lines)
+    configs = "[" + "".join(configs) + "]"
+    configs = ast.literal_eval(configs)
+    return dict(configs)
 
 
 def get_best_result(epochs, tag):
     # convert to dict
     epochs = [json.loads(x) for x in epochs]
 
-    test = [x for x in epochs if x['mode'] == "test"]
-    train = [x for x in epochs if x['mode'] == "train"]
+    test = [x for x in epochs if x["mode"] == "test"]
+    train = [x for x in epochs if x["mode"] == "train"]
 
     best_idx = -1
     best_tag = -1
@@ -49,7 +67,7 @@ def get_best_result(epochs, tag):
             best_idx = idx
 
     best_vals = [train[best_idx], test[best_idx]]
-    max_epochs = test[idx]['epoch']
+    max_epochs = test[idx]["epoch"]
 
     return best_vals, max_epochs
 
@@ -65,8 +83,7 @@ def parse_results(nest_path, tag):
         if "submitit ERROR" in "\n".join(lines):
             continue
 
-        configs = [x for x in lines if "# launching" in x][0]
-        configs = get_configs(configs)
+        configs = get_configs(lines)
         # lines = prov_lines
         epochs = [x for x in lines if tag in x]
         best_vals, max_epoch = get_best_result(epochs, tag)
@@ -89,27 +106,27 @@ def build_csv(csv_path, configs):
 def build_dataframe(results):
     tmp = results[0]
 
-    columns = list(tmp['configs'].keys())
-    columns += [f"train_{x}" for x in tmp['best_vals'][0].keys()]
-    columns += [f"test_{x}" for x in tmp['best_vals'][0].keys()]
-    columns += ['max_epoch']
+    columns = list(tmp["configs"].keys())
+    columns += [f"train_{x}" for x in tmp["best_vals"][0].keys()]
+    columns += [f"test_{x}" for x in tmp["best_vals"][0].keys()]
+    columns += ["max_epoch"]
     df = pd.DataFrame(columns=columns)
 
     idx = 0
     for tmp in results:
-        row = list(tmp['configs'].values())
-        row += [x for x in tmp['best_vals'][0].values()]
-        row += [x for x in tmp['best_vals'][1].values()]
-        row += [tmp['max_epoch']]
+        row = list(tmp["configs"].values())
+        row += [x for x in tmp["best_vals"][0].values()]
+        row += [x for x in tmp["best_vals"][1].values()]
+        row += [tmp["max_epoch"]]
         df.loc[idx] = row
         idx += 1
 
     return df
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     nest_path = path_parser()
-    csv_name = nest_path.joinpath("results.csv")
+    csv_name = nest_path.joinpath(f"results_{nest_path.stem}.csv")
 
     ids = parse_results(nest_path, tag="accuracy_receiver")
     df = build_dataframe(ids)
