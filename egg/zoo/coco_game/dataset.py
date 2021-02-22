@@ -4,11 +4,11 @@ from argparse import Namespace
 from functools import reduce
 from typing import Dict, List, Tuple
 
+import PIL
 import albumentations as album
 import cv2
 import lycon
 import numpy as np
-import PIL
 import torch
 import torchvision
 from pycocotools.coco import COCO
@@ -31,12 +31,12 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-        self,
-        root: str,
-        ann_file: str,
-        base_transform: album.Compose,
-        perc_ids: float = 1,
-        distractors: int = 1,
+            self,
+            root: str,
+            ann_file: str,
+            base_transform: album.Compose,
+            perc_ids: float = 1,
+            distractors: int = 1,
     ):
         """
         Custom Dataset
@@ -100,7 +100,7 @@ class CocoDetection(VisionDataset):
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
-        cats = cats[over_presented : num_classes + over_presented]
+        cats = cats[over_presented: num_classes + over_presented]
         ans = dataset["annotations"]
         ids = [elem["id"] for elem in cats]
         cat_map = {}
@@ -234,10 +234,10 @@ class CocoDetection(VisionDataset):
 
             # get normalized area
             area = (
-                (an["bbox"][2] + eps)
-                / img["width"]
-                * (an["bbox"][3] + eps)
-                / img["height"]
+                    (an["bbox"][2] + eps)
+                    / img["width"]
+                    * (an["bbox"][3] + eps)
+                    / img["height"]
             )
             if area < min_area:
                 self.ids[idx] = None
@@ -251,7 +251,7 @@ class CocoDetection(VisionDataset):
         )
 
     def get_images(
-        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
@@ -276,7 +276,7 @@ class CocoDetection(VisionDataset):
         return imgs
 
     def __getitem__(
-        self, index: int
+            self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -382,7 +382,7 @@ def torch_transformations(input_size: int) -> album.Compose:
 
 
 def collate(
-    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -409,7 +409,7 @@ def collate(
 
 
 def get_data(
-    opts: Namespace,
+        opts: Namespace,
 ):
     """
     Get train and validation data loader
@@ -471,3 +471,51 @@ def get_data(
     )
 
     return coco_train, coco_val
+
+
+def get_test(
+        opts: Namespace,
+):
+    """
+    Get train and validation data loader
+    the path should be of the form:
+    - path2data
+
+    -- images
+    --- train2017
+
+    -- annotations
+    --- instances_train2017.json
+    """
+
+    path2imgs = opts.data_root + "/"
+    path2json = opts.data_root + "/annotations/"
+
+    base_trans = torch_transformations(opts.image_resize)
+
+    # generate datasets
+    coco_test = CocoDetection(
+        root=path2imgs + "test2017",
+        ann_file=path2json + "image_info_test2017.json",
+        perc_ids=opts.train_data_perc,
+        base_transform=base_trans,
+        distractors=opts.distractors,
+    )
+
+    if opts.num_workers > 0:
+        timeout = 10
+    else:
+        timeout = 0
+
+    # generate dataloaders
+    coco_test = DataLoader(
+        coco_test,
+        shuffle=True,
+        drop_last=True,
+        num_workers=opts.num_workers,
+        batch_size=opts.batch_size,
+        collate_fn=collate,
+        timeout=timeout,
+    )
+
+    return coco_test

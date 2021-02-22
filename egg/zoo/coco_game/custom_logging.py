@@ -26,14 +26,14 @@ class RandomLogging(LoggingStrategy):
         super().__init__(*args)
 
     def filtered_interaction(
-        self,
-        sender_input,
-        receiver_input,
-        labels,
-        message,
-        receiver_output,
-        message_length,
-        aux,
+            self,
+            sender_input,
+            receiver_input,
+            labels,
+            message,
+            receiver_output,
+            message_length,
+            aux,
     ):
         rnd = random.random()
         should_store = rnd < self.store_prob
@@ -55,17 +55,16 @@ class RandomLogging(LoggingStrategy):
 
 class TensorboardLogger(Callback):
     def __init__(
-        self,
-        tensorboard_dir: str,
-        loggers: Dict[str, LoggingStrategy] = None,
-        train_logging_step: int = 50,
-        val_logging_step: int = 20,
-        resume_training: bool = False,
-        game: torch.nn.Module = None,
-        class_map: Dict[int, str] = {},
-        get_image_method=None,
-        hparams=None,
-        val_coco: COCO = None,
+            self,
+            tensorboard_dir: str,
+            loggers: Dict[str, LoggingStrategy] = None,
+            train_logging_step: int = 50,
+            val_logging_step: int = 20,
+            resume_training: bool = False,
+            game: torch.nn.Module = None,
+            class_map: Dict[int, str] = {},
+            get_image_method=None,
+            hparams=None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -79,13 +78,11 @@ class TensorboardLogger(Callback):
         """
         self.writer = SummaryWriter(log_dir=tensorboard_dir)
         self.gs_file = join(tensorboard_dir, "gs.txt")
-        self.message_file = Path(join(tensorboard_dir, "messages.csv"))
         self.train_log_step = train_logging_step
         self.val_log_step = val_logging_step
         self.train_gs = 0
         self.val_gs = 0
         self.loggers = loggers
-        self.val_coco = val_coco
 
         self.game = game
         self.class_map = class_map
@@ -104,24 +101,6 @@ class TensorboardLogger(Callback):
             except FileNotFoundError:
                 pass
 
-    def init_message_file(self):
-        header = [
-            "Epoch",
-            "Message",
-            "Pred Class",
-            "True Class",
-            "Distractors",
-            "Other Classes",
-        ]
-
-        if self.message_file.exists():
-            console.log(
-                f"File {self.message_file} already exists, data will be appended"
-            )
-        else:
-            with open(self.message_file, "w+") as f:
-                f.write(",".join(header))
-                f.write("/n")
 
     @staticmethod
     def filter_hparam(hparam):
@@ -170,7 +149,6 @@ class TensorboardLogger(Callback):
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         # self.log_precision_recall(logs, phase="val", global_step=epoch)
         self.log_messages_embedding(logs, is_train=False, global_step=epoch)
-        self.log_message_file(logs, global_step=epoch)
         self.log_hparams(logs, loss)
         if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
@@ -180,7 +158,7 @@ class TensorboardLogger(Callback):
         self.log_conv = False
 
     def on_batch_end(
-        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
 
         if batch_id != 0:
@@ -190,7 +168,7 @@ class TensorboardLogger(Callback):
                 self.log(loss.detach(), logs, is_training)
 
     def log_receiver_output(
-        self, receiver_output: torch.Tensor, phase: str, global_step: int
+            self, receiver_output: torch.Tensor, phase: str, global_step: int
     ):
         """
         Add information about receiver output to tensorboard.
@@ -212,11 +190,11 @@ class TensorboardLogger(Callback):
         )
 
     def log_metrics(
-        self,
-        logs: Interaction,
-        phase: str,
-        global_step: int,
-        loss: float,
+            self,
+            logs: Interaction,
+            phase: str,
+            global_step: int,
+            loss: float,
     ):
 
         metrics = logs.aux
@@ -267,7 +245,7 @@ class TensorboardLogger(Callback):
         )
 
     def log_labels(
-        self, logs: Interaction, phase: str, global_step: int, label_key="true_segment"
+            self, logs: Interaction, phase: str, global_step: int, label_key="true_segment"
     ):
         """
         Logs statistic about the labels such as the class and the bounding boxes
@@ -374,7 +352,7 @@ class TensorboardLogger(Callback):
             )
 
     def log_messages_embedding(
-        self, logs: Interaction, is_train: bool, global_step: int
+            self, logs: Interaction, is_train: bool, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -435,82 +413,8 @@ class TensorboardLogger(Callback):
             tag=f"{phase}/message",
         )
 
-    def log_message_file(self, logs: Interaction, global_step: int):
-        """
-        Logs the csv with message
-        """
-
-        def get_cat_name_id(cat_ids):
-            return [self.val_coco.cats[idx]["name"] for idx in cat_ids]
-
-        def get_cat_name_ann(annotations):
-            """
-            Return list of objs names from annotation ids
-            """
-
-            result = []
-
-            for ann in annotations:
-                ann_id = ann["category_id"]
-                ann_name = self.val_coco.cats[ann_id]["name"]
-                result.append(ann_name)
-            return result
-
-        if self.val_coco is None:
-            return
-
-        res_dict = get_labels(logs.labels)
-        true_seg = res_dict["true_segment"]
-        objects = res_dict["class_id"]
-        objects = [x.tolist() for x in objects]
-
-        true_class = []
-        distractors = []
-
-        for idx in range(len(objects)):
-            tc = objects[idx].pop(true_seg[idx])
-            true_class.append(tc)
-            distractors.append(objects[idx])
-
-        image_id = res_dict["image_id"]
-        messages = logs.message
-        predictions = logs.receiver_output
-        predictions = torch.softmax(predictions, dim=1)
-        predictions = torch.argmax(predictions, dim=1)
-
-        true_class = [self.val_coco.cats[idx]["name"] for idx in true_class]
-        distractors = [get_cat_name_id(idx) for idx in distractors]
-
-        # get all other objects in image
-        other_ans = [self.val_coco.imgToAnns[x].copy() for x in image_id.tolist()]
-
-        # transfrom id to string
-        other_ans = [get_cat_name_ann(x) for x in other_ans]
-
-        # remove obj to predict from other anns
-        for idx in range(len(true_class)):
-            oa = other_ans[idx]
-            tc = true_class[idx]
-            oa.remove(tc)
-            dis = distractors[idx]
-            for d in dis:
-                if d in oa:
-                    oa.remove(d)
-
-        with open(self.message_file, "a+") as file:
-            for idx in range(len(true_class)):
-                # ["Epoch", "Message", "Pred Class", "True Class", Distractors, "Other Classes"]
-
-                line = f"{global_step},"
-                line += f"{';'.join([str(x) for x in messages[idx].tolist()])},"
-                line += f"{predictions[idx]},"
-                line += f"{true_class[idx]},"
-                line += f"{';'.join(distractors[idx])}"
-                line += f"{';'.join(other_ans[idx])}\n"
-                file.write(line)
-
     def log_messages_distribution(
-        self, logs: Interaction, phase: str, global_step: int
+            self, logs: Interaction, phase: str, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -560,6 +464,127 @@ class TensorboardLogger(Callback):
         self.log_receiver_output(logs.receiver_output, phase, global_step)
         self.log_labels(logs, phase, global_step)
         self.log_messages_distribution(logs, phase, global_step)
+
+
+class InteractionCSV(Callback):
+    def __init__(
+            self,
+            tensorboard_dir: str,
+            loggers: Dict[str, LoggingStrategy] = None,
+            val_coco: COCO = None,
+    ):
+        """
+        Callback to log metrics to tensorboard
+
+        """
+        self.writer = SummaryWriter(log_dir=tensorboard_dir)
+        self.message_file = Path(join(tensorboard_dir, "interactions.csv"))
+        self.loggers = loggers
+        self.val_coco = val_coco
+
+    def init_message_file(self):
+        header = [
+            "Epoch",
+            "Message",
+            "Pred Class",
+            "True Class",
+            "Is correct",
+            "Distractors",
+            "Other Classes",
+        ]
+
+        if self.message_file.exists():
+            console.log(
+                f"File {self.message_file} already exists, data will be appended"
+            )
+        else:
+            with open(self.message_file, "w+") as f:
+                f.write(",".join(header))
+                f.write("/n")
+
+    def on_train_end(self):
+        self.writer.close()
+
+    def on_test_end(self, loss: float, logs: Interaction, epoch: int):
+        # self.log_precision_recall(logs, phase="val", global_step=epoch)
+        self.log_interactions_file(logs, global_step=epoch)
+
+    def log_interactions_file(self, logs: Interaction, global_step: int):
+        """
+        Logs the csv with message
+        """
+
+        def get_cat_name_id(cat_ids):
+            return [self.val_coco.cats[idx]["name"] for idx in cat_ids]
+
+        def get_cat_name_ann(annotations):
+            """
+            Return list of objs names from annotation ids
+            """
+
+            result = []
+
+            for ann in annotations:
+                ann_id = ann["category_id"]
+                ann_name = self.val_coco.cats[ann_id]["name"]
+                result.append(ann_name)
+            return result
+
+        if self.val_coco is None:
+            return
+
+        res_dict = get_labels(logs.labels)
+        true_seg = res_dict["true_segment"]
+        objects = res_dict["class_id"]
+        objects = [x.tolist() for x in objects]
+
+        true_class = []
+        distractors = []
+
+        for idx in range(len(objects)):
+            tc = objects[idx].pop(true_seg[idx])
+            true_class.append(tc)
+            distractors.append(objects[idx])
+
+        image_id = res_dict["image_id"]
+        messages = logs.message
+        predictions = logs.receiver_output
+        predictions = torch.softmax(predictions, dim=1)
+        predictions = torch.argmax(predictions, dim=1)
+        correct_pred = predictions == true_seg
+        true_class = [self.val_coco.cats[idx]["name"] for idx in true_class]
+        distractors = [get_cat_name_id(idx) for idx in distractors]
+
+        # get all other objects in image
+        other_ans = [self.val_coco.imgToAnns[x].copy() for x in image_id.tolist()]
+
+        # transfrom id to string
+        other_ans = [get_cat_name_ann(x) for x in other_ans]
+
+        # remove obj to predict from other anns
+        for idx in range(len(true_class)):
+            oa = other_ans[idx]
+            tc = true_class[idx]
+            oa.remove(tc)
+            dis = distractors[idx]
+            for d in dis:
+                if d in oa:
+                    oa.remove(d)
+
+        with open(self.message_file, "a+") as file:
+            for idx in range(len(true_class)):
+                # ["Epoch", "Message", "Pred Class", "True Class","Is correct", Distractors, "Other Classes"]
+
+                line = f"{global_step},"
+                line += f"{';'.join([str(x) for x in messages[idx].tolist()])},"
+                line += f"{predictions[idx]},"
+                line += f"{true_class[idx]},"
+                line += f"{correct_pred[idx]},"
+                line += f"{';'.join(distractors[idx])}"
+                line += f"{';'.join(other_ans[idx])}\n"
+                file.write(line)
+
+
 
 
 class RlScheduler(Callback):

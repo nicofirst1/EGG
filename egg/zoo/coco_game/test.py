@@ -13,7 +13,7 @@ from egg.zoo.coco_game.custom_logging import (
     RlScheduler,
     TensorboardLogger, EarlyStopperAccuracy, InteractionCSV,
 )
-from egg.zoo.coco_game.dataset import get_data
+from egg.zoo.coco_game.dataset import get_data, get_test
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.sender_reinforce import (
     CustomSenderReceiverRnnReinforce,
@@ -94,9 +94,9 @@ def main(params=None):
     dump_params(opts)
     model = initialize_model()
 
-    train_data, val_data = get_data(opts)
+    test_data = get_test(opts)
 
-    class_weights = get_class_weight(train_data, opts)
+    class_weights = get_class_weight(test_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
@@ -104,13 +104,13 @@ def main(params=None):
         optimizer=optimizer, gamma=opts.decay_rate
     )
 
-    get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
+    get_imgs = get_images(test_data.dataset.get_images, test_data.dataset.get_images)
 
     callbacks = [
         InteractionCSV(
             tensorboard_dir=opts.tensorboard_dir,
             loggers=loggers,
-            val_coco=val_data.dataset.coco,
+            val_coco=test_data.dataset.coco,
 
         ),
         CheckpointSaver(
@@ -129,8 +129,8 @@ def main(params=None):
         clbs = [
             ProgressBarLogger(
                 n_epochs=opts.n_epochs,
-                train_data_len=len(train_data),
-                val_data_len=len(val_data),
+                train_data_len=len(test_data),
+                val_data_len=len(test_data),
                 use_info_table=False,
             ),
             TensorboardLogger(
@@ -140,7 +140,7 @@ def main(params=None):
                 resume_training=opts.resume_training,
                 loggers=loggers,
                 game=game,
-                class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
+                class_map={k: v["name"] for k, v in test_data.dataset.coco.cats.items()},
                 get_image_method=get_imgs,
                 hparams=vars(opts),
             ),
@@ -150,15 +150,14 @@ def main(params=None):
     trainer = core.Trainer(
         game=game,
         optimizer=optimizer,
-        train_data=train_data,
-        validation_data=val_data,
+        validation_data=test_data,
         callbacks=callbacks,
     )
     if opts.resume_training:
         trainer.load_from_latest(Path(opts.checkpoint_dir))
 
     trainer.train(n_epochs=opts.n_epochs)
-    console.log("Train is over")
+    console.log("Test is over")
 
 
 if __name__ == "__main__":
