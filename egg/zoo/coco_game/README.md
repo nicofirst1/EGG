@@ -8,7 +8,7 @@ In the [markdown](markdowns) dir you can find more information about the code.
 
 The structure of the repos unfolds as follows:
 
-- [main](main.py): main python file, collects args, init classes and starts training
+- [main](train.py): main python file, collects args, init classes and starts training
 - [dataset](dataset.py): handle the coco dataset pipeline
 - [custom logging](custom_logging.py): contains the callback necessary for the logging such as Tensorboard
 - [losses](losses.py): define the custom losses used during the train
@@ -40,5 +40,5 @@ Be sure to change the paths value inside the [args script](args.sh)
 ## Python 
 To run with python simply use:
 ```shell
-python main.py --data_root $path2coco
+python train.py --data_root $path2coco
 ```

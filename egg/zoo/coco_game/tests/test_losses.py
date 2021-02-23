@@ -1,6 +1,6 @@
 from termcolor import colored
 
-from egg.zoo.coco_game.main import main
+from egg.zoo.coco_game.train import main
 
 base_args = [
     "--batch_size",
