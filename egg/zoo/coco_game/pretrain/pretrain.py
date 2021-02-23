@@ -7,7 +7,7 @@ from egg.core import CheckpointSaver, ProgressBarLogger
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import (
-    RandomLogging,
+    SyncLogging,
     RlScheduler,
     TensorboardLogger,
 )
@@ -49,10 +49,10 @@ def pretrain(params=None):
         class_weights=class_weights,
     )
 
-    train_log = RandomLogging(
+    train_log = SyncLogging(
         logging_step=opts.train_logging_step, store_prob=opts.train_log_prob
     )
-    test_log = RandomLogging(
+    test_log = SyncLogging(
         logging_step=opts.test_logging_step, store_prob=opts.test_log_prob
     )
     loggers = dict(train=train_log, test=test_log)

@@ -9,9 +9,11 @@ from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import (
-    RandomLogging,
+    SyncLogging,
     RlScheduler,
-    TensorboardLogger, EarlyStopperAccuracy, InteractionCSV,
+    TensorboardLogger,
+    EarlyStopperAccuracy,
+    InteractionCSV,
 )
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
@@ -61,10 +63,10 @@ def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Game wrapper
     ######################################
-    train_log = RandomLogging(
+    train_log = SyncLogging(
         logging_step=opts.train_logging_step, store_prob=opts.train_log_prob
     )
-    val_log = RandomLogging(
+    val_log = SyncLogging(
         logging_step=opts.val_logging_step, store_prob=opts.val_log_prob
     )
 
@@ -111,7 +113,6 @@ def main(params=None):
             tensorboard_dir=opts.tensorboard_dir,
             loggers=loggers,
             val_coco=val_data.dataset.coco,
-
         ),
         CheckpointSaver(
             checkpoint_path=opts.checkpoint_dir,
@@ -119,7 +120,6 @@ def main(params=None):
             prefix="epoch",
             max_checkpoints=10,
         ),
-
         RlScheduler(rl_optimizer=rl_optimizer),
         EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
         ConsoleLogger(print_train_loss=True, as_json=True),
@@ -140,7 +140,9 @@ def main(params=None):
                 resume_training=opts.resume_training,
                 loggers=loggers,
                 game=game,
-                class_map={k: v["name"] for k, v in train_data.dataset.coco.cats.items()},
+                class_map={
+                    k: v["name"] for k, v in train_data.dataset.coco.cats.items()
+                },
                 get_image_method=get_imgs,
                 hparams=vars(opts),
             ),

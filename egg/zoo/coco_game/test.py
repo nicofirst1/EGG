@@ -3,17 +3,16 @@ from pathlib import Path
 import torch
 
 from egg import core
-from egg.core import CheckpointSaver, ConsoleLogger, ProgressBarLogger
+from egg.core import CheckpointSaver, ConsoleLogger, ProgressBarLogger, LoggingStrategy
 from egg.core.baselines import MeanBaseline
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import (
-    RandomLogging,
     RlScheduler,
-    TensorboardLogger, EarlyStopperAccuracy, InteractionCSV,
+    InteractionCSV,
 )
-from egg.zoo.coco_game.dataset import get_data, get_test
+from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.sender_reinforce import (
     CustomSenderReceiverRnnReinforce,
@@ -61,12 +60,9 @@ def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Game wrapper
     ######################################
-    train_log = RandomLogging(
-        logging_step=opts.train_logging_step, store_prob=opts.train_log_prob
-    )
-    val_log = RandomLogging(
-        logging_step=opts.val_logging_step, store_prob=opts.val_log_prob
-    )
+    train_log = LoggingStrategy().minimal
+
+    val_log = LoggingStrategy()
 
     game = CustomSenderReceiverRnnReinforce(
         sender,
@@ -94,7 +90,7 @@ def main(params=None):
     dump_params(opts)
     model = initialize_model()
 
-    test_data = get_test(opts)
+    _, test_data = get_data(opts)
 
     class_weights = get_class_weight(test_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)
@@ -104,14 +100,11 @@ def main(params=None):
         optimizer=optimizer, gamma=opts.decay_rate
     )
 
-    get_imgs = get_images(test_data.dataset.get_images, test_data.dataset.get_images)
-
     callbacks = [
         InteractionCSV(
             tensorboard_dir=opts.tensorboard_dir,
             loggers=loggers,
             val_coco=test_data.dataset.coco,
-
         ),
         CheckpointSaver(
             checkpoint_path=opts.checkpoint_dir,
@@ -119,9 +112,7 @@ def main(params=None):
             prefix="epoch",
             max_checkpoints=10,
         ),
-
         RlScheduler(rl_optimizer=rl_optimizer),
-        EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
         ConsoleLogger(print_train_loss=True, as_json=True),
     ]
 
@@ -133,30 +124,20 @@ def main(params=None):
                 val_data_len=len(test_data),
                 use_info_table=False,
             ),
-            TensorboardLogger(
-                tensorboard_dir=opts.tensorboard_dir,
-                train_logging_step=opts.train_logging_step,
-                val_logging_step=opts.val_logging_step,
-                resume_training=opts.resume_training,
-                loggers=loggers,
-                game=game,
-                class_map={k: v["name"] for k, v in test_data.dataset.coco.cats.items()},
-                get_image_method=get_imgs,
-                hparams=vars(opts),
-            ),
         ]
         callbacks += clbs
 
     trainer = core.Trainer(
         game=game,
         optimizer=optimizer,
+        train_data=None,
         validation_data=test_data,
         callbacks=callbacks,
     )
     if opts.resume_training:
         trainer.load_from_latest(Path(opts.checkpoint_dir))
 
-    trainer.train(n_epochs=opts.n_epochs)
+    trainer.test(n_epochs=1)
     console.log("Test is over")
 
 

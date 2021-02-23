@@ -14,29 +14,27 @@ from egg.core import Callback, Interaction, LoggingStrategy
 from egg.zoo.coco_game.utils.utils import console, get_labels, get_true_elems
 
 
-class RandomLogging(LoggingStrategy):
+class SyncLogging(LoggingStrategy):
     """
     Log strategy based on random probability
     """
 
-    def __init__(self, logging_step: int, store_prob: float = 1, *args):
-        self.store_prob = store_prob
+    def __init__(self, logging_step: int, *args):
         self.logging_step = logging_step
         self.cur_batch = 0
         super().__init__(*args)
 
     def filtered_interaction(
-            self,
-            sender_input,
-            receiver_input,
-            labels,
-            message,
-            receiver_output,
-            message_length,
-            aux,
+        self,
+        sender_input,
+        receiver_input,
+        labels,
+        message,
+        receiver_output,
+        message_length,
+        aux,
     ):
-        rnd = random.random()
-        should_store = rnd < self.store_prob
+        should_store = False
         if self.cur_batch % self.logging_step == 0:
             should_store = True
 
@@ -55,16 +53,16 @@ class RandomLogging(LoggingStrategy):
 
 class TensorboardLogger(Callback):
     def __init__(
-            self,
-            tensorboard_dir: str,
-            loggers: Dict[str, LoggingStrategy] = None,
-            train_logging_step: int = 50,
-            val_logging_step: int = 20,
-            resume_training: bool = False,
-            game: torch.nn.Module = None,
-            class_map: Dict[int, str] = {},
-            get_image_method=None,
-            hparams=None,
+        self,
+        tensorboard_dir: str,
+        loggers: Dict[str, LoggingStrategy] = None,
+        train_logging_step: int = 50,
+        val_logging_step: int = 20,
+        resume_training: bool = False,
+        game: torch.nn.Module = None,
+        class_map: Dict[int, str] = {},
+        get_image_method=None,
+        hparams=None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -100,7 +98,6 @@ class TensorboardLogger(Callback):
                 self.get_gs()
             except FileNotFoundError:
                 pass
-
 
     @staticmethod
     def filter_hparam(hparam):
@@ -158,7 +155,7 @@ class TensorboardLogger(Callback):
         self.log_conv = False
 
     def on_batch_end(
-            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
 
         if batch_id != 0:
@@ -168,7 +165,7 @@ class TensorboardLogger(Callback):
                 self.log(loss.detach(), logs, is_training)
 
     def log_receiver_output(
-            self, receiver_output: torch.Tensor, phase: str, global_step: int
+        self, receiver_output: torch.Tensor, phase: str, global_step: int
     ):
         """
         Add information about receiver output to tensorboard.
@@ -190,11 +187,11 @@ class TensorboardLogger(Callback):
         )
 
     def log_metrics(
-            self,
-            logs: Interaction,
-            phase: str,
-            global_step: int,
-            loss: float,
+        self,
+        logs: Interaction,
+        phase: str,
+        global_step: int,
+        loss: float,
     ):
 
         metrics = logs.aux
@@ -245,7 +242,7 @@ class TensorboardLogger(Callback):
         )
 
     def log_labels(
-            self, logs: Interaction, phase: str, global_step: int, label_key="true_segment"
+        self, logs: Interaction, phase: str, global_step: int, label_key="true_segment"
     ):
         """
         Logs statistic about the labels such as the class and the bounding boxes
@@ -352,7 +349,7 @@ class TensorboardLogger(Callback):
             )
 
     def log_messages_embedding(
-            self, logs: Interaction, is_train: bool, global_step: int
+        self, logs: Interaction, is_train: bool, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -414,7 +411,7 @@ class TensorboardLogger(Callback):
         )
 
     def log_messages_distribution(
-            self, logs: Interaction, phase: str, global_step: int
+        self, logs: Interaction, phase: str, global_step: int
     ):
         """
         Logs the messages as an embedding
@@ -468,10 +465,10 @@ class TensorboardLogger(Callback):
 
 class InteractionCSV(Callback):
     def __init__(
-            self,
-            tensorboard_dir: str,
-            loggers: Dict[str, LoggingStrategy] = None,
-            val_coco: COCO = None,
+        self,
+        tensorboard_dir: str,
+        loggers: Dict[str, LoggingStrategy] = None,
+        val_coco: COCO = None,
     ):
         """
         Callback to log metrics to tensorboard
@@ -580,11 +577,9 @@ class InteractionCSV(Callback):
                 line += f"{predictions[idx]},"
                 line += f"{true_class[idx]},"
                 line += f"{correct_pred[idx]},"
-                line += f"{';'.join(distractors[idx])}"
+                line += f"{';'.join(distractors[idx])},"
                 line += f"{';'.join(other_ans[idx])}\n"
                 file.write(line)
-
-
 
 
 class RlScheduler(Callback):
