@@ -49,7 +49,7 @@ def get_infos(lines: list) -> Dict:
 
     # normalize number of other classes len
     infos.loc["other_classes_len", :] = (
-        infos.loc["other_classes_len", :] / infos.loc["total", :]
+            infos.loc["other_classes_len", :] / infos.loc["total", :]
     )
 
     to_add = infos.loc["true", :] / infos.loc["total", :]
@@ -57,19 +57,24 @@ def get_infos(lines: list) -> Dict:
     infos = infos.append(to_add)
 
     to_add = infos.loc["true_sc", :] / (
-        infos.loc["false_sc", :] + infos.loc["true_sc", :]
+            infos.loc["false_sc", :] + infos.loc["true_sc", :]
     )
     to_add.name = "prec_sc"
     infos = infos.append(to_add)
 
     to_add = infos.loc["true_oc", :] / (
-        infos.loc["false_oc", :] + infos.loc["true_oc", :]
+            infos.loc["false_oc", :] + infos.loc["true_oc", :]
     )
     to_add.name = "prec_oc"
     infos = infos.append(to_add)
 
     to_add = infos.loc["total", :] / sum(infos.loc["total", :])
     to_add.name = "frequency"
+    infos = infos.append(to_add)
+
+    to_add = infos.loc["true_sc", :] + infos.loc["false_sc", :]
+    to_add /= infos.loc["total", :]
+    to_add.name = "ambiguity_rate"
     infos = infos.append(to_add)
 
     infos = infos.fillna(0)
@@ -91,7 +96,6 @@ def coccurence(lines, classes):
 
 
 def accuracy_analysis(interaction_path, out_dir):
-
     with open(interaction_path, "r") as f:
         reader = csv.reader(f)
         lines = list(reader)
@@ -103,6 +107,7 @@ def accuracy_analysis(interaction_path, out_dir):
     prec_diff = sum(infos.loc["prec_sc", :] - infos.loc["prec_oc", :]) / infos.shape[1]
     acc_freq_corr = infos.loc["accuracy", :].corr(infos.loc["frequency", :])
     acc_oc_len_corr = infos.loc["other_classes_len", :].corr(infos.loc["frequency", :])
+    acc_ambiguity_corr = infos.loc["ambiguity_rate", :].corr(infos.loc["frequency", :])
 
     cooc = coccurence(lines, infos.columns)
 
@@ -116,15 +121,22 @@ def accuracy_analysis(interaction_path, out_dir):
     with open(analysis_path, "w+") as f:
         head = [
             "Total Accuracy",
-            "Correlation Accuracy Frequency",
-            "Correlation Accuracy Other classes",
+            "Correlation Accuracy-Frequency",
+            "Correlation Accuracy-Other classes",
+            "Correlation Accuracy-Ambiguity Rate",
             "Precision difference sc/oc",
         ]
         f.write(",".join(head))
         f.write("\n")
-        vals = [total_accuracy, acc_freq_corr, acc_oc_len_corr, prec_diff]
+        vals = [total_accuracy, acc_freq_corr, acc_oc_len_corr, acc_ambiguity_corr, prec_diff]
         vals = [str(x) for x in vals]
         f.write(",".join(vals))
         f.write("\n")
 
     print(f"Out saved in {out_dir}")
+
+
+if __name__ == '__main__':
+    interaction_path, out_dir = path_parser()
+
+    accuracy_analysis(interaction_path, out_dir)
