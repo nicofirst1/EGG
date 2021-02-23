@@ -498,7 +498,7 @@ class InteractionCSV(Callback):
         else:
             with open(self.message_file, "w+") as f:
                 f.write(",".join(header))
-                f.write("/n")
+                f.write("\n")
 
     def on_train_end(self):
         self.writer.close()

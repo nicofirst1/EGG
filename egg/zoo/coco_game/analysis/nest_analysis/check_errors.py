@@ -1,10 +1,8 @@
-import argparse
-import pathlib
 from collections import Counter
 
 from tensorboard.backend.event_processing import event_accumulator
 
-from egg.zoo.coco_game.utils.nest_analysis.nest_utils import path_parser
+from egg.zoo.coco_game.analysis.nest_analysis import path_parser
 
 
 def parse_error_args(nest_path, idxs):
