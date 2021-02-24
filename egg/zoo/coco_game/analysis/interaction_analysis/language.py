@@ -115,17 +115,19 @@ def language_analysis(interaction_path, out_dir):
     infos, classes = get_infos(lines, max_len)
     symbols = infos["symbols"].keys()
     sequences = infos["sequences"].keys()
-    symbol_df, sequence_df, sequence_cooc_tensor = coccurence(lines, symbols, sequences, classes, max_len)
+    symbol_df, sequence_df, sequence_cooc_tensor = coccurence(
+        lines, symbols, sequences, classes, max_len
+    )
 
     to_add = symbol_df.sum(axis=1)
-    symbol_df['class_richness'] = to_add
+    symbol_df["class_richness"] = to_add
 
     to_add = pd.Series(infos["symbols"])
     to_add.name = "frequency"
     symbol_df = symbol_df.append(to_add)
 
     to_add = sequence_df.sum(axis=1)
-    sequence_df['class_richness'] = to_add
+    sequence_df["class_richness"] = to_add
 
     to_add = pd.Series(infos["sequences"])
     to_add.name = "frequency"
@@ -138,18 +140,18 @@ def language_analysis(interaction_path, out_dir):
     symbol_df.to_csv(symbol_path)
     sequence_df.to_csv(sequence_path)
 
-    with open(sequence_cooc_path,"w") as f:
-        json.dump( sequence_cooc_tensor,f)
+    with open(sequence_cooc_path, "w") as f:
+        json.dump(sequence_cooc_tensor, f)
     print(f"Files save in {out_dir}")
 
     return dict(
         symbol_df=symbol_df,
         sequence_df=sequence_df,
-        sequence_cooc_tensor=sequence_cooc_tensor
+        sequence_cooc_tensor=sequence_cooc_tensor,
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     interaction_path, out_dir = path_parser()
 
     language_analysis(interaction_path, out_dir)

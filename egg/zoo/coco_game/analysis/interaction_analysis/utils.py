@@ -1,6 +1,6 @@
 import argparse
 import pathlib
-
+import pandas as pd
 
 def path_parser():
     parser = argparse.ArgumentParser()
@@ -28,3 +28,11 @@ def path_parser():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     return interaction_path, out_dir
+
+
+def add_row(row_value, row_name, df: pd.DataFrame):
+
+    s=pd.Series(row_value)
+    s.name=row_name
+
+    return df.append(s)

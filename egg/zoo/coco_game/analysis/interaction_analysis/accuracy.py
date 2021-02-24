@@ -3,7 +3,7 @@ from typing import Dict
 
 import pandas as pd
 
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser, add_row
 
 
 def get_infos(lines: list) -> Dict:
@@ -13,15 +13,17 @@ def get_infos(lines: list) -> Dict:
     accuracy_dict = {}
 
     def empty_dict():
-        return dict(
-            total=0,
-            true=0,
-            true_sc=0,
-            false_sc=0,
-            true_oc=0,
-            false_oc=0,
-            other_classes_len=0,
-        )
+
+        return {
+            "total": 0,
+            "correct": 0,
+            "correct_tartget=distr": 0,
+            "wrong_target=distr": 0,
+            "correct_target!=distr": 0,
+            "wrong_target!=distr": 0,
+            "other_classes_len": 0,
+            "target_freq":0,
+        }
 
     for l in lines:
         pred_class = l[2]
@@ -39,50 +41,49 @@ def get_infos(lines: list) -> Dict:
 
         accuracy_dict[pred_class]["total"] += 1
         accuracy_dict[pred_class]["other_classes_len"] += len(other_classes.split(";"))
+
+        accuracy_dict[pred_class]['target_freq']+=1
+
         if eval(correct):
-            accuracy_dict[pred_class]["true"] += 1
+            accuracy_dict[pred_class]["correct"] += 1
 
             if distract == true_class:
-                accuracy_dict[pred_class]["true_sc"] += 1
+                accuracy_dict[pred_class]["correct_tartget=distr"] += 1
             else:
-                accuracy_dict[pred_class]["true_oc"] += 1
+                accuracy_dict[pred_class]["correct_target!=distr"] += 1
         else:
             if distract == true_class:
-                accuracy_dict[pred_class]["false_sc"] += 1
+                accuracy_dict[pred_class]["wrong_target=distr"] += 1
             else:
-                accuracy_dict[pred_class]["false_oc"] += 1
+                accuracy_dict[pred_class]["wrong_target!=distr"] += 1
 
     infos = pd.DataFrame.from_dict(accuracy_dict)
 
     # normalize number of other classes len
-    infos.loc["other_classes_len", :] = (
-            infos.loc["other_classes_len", :] / infos.loc["total", :]
-    )
+    infos.loc["other_classes_len", :] = infos.loc["other_classes_len", :] / infos.loc["total", :]
 
-    to_add = infos.loc["true", :] / infos.loc["total", :]
-    to_add.name = "accuracy"
-    infos = infos.append(to_add)
+    to_add = infos.loc["correct", :] / infos.loc["total", :]
+    infos = add_row(to_add, "accuracy", infos)
 
-    to_add = infos.loc["true_sc", :] / (
-            infos.loc["false_sc", :] + infos.loc["true_sc", :]
+    to_add = infos.loc["correct_tartget=distr", :] / (
+            infos.loc["wrong_target=distr", :] + infos.loc["correct_tartget=distr", :]
     )
-    to_add.name = "prec_sc"
-    infos = infos.append(to_add)
+    infos = add_row(to_add, "precision_sc", infos)
 
-    to_add = infos.loc["true_oc", :] / (
-            infos.loc["false_oc", :] + infos.loc["true_oc", :]
+    to_add = infos.loc["correct_target!=distr", :] / (
+            infos.loc["wrong_target!=distr", :] + infos.loc["correct_target!=distr", :]
     )
-    to_add.name = "prec_oc"
-    infos = infos.append(to_add)
+    infos = add_row(to_add, "precision_oc", infos)
 
     to_add = infos.loc["total", :] / sum(infos.loc["total", :])
-    to_add.name = "frequency"
-    infos = infos.append(to_add)
+    infos = add_row(to_add, "frequency", infos)
 
-    to_add = infos.loc["true_sc", :] + infos.loc["false_sc", :]
+    to_add = infos.loc["correct_tartget=distr", :] + infos.loc["wrong_target=distr", :]
     to_add /= infos.loc["total", :]
-    to_add.name = "ambiguity_rate"
-    infos = infos.append(to_add)
+    infos = add_row(to_add, "ambiguity_rate", infos)
+
+    to_add = infos.loc["target_freq", :] / infos.loc["total", :]
+    infos = add_row(to_add, "target_frequency", infos)
 
     infos = infos.fillna(0)
 
@@ -102,6 +103,37 @@ def coccurence(lines, classes):
     return df
 
 
+def analysis_df(infos):
+    analysis = pd.DataFrame()
+
+    to_add = infos.loc["accuracy", :].sum() / infos.shape[1]
+    analysis = add_row(to_add, "Total Accuracy", analysis)
+
+    to_add = infos.loc["precision_sc", :] - infos.loc["precision_sc", :].sum() / infos.shape[1]
+    to_add = to_add.mean()
+    analysis = add_row(to_add, "Precision difference sc/oc", analysis)
+
+    to_add = infos.loc["accuracy", :].corr(infos.loc["frequency", :])
+    analysis = add_row(to_add, "Corr Accuracy-Frequency", analysis)
+
+    to_add = infos.loc["other_classes_len", :].corr(infos.loc["frequency", :])
+    analysis = add_row(to_add, "Corr OtherClassLen-Frequency", analysis)
+
+    to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["frequency", :])
+    analysis = add_row(to_add, "Corr AmbiguityRate-Frequency", analysis)
+
+    to_add = infos.loc["target_frequency", :].corr(infos.loc["accuracy", :])
+    analysis = add_row(to_add, "Corr TargetFrequency-Accuracy", analysis)
+
+    to_add = infos.loc["target_frequency", :].corr(infos.loc["ambiguity_rate", :])
+    analysis = add_row(to_add, "Corr TargetFrequency-AmbiguityRate", analysis)
+
+    to_add = infos.loc["target_frequency", :].corr(infos.loc["other_classes_len", :])
+    analysis = add_row(to_add, "Corr TargetFrequency-OtherClassLen", analysis)
+
+    return analysis
+
+
 def accuracy_analysis(interaction_path, out_dir):
     with open(interaction_path, "r") as f:
         reader = csv.reader(f)
@@ -111,35 +143,16 @@ def accuracy_analysis(interaction_path, out_dir):
     assert len(lines) > 0, "Empty Csv File!"
     infos = get_infos(lines)
 
-    total_accuracy = sum(infos.loc["accuracy", :]) / infos.shape[1]
-    prec_diff = sum(infos.loc["prec_sc", :] - infos.loc["prec_oc", :]) / infos.shape[1]
-    acc_freq_corr = infos.loc["accuracy", :].corr(infos.loc["frequency", :])
-    acc_oc_len_corr = infos.loc["other_classes_len", :].corr(infos.loc["frequency", :])
-    acc_ambiguity_corr = infos.loc["ambiguity_rate", :].corr(infos.loc["frequency", :])
-
     cooc = coccurence(lines, infos.columns)
+    analysis = analysis_df(infos)
 
-    cooc_path = out_dir.joinpath("acc_cooc.csv")
-    infos_path = out_dir.joinpath("acc_infos.csv")
+    cooc_path = out_dir.joinpath("acc_class_cooc.csv")
+    infos_path = out_dir.joinpath("acc_class_infos.csv")
     analysis_path = out_dir.joinpath("acc_analysis.csv")
 
     cooc.to_csv(cooc_path)
     infos.to_csv(infos_path)
-
-    with open(analysis_path, "w+") as f:
-        head = [
-            "Total Accuracy",
-            "Correlation Accuracy-Frequency",
-            "Correlation Accuracy-Other classes",
-            "Correlation Accuracy-Ambiguity Rate",
-            "Precision difference sc/oc",
-        ]
-        f.write(",".join(head))
-        f.write("\n")
-        vals = [total_accuracy, acc_freq_corr, acc_oc_len_corr, acc_ambiguity_corr, prec_diff]
-        vals = [str(x) for x in vals]
-        f.write(",".join(vals))
-        f.write("\n")
+    analysis.to_csv(analysis_path)
 
     print(f"Out saved in {out_dir}")
 
@@ -149,7 +162,7 @@ def accuracy_analysis(interaction_path, out_dir):
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     interaction_path, out_dir = path_parser()
 
     accuracy_analysis(interaction_path, out_dir)
