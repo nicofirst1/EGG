@@ -12,6 +12,17 @@ def get_infos(lines: list) -> Dict:
     """
     accuracy_dict = {}
 
+    def empty_dict():
+        return dict(
+            total=0,
+            true=0,
+            true_sc=0,
+            false_sc=0,
+            true_oc=0,
+            false_oc=0,
+            other_classes_len=0,
+        )
+
     for l in lines:
         pred_class = l[2]
         true_class = l[3]
@@ -20,15 +31,11 @@ def get_infos(lines: list) -> Dict:
         other_classes = l[6]
 
         if pred_class not in accuracy_dict:
-            accuracy_dict[pred_class] = dict(
-                total=0,
-                true=0,
-                true_sc=0,
-                false_sc=0,
-                true_oc=0,
-                false_oc=0,
-                other_classes_len=0,
-            )
+            accuracy_dict[pred_class] = empty_dict()
+        if true_class not in accuracy_dict:
+            accuracy_dict[true_class] = empty_dict()
+        if distract not in accuracy_dict:
+            accuracy_dict[distract] = empty_dict()
 
         accuracy_dict[pred_class]["total"] += 1
         accuracy_dict[pred_class]["other_classes_len"] += len(other_classes.split(";"))
@@ -101,6 +108,7 @@ def accuracy_analysis(interaction_path, out_dir):
         lines = list(reader)
 
     header = lines.pop(0)
+    assert len(lines) > 0, "Empty Csv File!"
     infos = get_infos(lines)
 
     total_accuracy = sum(infos.loc["accuracy", :]) / infos.shape[1]
@@ -111,9 +119,9 @@ def accuracy_analysis(interaction_path, out_dir):
 
     cooc = coccurence(lines, infos.columns)
 
-    cooc_path = out_dir.joinpath("co_occurence.csv")
-    infos_path = out_dir.joinpath("infos.csv")
-    analysis_path = out_dir.joinpath("analysis.csv")
+    cooc_path = out_dir.joinpath("acc_cooc.csv")
+    infos_path = out_dir.joinpath("acc_infos.csv")
+    analysis_path = out_dir.joinpath("acc_analysis.csv")
 
     cooc.to_csv(cooc_path)
     infos.to_csv(infos_path)
@@ -134,6 +142,11 @@ def accuracy_analysis(interaction_path, out_dir):
         f.write("\n")
 
     print(f"Out saved in {out_dir}")
+
+    return dict(
+        cooc=cooc,
+        infos=infos,
+    )
 
 
 if __name__ == '__main__':

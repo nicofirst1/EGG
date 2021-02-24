@@ -1,7 +1,10 @@
 import csv
+import json
 from typing import Dict
 
 import pandas as pd
+
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser
 
 
 def get_infos(lines: list, max_len) -> Dict:
@@ -19,14 +22,17 @@ def get_infos(lines: list, max_len) -> Dict:
     for l in lines:
         message = l[1].split(";")
         true_class = l[3]
+        distract = l[5]
 
         if true_class not in classes:
             classes.append(true_class)
+        if distract not in classes:
+            classes.append(distract)
 
         msg_len = message.index("0")
         infos["message_len"] += msg_len
 
-        for m in message[:msg_len]:
+        for m in message[:max_len]:
 
             if m not in infos["symbols"].keys():
                 infos["symbols"][m] = 0
@@ -56,22 +62,44 @@ def coccurence(lines, symbols, sequences, classes, max_len):
     sequence_df = pd.DataFrame(index=classes, columns=sequences)
     sequence_df = sequence_df.fillna(0)
 
+    sequence_cooc_tensor = {}
+
     for l in lines:
         message = l[1].split(";")
         true_class = l[3]
+        pred_class = l[2]
+        correct = l[4]
+        distract = l[5]
+        other_classes = l[6]
 
         msg_len = message.index("0")
-        for m in message[:msg_len]:
+        for m in message[:max_len]:
             symbol_df[m][true_class] += 1
 
         symbol_seq = "".join(message[:msg_len])
         sequence_df[symbol_seq][true_class] += 1
 
+        if true_class not in sequence_cooc_tensor.keys():
+            sequence_cooc_tensor[true_class] = {}
+
+        if distract not in sequence_cooc_tensor[true_class].keys():
+            sequence_cooc_tensor[true_class][distract] = {}
+
+        if symbol_seq not in sequence_cooc_tensor[true_class][distract].keys():
+            sequence_cooc_tensor[true_class][distract][symbol_seq] = 0
+
+        sequence_cooc_tensor[true_class][distract][symbol_seq] += 1
+
     symbol_df /= len(lines)
     symbol_df /= max_len
     sequence_df /= len(lines)
 
-    return symbol_df, sequence_df
+    for k1 in sequence_cooc_tensor.keys():
+        for k2 in sequence_cooc_tensor[k1].keys():
+            for k3 in sequence_cooc_tensor[k1][k2].keys():
+                sequence_cooc_tensor[k1][k2][k3] /= max_len
+
+    return symbol_df, sequence_df, sequence_cooc_tensor
 
 
 def language_analysis(interaction_path, out_dir):
@@ -87,20 +115,41 @@ def language_analysis(interaction_path, out_dir):
     infos, classes = get_infos(lines, max_len)
     symbols = infos["symbols"].keys()
     sequences = infos["sequences"].keys()
-    symbol_df, sequence_df = coccurence(lines, symbols, sequences, classes, max_len)
+    symbol_df, sequence_df, sequence_cooc_tensor = coccurence(lines, symbols, sequences, classes, max_len)
 
-    symbol_freq = pd.Series(infos["symbols"])
-    symbol_freq.name = "frequency"
-    symbol_df = symbol_df.append(symbol_freq)
+    to_add = symbol_df.sum(axis=1)
+    symbol_df['class_richness'] = to_add
 
-    seq_freq = pd.Series(infos["sequences"])
-    seq_freq.name = "frequency"
-    sequence_df = sequence_df.append(seq_freq)
+    to_add = pd.Series(infos["symbols"])
+    to_add.name = "frequency"
+    symbol_df = symbol_df.append(to_add)
 
-    symbol_path = out_dir.joinpath("symbol.csv")
-    sequence_path = out_dir.joinpath("sequence.csv")
+    to_add = sequence_df.sum(axis=1)
+    sequence_df['class_richness'] = to_add
+
+    to_add = pd.Series(infos["sequences"])
+    to_add.name = "frequency"
+    sequence_df = sequence_df.append(to_add)
+
+    symbol_path = out_dir.joinpath("lang_symbol.csv")
+    sequence_cooc_path = out_dir.joinpath("lang_sequence_cooc.json")
+    sequence_path = out_dir.joinpath("lang_sequence.csv")
 
     symbol_df.to_csv(symbol_path)
     sequence_df.to_csv(sequence_path)
 
+    with open(sequence_cooc_path,"w") as f:
+        json.dump( sequence_cooc_tensor,f)
     print(f"Files save in {out_dir}")
+
+    return dict(
+        symbol_df=symbol_df,
+        sequence_df=sequence_df,
+        sequence_cooc_tensor=sequence_cooc_tensor
+    )
+
+
+if __name__ == '__main__':
+    interaction_path, out_dir = path_parser()
+
+    language_analysis(interaction_path, out_dir)

@@ -1,5 +1,6 @@
 import ast
 import json
+
 import numpy as np
 import pandas as pd
 
@@ -128,28 +129,29 @@ def config_check(configs):
     # all configs are the same
     if len(set(all_lens)) == 1: return configs
 
-    all_lens=np.array(all_lens)
+    all_lens = np.array(all_lens)
     max_idx = np.argmax(all_lens)
     min_idx = np.argmin(all_lens)
     c_max = configs[max_idx]
     c_min = configs[min_idx]
-    to_add_key=set(c_max.keys())- set(c_min.keys())
+    to_add_key = set(c_max.keys()) - set(c_min.keys())
 
     for idx in range(len(configs)):
         for k in to_add_key:
             if k not in configs[idx].keys():
-                configs[idx][k]=""
+                configs[idx][k] = ""
     return configs
+
 
 if __name__ == "__main__":
     nest_path = path_parser()
     csv_name = nest_path.joinpath(f"results_{nest_path.stem}.csv")
 
     ids = parse_results(nest_path, tag="accuracy_receiver")
-    configs=config_check([x['configs'] for x in ids])
+    configs = config_check([x['configs'] for x in ids])
 
     for idx in range(len(configs)):
-        ids[idx]['configs']=configs[idx]
+        ids[idx]['configs'] = configs[idx]
 
     df = build_dataframe(ids)
 

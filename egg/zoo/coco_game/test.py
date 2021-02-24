@@ -96,9 +96,6 @@ def main(params=None):
     game, loggers = get_game(model, opts, class_weights=class_weights)
 
     optimizer = core.build_optimizer(game.parameters())
-    rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(
-        optimizer=optimizer, gamma=opts.decay_rate
-    )
 
     callbacks = [
         InteractionCSV(
@@ -112,8 +109,7 @@ def main(params=None):
             prefix="epoch",
             max_checkpoints=10,
         ),
-        RlScheduler(rl_optimizer=rl_optimizer),
-        ConsoleLogger(print_train_loss=True, as_json=True),
+        ConsoleLogger(print_train_loss=False, as_json=True),
     ]
 
     if opts.use_progress_bar:
@@ -134,8 +130,10 @@ def main(params=None):
         validation_data=test_data,
         callbacks=callbacks,
     )
-    if opts.resume_training:
-        trainer.load_from_latest(Path(opts.checkpoint_dir))
+
+    trainer.load_from_latest(Path("/home/dizzi/Downloads/"))
+    trainer.start_epoch=0
+
 
     trainer.test(n_epochs=1)
     console.log("Test is over")
