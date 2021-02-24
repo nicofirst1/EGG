@@ -42,7 +42,7 @@ def image_parser(parser):
     parser.add_argument(
         "--image_type",
         type=str,
-        default="both",
+        default="seg",
         help="Choose the sender input type: seg(mented), image, both",
         choices=["seg", "img", "both"],
     )
@@ -156,7 +156,7 @@ def dataloader_parsing(parser):
     parser.add_argument(
         "--num_workers",
         type=int,
-        default=4,
+        default=0,
         help="Number of workers in the dataloader",
     )
     parser.add_argument(
