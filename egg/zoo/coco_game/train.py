@@ -64,10 +64,10 @@ def get_game(feat_extractor, opts, class_weights=None):
     #   Game wrapper
     ######################################
     train_log = SyncLogging(
-        logging_step=opts.train_logging_step, store_prob=opts.train_log_prob
+        logging_step=opts.train_logging_step
     )
     val_log = SyncLogging(
-        logging_step=opts.val_logging_step, store_prob=opts.val_log_prob
+        logging_step=opts.val_logging_step
     )
 
     game = CustomSenderReceiverRnnReinforce(
@@ -133,19 +133,19 @@ def main(params=None):
                 val_data_len=len(val_data),
                 use_info_table=False,
             ),
-            TensorboardLogger(
-                tensorboard_dir=opts.tensorboard_dir,
-                train_logging_step=opts.train_logging_step,
-                val_logging_step=opts.val_logging_step,
-                resume_training=opts.resume_training,
-                loggers=loggers,
-                game=game,
-                class_map={
-                    k: v["name"] for k, v in train_data.dataset.coco.cats.items()
-                },
-                get_image_method=get_imgs,
-                hparams=vars(opts),
-            ),
+            # TensorboardLogger(
+            #     tensorboard_dir=opts.tensorboard_dir,
+            #     train_logging_step=opts.train_logging_step,
+            #     val_logging_step=opts.val_logging_step,
+            #     resume_training=opts.resume_training,
+            #     loggers=loggers,
+            #     game=game,
+            #     class_map={
+            #         k: v["name"] for k, v in train_data.dataset.coco.cats.items()
+            #     },
+            #     get_image_method=get_imgs,
+            #     hparams=vars(opts),
+            # ),
         ]
         callbacks += clbs
 

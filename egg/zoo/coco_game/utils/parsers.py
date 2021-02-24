@@ -63,6 +63,7 @@ def image_parser(parser):
 
 
 def logs_parser(parser):
+
     parser.add_argument(
         "--use_rich_traceback",
         default=False,
@@ -315,6 +316,9 @@ def parse_arguments(params=None):
 
     # add core opt and print
     opt = core.init(parser, params=params)
+
+    if opt.checkpoint_dir is None:
+        opt.checkpoint_dir="checkpoints"
 
     if opt.sender_receiver_hidden is not None:
         opt.sender_hidden = opt.sender_receiver_hidden
