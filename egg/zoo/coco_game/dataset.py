@@ -144,7 +144,7 @@ class CocoDetection(VisionDataset):
         self.coco.catToImgs = catToImgs
         self.ids = list(self.coco.imgs.keys())
 
-    def filter_anns_coocurence(self, min_annotations: int, min_perc_valid: float = 0.8):
+    def filter_anns_coocurence(self, min_annotations: int, min_perc_valid: float = 0.7):
         """
         Filter annotations based on minimum number of co-occurences
         """
@@ -181,6 +181,7 @@ class CocoDetection(VisionDataset):
                 console.log(
                     f"Percentage of valid classes with more than {min_annotations} annotations per image:{to_log}\n"
                 )
+                console.log(f"Total are: {len(to_log)}")
 
             counter = [k for k, v in counter.items() if v < min_perc_valid]
             anns_to_rm += [
