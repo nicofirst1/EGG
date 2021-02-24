@@ -98,25 +98,28 @@ def parse_results(nest_path, tag):
     return res
 
 
-def build_csv(csv_path, configs):
-    with open(csv_path, "w+") as file:
-        a = 1
-
-
 def build_dataframe(results):
     tmp = results[0]
+    config_cols = sorted(list(tmp["configs"].keys()))
+    train_cols = sorted([f"train_{x}" for x in tmp["best_vals"][0].keys()])
+    test_col = sorted([f"test_{x}" for x in tmp["best_vals"][0].keys()])
+    last_col = ["max_epoch"]
+    columns = config_cols + train_cols + test_col + last_col
 
-    columns = list(tmp["configs"].keys())
-    columns += [f"train_{x}" for x in tmp["best_vals"][0].keys()]
-    columns += [f"test_{x}" for x in tmp["best_vals"][0].keys()]
-    columns += ["max_epoch"]
     df = pd.DataFrame(columns=columns)
 
     idx = 0
     for tmp in results:
-        row = list(tmp["configs"].values())
-        row += [x for x in tmp["best_vals"][0].values()]
-        row += [x for x in tmp["best_vals"][1].values()]
+        row = []
+        for k in config_cols:
+            row.append(tmp['configs'][k])
+        for k in train_cols:
+            k = k.replace("train_", "")
+            row.append(tmp['best_vals'][0][k])
+        for k in test_col:
+            k = k.replace("test_", "")
+            row.append(tmp['best_vals'][1][k])
+
         row += [tmp["max_epoch"]]
         df.loc[idx] = row
         idx += 1
