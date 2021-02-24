@@ -1,9 +1,7 @@
 import ast
 import json
-
+import numpy as np
 import pandas as pd
-
-from egg.zoo.coco_game.analysis.nest_analysis import path_parser
 
 # prov_lines = """
 # {"loss": 0.6343242526054382, "f_loss": 0.3030605614185333, "x_loss": 0.7756949663162231, "kl_loss": 2.823378086090088, "accuracy_receiver": 0.5036764740943909, "accuracy_sender": 0.1875, "custom_loss": 0.7756949663162231, "sender_entropy": 0.15114206075668335, "receiver_entropy": 0.0, "length": 3.808823585510254, "policy_loss": -0.28811606764793396, "weighted_entropy": 0.015770524740219116, "mode": "train", "epoch": 1}
@@ -12,6 +10,7 @@ from egg.zoo.coco_game.analysis.nest_analysis import path_parser
 # {"loss": 0.6870132684707642, "f_loss": 0.17025837302207947, "x_loss": 0.6849746108055115, "kl_loss": 2.642674446105957, "accuracy_receiver": 0.56640625, "accuracy_sender": 0.3125, "custom_loss": 0.6849746108055115, "sender_entropy": 1.985521461329333e-14, "receiver_entropy": 0.0, "length": 4.0, "policy_loss": 0.0, "weighted_entropy": 1.985521461329333e-15, "mode": "test", "epoch": 2}
 # """
 # prov_lines = prov_lines.split("\n")
+from egg.zoo.coco_game.analysis.nest_analysis.nest_utils import path_parser
 
 
 def get_configs(lines: list) -> str:
@@ -124,11 +123,34 @@ def build_dataframe(results):
     return df
 
 
+def config_check(configs):
+    all_lens = [len(x) for x in configs]
+    # all configs are the same
+    if len(set(all_lens)) == 1: return configs
+
+    all_lens=np.array(all_lens)
+    max_idx = np.argmax(all_lens)
+    min_idx = np.argmin(all_lens)
+    c_max = configs[max_idx]
+    c_min = configs[min_idx]
+    to_add_key=set(c_max.keys())- set(c_min.keys())
+
+    for idx in range(len(configs)):
+        for k in to_add_key:
+            if k not in configs[idx].keys():
+                configs[idx][k]=""
+    return configs
+
 if __name__ == "__main__":
     nest_path = path_parser()
     csv_name = nest_path.joinpath(f"results_{nest_path.stem}.csv")
 
     ids = parse_results(nest_path, tag="accuracy_receiver")
+    configs=config_check([x['configs'] for x in ids])
+
+    for idx in range(len(configs)):
+        ids[idx]['configs']=configs[idx]
+
     df = build_dataframe(ids)
 
     df.to_csv(csv_name)
