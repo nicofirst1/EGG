@@ -1,19 +1,25 @@
+from typing import List
+
 from pycocotools.coco import COCO
 from torchvision.datasets import CocoDetection
 
 from egg.zoo.coco_game.utils.utils import console
 
 
-def check_same_classes(
-    train_data: CocoDetection, val_data: CocoDetection, min_annotations
+def filter_distractors(
+        train_data: CocoDetection, val_data: CocoDetection, min_annotations: int
 ):
+    """
+    Filter both train and val given a minimum number of distractors per image.
+    An image is valid if the number of annotations in it is >= distractors+1
+    """
     min_perc_valid = 0.7
     train_cats = train_data.coco.cats
     train_cats = [x["name"] for x in train_cats.values()]
 
     stop = False
     while not stop:
-        stop = filter(train_data, val_data, min_annotations, min_perc_valid)
+        stop = inner_filtering(train_data, val_data, min_annotations, min_perc_valid)
 
     new_train_cats = train_data.coco.cats
     new_train_cats = [x["name"] for x in new_train_cats.values()]
@@ -21,12 +27,18 @@ def check_same_classes(
     removed_cats = set(train_cats) - set(new_train_cats)
 
     console.log(
-        f"A total of {len(new_train_cats)} classes are left from the distractor filtering\nFiltered classes are : {removed_cats}"
+        f"A total of {len(new_train_cats)} classes are left from the distractor filtering\n"
+        f"Filtered classes are : {removed_cats}"
     )
 
 
-def get_annotation_stats(coco: COCO, min_annotations, min_perc_valid):
-    counter = {id_: dict(total=0, valid=0) for id_ in coco.cats.keys()}
+def get_annotation_stats(
+        coco: COCO, min_annotations: int, min_perc_valid: float
+) -> List[str]:
+    """
+    Return the discarded categories and removes annotations/images and cats from coco
+    """
+    cat2remove = {id_: dict(total=0, valid=0) for id_ in coco.cats.keys()}
 
     imgs_to_rm = []
     anns2remove = []
@@ -41,13 +53,13 @@ def get_annotation_stats(coco: COCO, min_annotations, min_perc_valid):
 
         for anns in anns:
             ann_id = anns["category_id"]
-            counter[ann_id]["total"] += 1
-            counter[ann_id]["valid"] += valid
+            cat2remove[ann_id]["total"] += 1
+            cat2remove[ann_id]["valid"] += valid
 
-    counter = {k: v["valid"] / v["total"] for k, v in counter.items()}
-    counter = [k for k, v in counter.items() if v < min_perc_valid]
+    cat2remove = {k: v["valid"] / v["total"] for k, v in cat2remove.items()}
+    cat2remove = [k for k, v in cat2remove.items() if v < min_perc_valid]
 
-    anns2remove += [k for k, v in coco.anns.items() if v["category_id"] in counter]
+    anns2remove += [k for k, v in coco.anns.items() if v["category_id"] in cat2remove]
 
     anns2remove = set(anns2remove)
 
@@ -57,13 +69,16 @@ def get_annotation_stats(coco: COCO, min_annotations, min_perc_valid):
     for ann_id in anns2remove:
         coco.anns.pop(ann_id)
 
-    for cat in counter:
+    for cat in cat2remove:
         coco.cats.pop(cat)
 
-    return counter
+    return cat2remove
 
 
-def remove_cats(coco: COCO, cat_list):
+def remove_cats(coco: COCO, cat_list: set):
+    """
+    Removes a category (annotations) from coco
+    """
     ans2remove = []
     for cat in cat_list:
         images = coco.catToImgs[cat]
@@ -80,9 +95,16 @@ def remove_cats(coco: COCO, cat_list):
         coco.anns.pop(ans)
 
 
-def filter(
-    train_coco: CocoDetection, val_coco: CocoDetection, min_annotations, min_perc_valid
-):
+def inner_filtering(
+        train_coco: CocoDetection,
+        val_coco: CocoDetection,
+        min_annotations: int,
+        min_perc_valid: float,
+) -> bool:
+    """
+    After independently removing images/anns from train and val based on min distractors, cross check to see if val and
+     train have the same categories. If not rremoves the surplus cats and returns false
+    """
     train_stats = get_annotation_stats(train_coco.coco, min_annotations, min_perc_valid)
     val_stats = get_annotation_stats(val_coco.coco, min_annotations, min_perc_valid)
 
@@ -94,42 +116,12 @@ def filter(
 
     if len(cats2rm_val) != 0 or len(cats2rm_train) != 0:
         stop = False
+        remove_cats(train_coco.coco, cats2rm_train)
+        remove_cats(val_coco.coco, cats2rm_val)
+
+        train_coco.init_dicts()
+        val_coco.init_dicts()
     else:
         stop = True
 
-    remove_cats(train_coco.coco, cats2rm_train)
-    remove_cats(val_coco.coco, cats2rm_val)
-
-    train_coco.init_dicts()
-    val_coco.init_dicts()
-
     return stop
-
-
-def filter_anns_coocurence(
-    self, train_coco, val_colo, min_annotations: int, min_perc_valid: float = 0.77
-):
-    """
-    Filter annotations based on minimum number of co-occurences
-    """
-
-    first_len = len(self.ids)
-    original_len = -1
-    new_len = 0
-
-    # need a while since every time you delete some annotations from images, some images may have not enough annotations anymore
-    while original_len != new_len:
-        original_len = len(self.ids)
-        filter(self)
-        new_len = len(self.ids)
-
-    imgs_to_rm = set(self.coco.imgs.keys()) - set(self.coco.imgToAnns.keys())
-    for img in imgs_to_rm:
-        self.coco.imgs.pop(img)
-
-    self.init_dicts()
-    new_len = len(self.ids)
-
-    console.log(
-        f"Co presence filtered len : {new_len}/{first_len} ({new_len / first_len * 100:.3f}%)"
-    )

@@ -15,7 +15,7 @@ from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
-from egg.zoo.coco_game.utils.dataset_utils import check_same_classes
+from egg.zoo.coco_game.utils.dataset_utils import filter_distractors
 from egg.zoo.coco_game.utils.utils import console
 from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
@@ -370,7 +370,7 @@ def get_data(
         distractors=opts.distractors,
     )
 
-    check_same_classes(
+    filter_distractors(
         train_data=coco_train, val_data=coco_val, min_annotations=opts.distractors + 1
     )
 
