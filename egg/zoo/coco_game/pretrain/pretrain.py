@@ -6,11 +6,7 @@ from egg import core
 from egg.core import CheckpointSaver, ProgressBarLogger
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import (
-    SyncLogging,
-    RlScheduler,
-    TensorboardLogger,
-)
+from egg.zoo.coco_game.custom_logging import RlScheduler, SyncLogging, TensorboardLogger
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.game import PretrainGame, SenderSaver

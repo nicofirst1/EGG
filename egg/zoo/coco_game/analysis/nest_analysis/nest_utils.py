@@ -7,7 +7,7 @@ def path_parser():
 
     parser.add_argument(
         "--nest_out_path",
-        default="/home/dizzi/Downloads/Both_out_all/",
+        default="/home/dizzi/Downloads/latest_data/",
         type=str,
     )
     p = parser.parse_args()

@@ -3,15 +3,12 @@ from pathlib import Path
 import torch
 
 from egg import core
-from egg.core import CheckpointSaver, ConsoleLogger, ProgressBarLogger, LoggingStrategy
+from egg.core import CheckpointSaver, ConsoleLogger, LoggingStrategy, ProgressBarLogger
 from egg.core.baselines import MeanBaseline
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import (
-    RlScheduler,
-    InteractionCSV,
-)
+from egg.zoo.coco_game.custom_logging import InteractionCSV, RlScheduler
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.sender_reinforce import (
@@ -132,8 +129,7 @@ def main(params=None):
     )
 
     trainer.load_from_latest(Path("/home/dizzi/Downloads/"))
-    trainer.start_epoch=0
-
+    trainer.start_epoch = 0
 
     trainer.test(n_epochs=1)
     console.log("Test is over")

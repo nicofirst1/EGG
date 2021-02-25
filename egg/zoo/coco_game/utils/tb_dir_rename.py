@@ -31,8 +31,6 @@ PARAMS_SKIP = set(
 )
 
 
-
-
 def get_params(path2params: str) -> Dict:
     path2params = glob(path2params + "/params*")[0]
     with open(path2params, "r") as f:

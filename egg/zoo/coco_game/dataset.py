@@ -4,11 +4,11 @@ from argparse import Namespace
 from functools import reduce
 from typing import Dict, List, Tuple
 
-import PIL
 import albumentations as album
 import cv2
 import lycon
 import numpy as np
+import PIL
 import torch
 import torchvision
 from pycocotools.coco import COCO
@@ -32,12 +32,12 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-            self,
-            root: str,
-            ann_file: str,
-            base_transform: album.Compose,
-            perc_ids: float = 1,
-            distractors:int=1,
+        self,
+        root: str,
+        ann_file: str,
+        base_transform: album.Compose,
+        perc_ids: float = 1,
+        distractors: int = 1,
     ):
         """
         Custom Dataset
@@ -52,7 +52,7 @@ class CocoDetection(VisionDataset):
         self.coco = COCO(ann_file)
         self.ids = list(self.coco.imgs.keys())
         self.base_transform = base_transform
-        self.distractors=distractors
+        self.distractors = distractors
 
         ############
         # Filtering
@@ -98,7 +98,7 @@ class CocoDetection(VisionDataset):
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
-        cats = cats[over_presented: num_classes + over_presented]
+        cats = cats[over_presented : num_classes + over_presented]
         ans = dataset["annotations"]
         ids = [elem["id"] for elem in cats]
         cat_map = {}
@@ -138,13 +138,12 @@ class CocoDetection(VisionDataset):
             imgToAnns[ann["image_id"]].append(ann)
             catToImgs[ann["category_id"]].append(ann["image_id"])
 
-        imgs2rm=set(self.coco.imgs.keys())-set(imgToAnns.keys())
-        self.coco.imgs= {k: v for k, v in self.coco.imgs.items() if k not in imgs2rm}
+        imgs2rm = set(self.coco.imgs.keys()) - set(imgToAnns.keys())
+        self.coco.imgs = {k: v for k, v in self.coco.imgs.items() if k not in imgs2rm}
 
         self.coco.imgToAnns = imgToAnns
         self.coco.catToImgs = catToImgs
         self.ids = list(self.coco.imgs.keys())
-
 
     def filter_anns_area(self, min_area=0.1):
         """
@@ -160,10 +159,10 @@ class CocoDetection(VisionDataset):
 
             # get normalized area
             area = (
-                    (an["bbox"][2] + eps)
-                    / img["width"]
-                    * (an["bbox"][3] + eps)
-                    / img["height"]
+                (an["bbox"][2] + eps)
+                / img["width"]
+                * (an["bbox"][3] + eps)
+                / img["height"]
             )
             if area < min_area:
                 self.ids[idx] = None
@@ -177,7 +176,7 @@ class CocoDetection(VisionDataset):
         )
 
     def get_images(
-            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
@@ -202,7 +201,7 @@ class CocoDetection(VisionDataset):
         return imgs
 
     def __getitem__(
-            self, index: int
+        self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -308,7 +307,7 @@ def torch_transformations(input_size: int) -> album.Compose:
 
 
 def collate(
-        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -334,10 +333,8 @@ def collate(
     return sender_inp, labels, seg
 
 
-
-
 def get_data(
-        opts: Namespace,
+    opts: Namespace,
 ):
     """
     Get train and validation data loader
@@ -373,7 +370,9 @@ def get_data(
         distractors=opts.distractors,
     )
 
-    check_same_classes(train_data=coco_train,val_data=coco_val, min_annotations=opts.distractors+1)
+    check_same_classes(
+        train_data=coco_train, val_data=coco_val, min_annotations=opts.distractors + 1
+    )
 
     if opts.num_workers > 0:
         timeout = 10

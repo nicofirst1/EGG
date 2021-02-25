@@ -24,7 +24,8 @@ def parse_error_args(nest_path, idxs):
 
         for p in c:
 
-            if "=" not in p: continue
+            if "=" not in p:
+                continue
 
             key = p.split("=")[0].replace("--", "")
             val = p.split("=")[1]
@@ -145,7 +146,7 @@ def parse_mean_time(error_epochs, standard_epochs):
     return error_times, standard_times
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     nest_path = path_parser()
 
     # parse error configurations
@@ -157,4 +158,6 @@ if __name__ == '__main__':
     error_epochs, standard_epochs = parse_epochs(nest_path, uuids)
     error_times, standard_times = parse_mean_time(error_epochs, standard_epochs)
 
-    print(f"Mean time for one epoch on oom error : {error_times}, while standard is : {standard_times}")
+    print(
+        f"Mean time for one epoch on oom error : {error_times}, while standard is : {standard_times}"
+    )

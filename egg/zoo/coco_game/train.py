@@ -9,11 +9,11 @@ from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_logging import (
-    SyncLogging,
-    RlScheduler,
-    TensorboardLogger,
     EarlyStopperAccuracy,
     InteractionCSV,
+    RlScheduler,
+    SyncLogging,
+    TensorboardLogger,
 )
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
@@ -63,12 +63,8 @@ def get_game(feat_extractor, opts, class_weights=None):
     ######################################
     #   Game wrapper
     ######################################
-    train_log = SyncLogging(
-        logging_step=opts.train_logging_step
-    )
-    val_log = SyncLogging(
-        logging_step=opts.val_logging_step
-    )
+    train_log = SyncLogging(logging_step=opts.train_logging_step)
+    val_log = SyncLogging(logging_step=opts.val_logging_step)
 
     game = CustomSenderReceiverRnnReinforce(
         sender,

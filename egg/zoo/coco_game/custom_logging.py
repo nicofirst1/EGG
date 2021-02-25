@@ -551,8 +551,13 @@ class InteractionCSV(Callback):
         predictions = torch.argmax(predictions, dim=1)
         correct_pred = predictions == true_seg
 
-        predictions= res_dict['class_id'].gather(1, predictions.unsqueeze(dim=1)).squeeze().tolist()
-        predictions= get_cat_name_id(predictions)
+        predictions = (
+            res_dict["class_id"]
+            .gather(1, predictions.unsqueeze(dim=1))
+            .squeeze()
+            .tolist()
+        )
+        predictions = get_cat_name_id(predictions)
 
         true_class = [self.val_coco.cats[idx]["name"] for idx in true_class]
         distractors = [get_cat_name_id(idx) for idx in distractors]

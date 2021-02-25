@@ -3,7 +3,7 @@ from typing import Dict
 
 import pandas as pd
 
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser, add_row
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
 
 
 def get_infos(lines: list) -> Dict:
@@ -22,7 +22,7 @@ def get_infos(lines: list) -> Dict:
             "correct_target!=distr": 0,
             "wrong_target!=distr": 0,
             "other_classes_len": 0,
-            "target_freq":0,
+            "target_freq": 0,
         }
 
     for l in lines:
@@ -42,7 +42,7 @@ def get_infos(lines: list) -> Dict:
         accuracy_dict[pred_class]["total"] += 1
         accuracy_dict[pred_class]["other_classes_len"] += len(other_classes.split(";"))
 
-        accuracy_dict[pred_class]['target_freq']+=1
+        accuracy_dict[pred_class]["target_freq"] += 1
 
         if eval(correct):
             accuracy_dict[pred_class]["correct"] += 1
@@ -60,18 +60,20 @@ def get_infos(lines: list) -> Dict:
     infos = pd.DataFrame.from_dict(accuracy_dict)
 
     # normalize number of other classes len
-    infos.loc["other_classes_len", :] = infos.loc["other_classes_len", :] / infos.loc["total", :]
+    infos.loc["other_classes_len", :] = (
+        infos.loc["other_classes_len", :] / infos.loc["total", :]
+    )
 
     to_add = infos.loc["correct", :] / infos.loc["total", :]
     infos = add_row(to_add, "accuracy", infos)
 
     to_add = infos.loc["correct_tartget=distr", :] / (
-            infos.loc["wrong_target=distr", :] + infos.loc["correct_tartget=distr", :]
+        infos.loc["wrong_target=distr", :] + infos.loc["correct_tartget=distr", :]
     )
     infos = add_row(to_add, "precision_sc", infos)
 
     to_add = infos.loc["correct_target!=distr", :] / (
-            infos.loc["wrong_target!=distr", :] + infos.loc["correct_target!=distr", :]
+        infos.loc["wrong_target!=distr", :] + infos.loc["correct_target!=distr", :]
     )
     infos = add_row(to_add, "precision_oc", infos)
 
@@ -109,7 +111,10 @@ def analysis_df(infos):
     to_add = infos.loc["accuracy", :].sum() / infos.shape[1]
     analysis = add_row(to_add, "Total Accuracy", analysis)
 
-    to_add = infos.loc["precision_sc", :] - infos.loc["precision_sc", :].sum() / infos.shape[1]
+    to_add = (
+        infos.loc["precision_sc", :]
+        - infos.loc["precision_sc", :].sum() / infos.shape[1]
+    )
     to_add = to_add.mean()
     analysis = add_row(to_add, "Precision difference sc/oc", analysis)
 

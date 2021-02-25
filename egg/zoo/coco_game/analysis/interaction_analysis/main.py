@@ -7,7 +7,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import language_an
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix,
 )
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser, add_row
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
 
 
 def load_generate_files(out_dir):
@@ -46,7 +46,6 @@ class Analysis:
     def __init__(self, interaction_path, out_dir):
         analysis = get_analysis(interaction_path, out_dir)
 
-
         self.acc_class_cooc = analysis["acc_class_cooc"]
         self.lang_sequence = analysis["lang_sequence"]
         self.lang_symbols = analysis["lang_symbol"]
@@ -58,22 +57,30 @@ class Analysis:
         to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
             self.lang_symbols["class_richness"]
         )
-        self.acc_analysis = add_row(to_add, "Correlation AmbiguityRate-SymbolClassRichness", self.acc_analysis)
+        self.acc_analysis = add_row(
+            to_add, "Correlation AmbiguityRate-SymbolClassRichness", self.acc_analysis
+        )
 
         to_add = self.acc_class_infos.loc["frequency", :].corr(
             self.lang_symbols["class_richness"]
         )
-        self.acc_analysis = add_row(to_add, "Correlation Frequency-SymbolClassRichness", self.acc_analysis)
+        self.acc_analysis = add_row(
+            to_add, "Correlation Frequency-SymbolClassRichness", self.acc_analysis
+        )
 
         to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
             self.lang_sequence["class_richness"]
         )
-        self.acc_analysis = add_row(to_add, "Correlation AmbiguityRate-SeqClassRichness", self.acc_analysis)
+        self.acc_analysis = add_row(
+            to_add, "Correlation AmbiguityRate-SeqClassRichness", self.acc_analysis
+        )
 
         to_add = self.acc_class_infos.loc["frequency", :].corr(
             self.lang_sequence["class_richness"]
         )
-        self.acc_analysis = add_row(to_add, "Correlation Frequency-SeqClassRichness", self.acc_analysis)
+        self.acc_analysis = add_row(
+            to_add, "Correlation Frequency-SeqClassRichness", self.acc_analysis
+        )
 
     def plot_cm(self):
         plot_confusion_matrix(self.acc_class_cooc, "Class CoOccurence")
@@ -92,5 +99,5 @@ if __name__ == "__main__":
 
     analysis = Analysis(interaction_path, out_dir)
     analysis.update()
-    #analysis.plot_cm()
-    a=1
+    # analysis.plot_cm()
+    a = 1
