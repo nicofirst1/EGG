@@ -121,6 +121,13 @@ def logs_parser(parser):
 
 def dataloader_parsing(parser):
     parser.add_argument(
+        "--data_seed",
+        type=int,
+        default=42,
+        help="Random seed for dataloaders",
+    )
+
+    parser.add_argument(
         "--min_area",
         type=float,
         default=0,

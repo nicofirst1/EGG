@@ -38,6 +38,7 @@ class CocoDetection(VisionDataset):
         base_transform: album.Compose,
         perc_ids: float = 1,
         distractors: int = 1,
+        data_seed: int =42,
     ):
         """
         Custom Dataset
@@ -53,6 +54,7 @@ class CocoDetection(VisionDataset):
         self.ids = list(self.coco.imgs.keys())
         self.base_transform = base_transform
         self.distractors = distractors
+        self.random_state = np.random.RandomState(data_seed)
 
         ############
         # Filtering
@@ -211,9 +213,10 @@ class CocoDetection(VisionDataset):
         # get annotation id-> target -> image id
         img_id = self.ids[index]
         targets = self.coco.imgToAnns[img_id].copy()
-        chosen_target = random.choice(targets)
+        chosen_target = self.random_state.choice(targets)
         targets.remove(chosen_target)
-        distractors = random.choices(targets, k=self.distractors)
+        distractors = self.random_state.choice(targets, size=self.distractors)
+        distractors=list(distractors)
 
         path = self.coco.loadImgs(img_id)[0]["file_name"]
 
@@ -255,7 +258,7 @@ class CocoDetection(VisionDataset):
         # shuffle segments
         segments = [x.unsqueeze(dim=0) for x in segments]
         indices = list(range(len(segments)))
-        random.shuffle(indices)
+        self.random_state.shuffle(indices)
         shuffled_segs = [segments[idx] for idx in indices]
         segments = torch.cat(shuffled_segs, dim=0)
 
@@ -360,6 +363,7 @@ def get_data(
         perc_ids=opts.train_data_perc,
         base_transform=base_trans,
         distractors=opts.distractors,
+        data_seed=opts.data_seed,
     )
 
     coco_val = CocoDetection(
@@ -368,6 +372,8 @@ def get_data(
         perc_ids=opts.val_data_perc,
         base_transform=base_trans,
         distractors=opts.distractors,
+        data_seed=opts.data_seed,
+
     )
 
     filter_distractors(
