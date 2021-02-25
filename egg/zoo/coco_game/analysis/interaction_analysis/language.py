@@ -145,9 +145,9 @@ def language_analysis(interaction_path, out_dir):
     print(f"Files save in {out_dir}")
 
     return dict(
-        symbol_df=symbol_df,
-        sequence_df=sequence_df,
-        sequence_cooc_tensor=sequence_cooc_tensor,
+        lang_symbol=symbol_df,
+        lang_sequence=sequence_df,
+        lang_sequence_cooc=sequence_cooc_tensor,
     )
 
 

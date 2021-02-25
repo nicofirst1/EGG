@@ -1,17 +1,19 @@
 import json
+from pathlib import Path
 
 import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
-    plot_confusion_matrix,
+    plot_confusion_matrix, plot_multi_scatter,
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
 
 
 def load_generate_files(out_dir):
-    files = list(out_dir.rglob("*"))
+    files = list(out_dir.rglob("*.json"))
+    files += list(out_dir.rglob("*.csv"))
     res_dict = {}
 
     for path in files:
@@ -43,7 +45,7 @@ def get_analysis(interaction_path, out_dir):
 
 
 class Analysis:
-    def __init__(self, interaction_path, out_dir):
+    def __init__(self, interaction_path: Path, out_dir: Path):
         analysis = get_analysis(interaction_path, out_dir)
 
         self.acc_class_cooc = analysis["acc_class_cooc"]
@@ -52,6 +54,12 @@ class Analysis:
         self.lang_sequence_cooc = analysis["lang_sequence_cooc"]
         self.acc_class_infos = analysis["acc_class_infos"]
         self.acc_analysis = analysis["acc_analysis"]
+
+        self.cm_path = out_dir.joinpath("ConfusionMatrix")
+        self.infos_path = out_dir.joinpath("Infos")
+
+        self.cm_path.mkdir(parents=True, exist_ok=True)
+        self.infos_path.mkdir(parents=True, exist_ok=True)
 
     def update(self):
         to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
@@ -83,15 +91,47 @@ class Analysis:
         )
 
     def plot_cm(self):
-        plot_confusion_matrix(self.acc_class_cooc, "Class CoOccurence")
+        plot_confusion_matrix(self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path)
 
         to_plot = self.lang_symbols.drop("frequency")
         to_plot = to_plot.drop("class_richness", axis=1)
-        plot_confusion_matrix(to_plot, "Class-Symbol CoOccurence")
+        plot_confusion_matrix(to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path)
 
         to_plot = self.lang_sequence.drop("frequency")
         to_plot = to_plot.drop("class_richness", axis=1)
-        plot_confusion_matrix(to_plot, "Class-Sequence CoOccurence")
+        plot_confusion_matrix(to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path)
+
+    def plot_infos(self):
+
+        info_len = len(self.acc_class_infos)
+        to_plot = []
+        for idx in range(info_len - 1):
+            for jdx in range(idx + 1, info_len):
+                row_i = self.acc_class_infos.iloc[idx]
+                row_j = self.acc_class_infos.iloc[jdx]
+
+                # remove outlayers
+                quant_i = row_i.between(row_i.quantile(0.05), row_i.quantile(.95))
+                quant_j = row_j.between(row_j.quantile(0.05), row_j.quantile(.95))
+
+                idexes = quant_i & quant_j
+
+                row_i = row_i[idexes]  # without outliers
+                row_j = row_j[idexes]  # without outliers
+
+                # get correlation
+                corr = row_i.corr(row_j)
+
+                # cast tu numpy
+                row_i = row_i.values
+                row_j = row_j.values
+
+                name_i = self.acc_class_infos.index[idx]
+                name_j = self.acc_class_infos.index[jdx]
+
+                to_plot.append((name_i, name_j, row_i, row_j, corr))
+
+        plot_multi_scatter(to_plot, save_dir=self.infos_path)
 
 
 if __name__ == "__main__":
@@ -100,4 +140,5 @@ if __name__ == "__main__":
     analysis = Analysis(interaction_path, out_dir)
     analysis.update()
     # analysis.plot_cm()
+    analysis.plot_infos()
     a = 1

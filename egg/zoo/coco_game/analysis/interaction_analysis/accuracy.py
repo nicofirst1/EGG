@@ -84,9 +84,6 @@ def get_infos(lines: list) -> Dict:
     to_add /= infos.loc["total", :]
     infos = add_row(to_add, "ambiguity_rate", infos)
 
-    to_add = infos.loc["target_freq", :] / infos.loc["total", :]
-    infos = add_row(to_add, "target_frequency", infos)
-
     infos = infos.fillna(0)
 
     return infos
@@ -113,7 +110,7 @@ def analysis_df(infos):
 
     to_add = (
         infos.loc["precision_sc", :]
-        - infos.loc["precision_sc", :].sum() / infos.shape[1]
+        - infos.loc["precision_oc", :].sum() / infos.shape[1]
     )
     to_add = to_add.mean()
     analysis = add_row(to_add, "Precision difference sc/oc", analysis)
@@ -127,14 +124,11 @@ def analysis_df(infos):
     to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["frequency", :])
     analysis = add_row(to_add, "Corr AmbiguityRate-Frequency", analysis)
 
-    to_add = infos.loc["target_frequency", :].corr(infos.loc["accuracy", :])
-    analysis = add_row(to_add, "Corr TargetFrequency-Accuracy", analysis)
+    to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["accuracy", :])
+    analysis = add_row(to_add, "Corr AmbiguityRate-Accuracy", analysis)
 
-    to_add = infos.loc["target_frequency", :].corr(infos.loc["ambiguity_rate", :])
-    analysis = add_row(to_add, "Corr TargetFrequency-AmbiguityRate", analysis)
-
-    to_add = infos.loc["target_frequency", :].corr(infos.loc["other_classes_len", :])
-    analysis = add_row(to_add, "Corr TargetFrequency-OtherClassLen", analysis)
+    to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["other_classes_len", :])
+    analysis = add_row(to_add, "Corr AmbiguityRate-OtherClassLen", analysis)
 
     return analysis
 
@@ -162,8 +156,9 @@ def accuracy_analysis(interaction_path, out_dir):
     print(f"Out saved in {out_dir}")
 
     return dict(
-        cooc=cooc,
-        infos=infos,
+        acc_class_cooc=cooc,
+        acc_class_infos=infos,
+        acc_analysis=analysis,
     )
 
 

@@ -9,7 +9,7 @@ def path_parser():
 
     parser.add_argument(
         "--interaction_path",
-        default="/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/test/runs/interactions.csv",
+        default="/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/915cc69f/runs/interactions.csv",
         type=str,
     )
 
