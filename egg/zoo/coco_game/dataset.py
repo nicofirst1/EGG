@@ -15,6 +15,7 @@ from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
+from egg.zoo.coco_game.utils.dataset_utils import check_same_classes
 from egg.zoo.coco_game.utils.utils import console
 from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
@@ -31,12 +32,12 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-        self,
-        root: str,
-        ann_file: str,
-        base_transform: album.Compose,
-        perc_ids: float = 1,
-        distractors: int = 1,
+            self,
+            root: str,
+            ann_file: str,
+            base_transform: album.Compose,
+            perc_ids: float = 1,
+            distractors:int=1,
     ):
         """
         Custom Dataset
@@ -51,14 +52,11 @@ class CocoDetection(VisionDataset):
         self.coco = COCO(ann_file)
         self.ids = list(self.coco.imgs.keys())
         self.base_transform = base_transform
-        self.distractors = distractors
+        self.distractors=distractors
 
         ############
         # Filtering
         ############
-        # filter per number of classes
-        self.filter_anns_coocurence(distractors + 1)
-
         # randomly drop perc_ids
         self.ids = self.delete_rand_items(self.ids, int((1 - perc_ids) * len(self.ids)))
 
@@ -100,7 +98,7 @@ class CocoDetection(VisionDataset):
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
-        cats = cats[over_presented : num_classes + over_presented]
+        cats = cats[over_presented: num_classes + over_presented]
         ans = dataset["annotations"]
         ids = [elem["id"] for elem in cats]
         cat_map = {}
@@ -140,86 +138,13 @@ class CocoDetection(VisionDataset):
             imgToAnns[ann["image_id"]].append(ann)
             catToImgs[ann["category_id"]].append(ann["image_id"])
 
+        imgs2rm=set(self.coco.imgs.keys())-set(imgToAnns.keys())
+        self.coco.imgs= {k: v for k, v in self.coco.imgs.items() if k not in imgs2rm}
+
         self.coco.imgToAnns = imgToAnns
         self.coco.catToImgs = catToImgs
         self.ids = list(self.coco.imgs.keys())
 
-    def filter_anns_coocurence(self, min_annotations: int, min_perc_valid: float = 0.7):
-        """
-        Filter annotations based on minimum number of co-occurences
-        """
-
-        def filter(self):
-            counter = {id_: dict(total=0, valid=0) for id_ in self.coco.cats.keys()}
-
-            imgs_to_rm = []
-            anns_to_rm = []
-
-            for img_id, anns in self.coco.imgToAnns.items():
-
-                valid = 1 if len(anns) > min_annotations else 0
-
-                if not valid:
-                    imgs_to_rm.append(img_id)
-                    anns_to_rm += [x["id"] for x in anns]
-
-                for anns in anns:
-                    ann_id = anns["category_id"]
-                    counter[ann_id]["total"] += 1
-                    counter[ann_id]["valid"] += valid
-
-            counter = {k: v["valid"] / v["total"] for k, v in counter.items()}
-
-            def log():
-                to_log = {}
-
-                for id_, cat in self.coco.cats.items():
-                    name = cat["name"]
-                    to_log[name] = int(counter[id_] * 100)
-
-                to_log = sorted(to_log.items(), key=lambda item: item[1], reverse=True)
-                console.log(
-                    f"Percentage of valid classes with more than {min_annotations} annotations per image:{to_log}\n"
-                )
-                console.log(f"Total are: {len(to_log)}")
-
-            counter = [k for k, v in counter.items() if v < min_perc_valid]
-            anns_to_rm += [
-                k for k, v in self.coco.anns.items() if v["category_id"] in counter
-            ]
-            anns_to_rm = set(anns_to_rm)
-
-            for img_id in imgs_to_rm:
-                self.coco.imgs.pop(img_id)
-
-            for ann_id in anns_to_rm:
-                self.coco.anns.pop(ann_id)
-
-            for cat in counter:
-                self.coco.cats.pop(cat)
-
-            self.init_dicts()
-
-        first_len = len(self.ids)
-        original_len = -1
-        new_len = 0
-
-        # need a while since every time you delete some annotations from images, some images may have not enough annotations anymore
-        while original_len != new_len:
-            original_len = len(self.ids)
-            filter(self)
-            new_len = len(self.ids)
-
-        imgs_to_rm = set(self.coco.imgs.keys()) - set(self.coco.imgToAnns.keys())
-        for img in imgs_to_rm:
-            self.coco.imgs.pop(img)
-
-        self.init_dicts()
-        new_len = len(self.ids)
-
-        console.log(
-            f"Co presence filtered len : {new_len}/{first_len} ({new_len / first_len * 100:.3f}%)"
-        )
 
     def filter_anns_area(self, min_area=0.1):
         """
@@ -235,10 +160,10 @@ class CocoDetection(VisionDataset):
 
             # get normalized area
             area = (
-                (an["bbox"][2] + eps)
-                / img["width"]
-                * (an["bbox"][3] + eps)
-                / img["height"]
+                    (an["bbox"][2] + eps)
+                    / img["width"]
+                    * (an["bbox"][3] + eps)
+                    / img["height"]
             )
             if area < min_area:
                 self.ids[idx] = None
@@ -252,7 +177,7 @@ class CocoDetection(VisionDataset):
         )
 
     def get_images(
-        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
@@ -277,7 +202,7 @@ class CocoDetection(VisionDataset):
         return imgs
 
     def __getitem__(
-        self, index: int
+            self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -383,7 +308,7 @@ def torch_transformations(input_size: int) -> album.Compose:
 
 
 def collate(
-    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -409,8 +334,10 @@ def collate(
     return sender_inp, labels, seg
 
 
+
+
 def get_data(
-    opts: Namespace,
+        opts: Namespace,
 ):
     """
     Get train and validation data loader
@@ -445,6 +372,8 @@ def get_data(
         base_transform=base_trans,
         distractors=opts.distractors,
     )
+
+    check_same_classes(train_data=coco_train,val_data=coco_val, min_annotations=opts.distractors+1)
 
     if opts.num_workers > 0:
         timeout = 10
