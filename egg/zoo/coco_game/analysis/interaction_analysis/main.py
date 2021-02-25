@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis
+from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix, plot_multi_scatter,
 )
@@ -38,7 +38,7 @@ def get_analysis(interaction_path, out_dir):
         acc_res = accuracy_analysis(interaction_path, out_dir)
         lan_res = language_analysis(interaction_path, out_dir)
 
-        acc_res.update(lan_res)
+        acc_res.update_analysis(lan_res)
         res_dict = acc_res
 
     return res_dict
@@ -61,7 +61,7 @@ class Analysis:
         self.cm_path.mkdir(parents=True, exist_ok=True)
         self.infos_path.mkdir(parents=True, exist_ok=True)
 
-    def update(self):
+    def update_analysis(self):
         to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
             self.lang_symbols["class_richness"]
         )
@@ -88,6 +88,16 @@ class Analysis:
         )
         self.acc_analysis = add_row(
             to_add, "Correlation Frequency-SeqClassRichness", self.acc_analysis
+        )
+
+    def update_infos(self):
+        to_add, to_add2 = ambiguity_richness(self.lang_sequence_cooc)
+        self.acc_class_infos = add_row(
+            to_add, "ambiguity_richness", self.acc_class_infos
+        )
+
+        self.acc_class_infos = add_row(
+            to_add2, "ambiguity_richness_perc", self.acc_class_infos
         )
 
     def plot_cm(self):
@@ -131,14 +141,15 @@ class Analysis:
 
                 to_plot.append((name_i, name_j, row_i, row_j, corr))
 
-        plot_multi_scatter(to_plot, save_dir=self.infos_path)
+        plot_multi_scatter(to_plot, save_dir=self.infos_path, show=False)
 
 
 if __name__ == "__main__":
     interaction_path, out_dir = path_parser()
 
     analysis = Analysis(interaction_path, out_dir)
-    analysis.update()
+    analysis.update_analysis()
+    analysis.update_infos()
     # analysis.plot_cm()
     analysis.plot_infos()
     a = 1
