@@ -59,14 +59,16 @@ class CocoDetection(VisionDataset):
         """
         n = int((1 - perc_ids) * len(self.ids))
         original_len = len(self.ids)
-        to_delete = self.random_state.choice(range(len(self.ids)), n)
-        new_len = len(self.ids) - n
+        to_delete= self.random_state.choice(range(len(self.ids)), size=n, replace=False)
+        to_delete = set(to_delete)
+
+        ids = [x for i, x in enumerate(self.ids) if i not in to_delete]
+        ids = sorted(ids)
+        new_len = len(ids)
 
         console.log(
             f"Perc filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
         )
-        ids = [x for i, x in enumerate(self.ids) if i not in to_delete]
-        ids = sorted(ids)
         self.ids = ids
 
     def get_class_weights(self) -> Dict[int, int]:
