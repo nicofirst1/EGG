@@ -1,4 +1,3 @@
-import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -28,10 +27,12 @@ def plot_confusion_matrix(df: pd.DataFrame, title, save_dir: Path, use_scaler=Tr
     if show:
         plt.show()
 
+    plt.close()
+
 
 def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
     figures = len(plot_list) // max_plot_figure
-    square_len = max_plot_figure//2
+    square_len = max_plot_figure // 2
     idx = 0
     for _ in range(figures):
         fig, axs = plt.subplots(square_len, square_len)
@@ -52,3 +53,4 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
         if show:
             plt.show()
         plt.close()
+

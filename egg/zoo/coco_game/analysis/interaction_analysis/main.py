@@ -1,10 +1,12 @@
 import json
+import pickle
 from pathlib import Path
 
 import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness
+from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness, \
+    language_tensor
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix, plot_multi_scatter,
 )
@@ -14,6 +16,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_
 def load_generate_files(out_dir):
     files = list(out_dir.rglob("*.json"))
     files += list(out_dir.rglob("*.csv"))
+    files += list(out_dir.rglob("*.pkl"))
     res_dict = {}
 
     for path in files:
@@ -24,6 +27,9 @@ def load_generate_files(out_dir):
             with open(path, "r") as f:
                 df = json.load(f)
 
+        elif path.suffix == ".pkl":
+            with open(path, "rb") as f:
+                df = pickle.load(f)
         else:
             raise KeyError(f"Unrecognized stem {path.stem}")
         res_dict[path.stem] = df
@@ -38,7 +44,7 @@ def get_analysis(interaction_path, out_dir):
         acc_res = accuracy_analysis(interaction_path, out_dir)
         lan_res = language_analysis(interaction_path, out_dir)
 
-        acc_res.update_analysis(lan_res)
+        acc_res.update(lan_res)
         res_dict = acc_res
 
     return res_dict
@@ -48,18 +54,22 @@ class Analysis:
     def __init__(self, interaction_path: Path, out_dir: Path):
         analysis = get_analysis(interaction_path, out_dir)
 
-        self.acc_class_cooc = analysis["acc_class_cooc"]
         self.lang_sequence = analysis["lang_sequence"]
         self.lang_symbols = analysis["lang_symbol"]
         self.lang_sequence_cooc = analysis["lang_sequence_cooc"]
+        self.lang_tensor = analysis['lang_tensor']
+
         self.acc_class_infos = analysis["acc_class_infos"]
         self.acc_analysis = analysis["acc_analysis"]
+        self.acc_class_cooc = analysis["acc_class_cooc"]
 
         self.cm_path = out_dir.joinpath("ConfusionMatrix")
         self.infos_path = out_dir.joinpath("Infos")
+        self.language_tensor_path = out_dir.joinpath("LanguageTensor")
 
         self.cm_path.mkdir(parents=True, exist_ok=True)
         self.infos_path.mkdir(parents=True, exist_ok=True)
+        self.language_tensor_path.mkdir(parents=True, exist_ok=True)
 
     def update_analysis(self):
         to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
@@ -143,6 +153,10 @@ class Analysis:
 
         plot_multi_scatter(to_plot, save_dir=self.infos_path, show=False)
 
+    def plot_language_tensor(self):
+        for k, df in self.lang_tensor.items():
+            plot_confusion_matrix(df, k, self.language_tensor_path, use_scaler=True, show=False)
+
 
 if __name__ == "__main__":
     interaction_path, out_dir = path_parser()
@@ -151,5 +165,6 @@ if __name__ == "__main__":
     analysis.update_analysis()
     analysis.update_infos()
     # analysis.plot_cm()
-    analysis.plot_infos()
+    # analysis.plot_infos()
+    analysis.plot_language_tensor()
     a = 1

@@ -13,7 +13,6 @@ from egg.zoo.coco_game.custom_logging import (
     InteractionCSV,
     RlScheduler,
     SyncLogging,
-    TensorboardLogger,
 )
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init

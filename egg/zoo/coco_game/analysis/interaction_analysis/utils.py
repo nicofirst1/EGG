@@ -2,14 +2,16 @@ import argparse
 import pathlib
 
 import pandas as pd
+from rich.console import Console
 
+console=Console()
 
 def path_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--interaction_path",
-        default="/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/915cc69f/runs/interactions.csv",
+        default="/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/test/runs/interactions.csv",
         type=str,
     )
 

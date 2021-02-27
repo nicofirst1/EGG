@@ -3,7 +3,7 @@ from typing import Dict
 
 import pandas as pd
 
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser, console
 
 
 def get_infos(lines: list) -> Dict:
@@ -134,6 +134,8 @@ def analysis_df(infos):
 
 
 def accuracy_analysis(interaction_path, out_dir):
+    console.log("Computing accuracy analysis...")
+
     with open(interaction_path, "r") as f:
         reader = csv.reader(f)
         lines = list(reader)

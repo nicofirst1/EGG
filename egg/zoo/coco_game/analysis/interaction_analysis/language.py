@@ -1,10 +1,12 @@
 import csv
 import json
+import pickle
 from typing import Dict
 
 import pandas as pd
+from rich.progress import track
 
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser, console
 
 
 def get_infos(lines: list, max_len) -> Dict:
@@ -55,7 +57,28 @@ def get_infos(lines: list, max_len) -> Dict:
     return infos, classes
 
 
-def ambiguity_richness(lang_sequence_cooc: Dict)->Dict:
+def language_tensor(lang_sequence_cooc):
+    tensor = {}
+    for true_c, distr_dict in lang_sequence_cooc.items():
+        sequences = [list(x.keys()) for x in distr_dict.values()]
+        sequences = [x for sub in sequences for x in sub]
+        sequences = set(sequences)
+
+        distractors = list(distr_dict.keys())
+
+        df = pd.DataFrame(index=sequences, columns=distractors).fillna(0)
+
+        for dist_k, seqs in distr_dict.items():
+
+            for seq_k, seq_v in seqs.items():
+                df[dist_k][seq_k] += seq_v
+
+        tensor[true_c] = df
+
+    return tensor
+
+
+def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
     ar_res = {}
     ar_perc_res = {}
     for k, v in lang_sequence_cooc.items():
@@ -75,7 +98,8 @@ def ambiguity_richness(lang_sequence_cooc: Dict)->Dict:
         ar_res[k] /= total
         ar_perc_res[k] /= total_perc
 
-    return ar_res , ar_perc_res
+    return ar_res, ar_perc_res
+
 
 def coccurence(lines, symbols, sequences, classes, max_len):
     symbol_df = pd.DataFrame(index=classes, columns=symbols)
@@ -84,9 +108,9 @@ def coccurence(lines, symbols, sequences, classes, max_len):
     sequence_df = pd.DataFrame(index=classes, columns=sequences)
     sequence_df = sequence_df.fillna(0)
 
-    sequence_cooc_tensor = {}
+    sequence_cooc_tensor = {k: {} for k in classes}
 
-    for l in lines:
+    for l in track(lines, description="Computing language analysis..."):
         message = l[1].split(";")
         true_class = l[3]
         pred_class = l[2]
@@ -101,9 +125,6 @@ def coccurence(lines, symbols, sequences, classes, max_len):
         symbol_seq = "".join(message[:msg_len])
         sequence_df[symbol_seq][true_class] += 1
 
-        if true_class not in sequence_cooc_tensor.keys():
-            sequence_cooc_tensor[true_class] = {}
-
         if distract not in sequence_cooc_tensor[true_class].keys():
             sequence_cooc_tensor[true_class][distract] = {}
 
@@ -115,11 +136,6 @@ def coccurence(lines, symbols, sequences, classes, max_len):
     symbol_df /= len(lines)
     symbol_df /= max_len
     sequence_df /= len(lines)
-
-    for k1 in sequence_cooc_tensor.keys():
-        for k2 in sequence_cooc_tensor[k1].keys():
-            for k3 in sequence_cooc_tensor[k1][k2].keys():
-                sequence_cooc_tensor[k1][k2][k3] /= max_len
 
     return symbol_df, sequence_df, sequence_cooc_tensor
 
@@ -141,6 +157,8 @@ def language_analysis(interaction_path, out_dir):
         lines, symbols, sequences, classes, max_len
     )
 
+    tensor=language_tensor(sequence_cooc_tensor)
+
     to_add = symbol_df.sum(axis=1)
     symbol_df["class_richness"] = to_add
 
@@ -158,18 +176,24 @@ def language_analysis(interaction_path, out_dir):
     symbol_path = out_dir.joinpath("lang_symbol.csv")
     sequence_cooc_path = out_dir.joinpath("lang_sequence_cooc.json")
     sequence_path = out_dir.joinpath("lang_sequence.csv")
+    tensor_path = out_dir.joinpath("lang_tensor.pkl")
 
     symbol_df.to_csv(symbol_path)
     sequence_df.to_csv(sequence_path)
 
     with open(sequence_cooc_path, "w") as f:
         json.dump(sequence_cooc_tensor, f)
-    print(f"Files save in {out_dir}")
+
+    with open(tensor_path, "wb") as f:
+        pickle.dump(tensor, f)
+
+    console.log(f"Files save in {out_dir}")
 
     return dict(
         lang_symbol=symbol_df,
         lang_sequence=sequence_df,
         lang_sequence_cooc=sequence_cooc_tensor,
+        lang_tensor=tensor,
     )
 
 
