@@ -1,21 +1,20 @@
 import os
-import random
 from argparse import Namespace
 from functools import reduce
 from typing import Dict, List, Tuple
 
+import PIL
 import albumentations as album
 import cv2
 import lycon
 import numpy as np
-import PIL
 import torch
 import torchvision
 from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
-from egg.zoo.coco_game.utils.dataset_utils import filter_distractors, save_data
+from egg.zoo.coco_game.utils.dataset_utils import filter_distractors
 from egg.zoo.coco_game.utils.utils import console
 from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
@@ -32,13 +31,12 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-        self,
-        root: str,
-        ann_file: str,
-        base_transform: album.Compose,
-        perc_ids: float = 1,
-        distractors: int = 1,
-        data_seed: int =42,
+            self,
+            root: str,
+            ann_file: str,
+            base_transform: album.Compose,
+            distractors: int = 1,
+            data_seed: int = 42,
     ):
         """
         Custom Dataset
@@ -46,7 +44,6 @@ class CocoDetection(VisionDataset):
             root: path to the coco dataset
             ann_file: path to coco annotations file
             base_transform: transformation used for the sender input
-            perc_ids: percentage of ids to keep
         """
         super(CocoDetection, self).__init__(root, None, None, None)
 
@@ -56,23 +53,21 @@ class CocoDetection(VisionDataset):
         self.distractors = distractors
         self.random_state = np.random.RandomState(data_seed)
 
-        ############
-        # Filtering
-        ############
-        # randomly drop perc_ids
-        self.ids = self.delete_rand_items(self.ids, int((1 - perc_ids) * len(self.ids)))
-
-        self.ids = sorted(self.ids)
-
-    def delete_rand_items(self,items: list, n: int):
-        original_len = len(items)
-        to_delete = set(self.random_state.choice(range(len(items)), n))
-        new_len = len(items) - n
+    def delete_rand_items(self, perc_ids: float):
+        """
+        Delete percentage of dataset randomly for testing
+        """
+        n = int((1 - perc_ids) * len(self.ids))
+        original_len = len(self.ids)
+        to_delete = self.random_state.choice(range(len(self.ids)), n)
+        new_len = len(self.ids) - n
 
         console.log(
             f"Perc filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
         )
-        return [x for i, x in enumerate(items) if not i in to_delete]
+        ids = [x for i, x in enumerate(self.ids) if i not in to_delete]
+        ids = sorted(ids)
+        self.ids = ids
 
     def get_class_weights(self) -> Dict[int, int]:
         dataset = self.coco.dataset
@@ -99,7 +94,7 @@ class CocoDetection(VisionDataset):
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
-        cats = cats[over_presented : num_classes + over_presented]
+        cats = cats[over_presented: num_classes + over_presented]
         ans = dataset["annotations"]
         ids = [elem["id"] for elem in cats]
         cat_map = {}
@@ -160,10 +155,10 @@ class CocoDetection(VisionDataset):
 
             # get normalized area
             area = (
-                (an["bbox"][2] + eps)
-                / img["width"]
-                * (an["bbox"][3] + eps)
-                / img["height"]
+                    (an["bbox"][2] + eps)
+                    / img["width"]
+                    * (an["bbox"][3] + eps)
+                    / img["height"]
             )
             if area < min_area:
                 self.ids[idx] = None
@@ -177,7 +172,7 @@ class CocoDetection(VisionDataset):
         )
 
     def get_images(
-        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
@@ -202,7 +197,7 @@ class CocoDetection(VisionDataset):
         return imgs
 
     def __getitem__(
-        self, index: int
+            self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -215,7 +210,7 @@ class CocoDetection(VisionDataset):
         chosen_target = self.random_state.choice(targets)
         targets.remove(chosen_target)
         distractors = self.random_state.choice(targets, size=self.distractors)
-        distractors=list(distractors)
+        distractors = list(distractors)
 
         path = self.coco.loadImgs(img_id)[0]["file_name"]
 
@@ -309,7 +304,7 @@ def torch_transformations(input_size: int) -> album.Compose:
 
 
 def collate(
-    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -323,7 +318,7 @@ def collate(
     seg = [elem[1] for elem in batch]
     labels = [elem[2] for elem in batch]
 
-    #save_data(labels, f"data_diff2.csv")
+    # save_data(labels, f"data_diff2.csv")
 
     # stack on torch tensor
     sender_inp = torch.stack(sender_inp).contiguous()
@@ -338,7 +333,7 @@ def collate(
 
 
 def get_data(
-    opts: Namespace,
+        opts: Namespace,
 ):
     """
     Get train and validation data loader
@@ -361,7 +356,6 @@ def get_data(
     coco_train = CocoDetection(
         root=path2imgs + "train2017",
         ann_file=path2json + "instances_train2017.json",
-        perc_ids=opts.train_data_perc,
         base_transform=base_trans,
         distractors=opts.distractors,
         data_seed=opts.data_seed,
@@ -371,7 +365,6 @@ def get_data(
     coco_val = CocoDetection(
         root=path2imgs + "val2017",
         ann_file=path2json + "instances_val2017.json",
-        perc_ids=opts.val_data_perc,
         base_transform=base_trans,
         distractors=opts.distractors,
         data_seed=opts.data_seed,
@@ -381,6 +374,9 @@ def get_data(
     filter_distractors(
         train_data=coco_train, val_data=coco_val, min_annotations=opts.distractors + 1
     )
+
+    coco_train.delete_rand_items(opts.train_data_perc)
+    coco_val.delete_rand_items(opts.val_data_perc)
 
     if opts.num_workers > 0:
         timeout = 10
