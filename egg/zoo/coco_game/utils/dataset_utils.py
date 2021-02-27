@@ -125,3 +125,12 @@ def inner_filtering(
         stop = True
 
     return stop
+
+
+def save_data(data_list, data_file="data.csv"):
+    data_list = [x.tolist() for x in data_list]
+    data_list = [x for sub in data_list for x in sub]
+    data_list = [",".join([str(y) for y in x]) for x in data_list]
+    data_list = [f"{x}\n" for x in data_list]
+    with open(data_file, "a") as f:
+        f.writelines(data_list)

@@ -15,7 +15,7 @@ from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
-from egg.zoo.coco_game.utils.dataset_utils import filter_distractors
+from egg.zoo.coco_game.utils.dataset_utils import filter_distractors, save_data
 from egg.zoo.coco_game.utils.utils import console
 from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
@@ -64,10 +64,9 @@ class CocoDetection(VisionDataset):
 
         self.ids = sorted(self.ids)
 
-    @staticmethod
-    def delete_rand_items(items: list, n: int):
+    def delete_rand_items(self,items: list, n: int):
         original_len = len(items)
-        to_delete = set(random.sample(range(len(items)), n))
+        to_delete = set(self.random_state.choice(range(len(items)), n))
         new_len = len(items) - n
 
         console.log(
@@ -324,6 +323,8 @@ def collate(
     seg = [elem[1] for elem in batch]
     labels = [elem[2] for elem in batch]
 
+    #save_data(labels, f"data_diff2.csv")
+
     # stack on torch tensor
     sender_inp = torch.stack(sender_inp).contiguous()
     seg = torch.stack(seg).contiguous()
@@ -364,6 +365,7 @@ def get_data(
         base_transform=base_trans,
         distractors=opts.distractors,
         data_seed=opts.data_seed,
+
     )
 
     coco_val = CocoDetection(
@@ -388,8 +390,8 @@ def get_data(
     # generate dataloaders
     coco_train = DataLoader(
         coco_train,
-        shuffle=True,
-        drop_last=True,
+        shuffle=False,
+        drop_last=False,
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
@@ -397,8 +399,8 @@ def get_data(
     )
     coco_val = DataLoader(
         coco_val,
-        shuffle=True,
-        drop_last=True,
+        shuffle=False,
+        drop_last=False,
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
