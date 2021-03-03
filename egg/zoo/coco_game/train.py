@@ -12,7 +12,7 @@ from egg.zoo.coco_game.custom_logging import (
     EarlyStopperAccuracy,
     InteractionCSV,
     RlScheduler,
-    SyncLogging,
+    SyncLogging, TensorboardLogger,
 )
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
@@ -120,6 +120,24 @@ def main(params=None):
         ConsoleLogger(print_train_loss=True, as_json=True),
     ]
 
+    if opts.use_custom_logging:
+        clbs = [
+            TensorboardLogger(
+                tensorboard_dir=opts.tensorboard_dir,
+                train_logging_step=opts.train_logging_step,
+                val_logging_step=opts.val_logging_step,
+                resume_training=opts.resume_training,
+                loggers=loggers,
+                game=game,
+                class_map={
+                    k: v["name"] for k, v in train_data.dataset.coco.cats.items()
+                },
+                get_image_method=get_imgs,
+                hparams=vars(opts),
+            ), ]
+
+        callbacks += clbs
+
     if opts.use_progress_bar:
         clbs = [
             ProgressBarLogger(
@@ -128,19 +146,7 @@ def main(params=None):
                 val_data_len=len(val_data),
                 use_info_table=False,
             ),
-            # TensorboardLogger(
-            #     tensorboard_dir=opts.tensorboard_dir,
-            #     train_logging_step=opts.train_logging_step,
-            #     val_logging_step=opts.val_logging_step,
-            #     resume_training=opts.resume_training,
-            #     loggers=loggers,
-            #     game=game,
-            #     class_map={
-            #         k: v["name"] for k, v in train_data.dataset.coco.cats.items()
-            #     },
-            #     get_image_method=get_imgs,
-            #     hparams=vars(opts),
-            # ),
+
         ]
         callbacks += clbs
 
