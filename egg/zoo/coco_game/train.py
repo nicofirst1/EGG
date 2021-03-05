@@ -92,6 +92,8 @@ def main(params=None):
     model = initialize_model()
 
     train_data, val_data = get_data(opts)
+    #val_data=train_data
+    
 
     class_weights = get_class_weight(train_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)

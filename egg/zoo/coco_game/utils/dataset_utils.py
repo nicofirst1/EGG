@@ -134,3 +134,32 @@ def save_data(data_list, data_file="data.csv"):
     data_list = [f"{x}\n" for x in data_list]
     with open(data_file, "a") as f:
         f.writelines(data_list)
+
+
+def check_data(train_data: CocoDetection, val_data: CocoDetection):
+
+    coco_train=train_data.coco
+    coco_val=val_data.coco
+
+    train_imgs = coco_train.imgs.keys()
+    val_imgs = coco_val.imgs.keys()
+
+    train_imgs = set(train_imgs)
+    val_imgs = set(val_imgs)
+
+    same_imgs=train_imgs.intersection(val_imgs)
+
+    if len(same_imgs)>0:
+        raise AttributeError("Test data and train data share same images")
+
+    train_anns = coco_train.anns.keys()
+    val_anns = coco_val.anns.keys()
+
+    train_anns = set(train_anns)
+    val_anns = set(val_anns)
+
+    same_anns = train_anns.intersection(val_anns)
+
+    if len(same_anns) > 0:
+        raise AttributeError("Test data and train data share same annotations")
+
