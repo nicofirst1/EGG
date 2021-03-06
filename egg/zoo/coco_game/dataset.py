@@ -14,7 +14,7 @@ from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
-from egg.zoo.coco_game.utils.dataset_utils import filter_distractors
+from egg.zoo.coco_game.utils.dataset_utils import filter_distractors, collate
 from egg.zoo.coco_game.utils.utils import console
 from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
@@ -59,7 +59,7 @@ class CocoDetection(VisionDataset):
         """
         n = int((1 - perc_ids) * len(self.ids))
         original_len = len(self.ids)
-        to_delete= self.random_state.choice(range(len(self.ids)), size=n, replace=False)
+        to_delete = self.random_state.choice(range(len(self.ids)), size=n, replace=False)
         to_delete = set(to_delete)
 
         ids = [x for i, x in enumerate(self.ids) if i not in to_delete]
@@ -303,35 +303,6 @@ def torch_transformations(input_size: int) -> album.Compose:
     )
 
     return base_transform
-
-
-def collate(
-        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """
-    Manage input (samples, segmented) and labels to feed at sender and reciever
-
-    :return : sender input, labels, reciever input, aux_info
-            (( image, segment), bboxs, image), target dict
-    """
-
-    # extract infos
-    sender_inp = [elem[0] for elem in batch]
-    seg = [elem[1] for elem in batch]
-    labels = [elem[2] for elem in batch]
-
-    # save_data(labels, f"data_diff2.csv")
-
-    # stack on torch tensor
-    sender_inp = torch.stack(sender_inp).contiguous()
-    seg = torch.stack(seg).contiguous()
-    labels = torch.stack(labels).contiguous()
-
-    # transpose to have [batch,discriminants ...]-> [discriminants, batch, ...]
-    # seg= np.transpose(seg, axes=(1, 0, 2, 3, 4))
-    # labels= np.transpose(labels, axes=(1, 0, 2))
-
-    return sender_inp, labels, seg
 
 
 def get_data(

@@ -1,9 +1,140 @@
-from typing import List
+from typing import List, Tuple
 
+import numpy as np
+import torch
 from pycocotools.coco import COCO
-from torchvision.datasets import CocoDetection
+from torch.utils.data import DataLoader
+from torchvision.datasets import CocoDetection, VisionDataset
 
 from egg.zoo.coco_game.utils.utils import console
+
+
+class DummyData(VisionDataset):
+    """`MS Coco Detection <http://mscoco.org/dataset/#detections-challenge2016>`_ Dataset.
+
+    Args:
+        root (string): Root directory where images are downloaded to.
+        ann_file (string): Path to json annotation file.
+        base_transform (callable, optional): A function/transform that  takes in an PIL image
+            and returns a transformed version. E.g, ``transforms.ToTensor``
+        perc_ids (int, optional): Max number of ids to load from the dataset, -1 for all
+    """
+
+    def __init__(
+            self,
+            data_len,
+            image_size: int = 224,
+            distractors: int = 1,
+            data_seed: int = 42,
+    ):
+        """
+        Custom Dataset
+        Args:
+            root: path to the coco dataset
+            ann_file: path to coco annotations file
+            base_transform: transformation used for the sender input
+        """
+
+        self.data_len = data_len
+        self.distractors = distractors
+        self.random_state = np.random.RandomState(data_seed)
+        self.image_size = image_size
+
+    def get_images(
+            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+    ) -> List[np.array]:
+        """
+        Get images, draw bbox with class name, resize and return
+        """
+
+        imgs = [self.random_state.random((self.image_size, self.image_size)) for _ in
+                range(img_id)]
+        return imgs
+
+    def __getitem__(
+            self, index: int
+    ):
+        """
+        Function called by the epoch iterator
+        Returns:
+            tuple: Tuple (image, target). target is the object returned by ``coco.loadAnns``.
+        """
+
+        # preprocess segments
+        chosen_sgm = self.random_state.random((self.image_size, self.image_size))
+        resized_image = self.random_state.random((self.image_size, self.image_size))
+        distractors_sgm = [self.random_state.random((self.image_size, self.image_size)) for _ in
+                           range(self.distractors)]
+        segments = [chosen_sgm] + distractors_sgm
+
+        # define sender input
+        sender_inp = torch.cat((resized_image, segments[0]), dim=-1)
+
+        # shuffle segments
+        segments = [x.unsqueeze(dim=0) for x in segments]
+        indices = list(range(len(segments)))
+        self.random_state.shuffle(indices)
+        shuffled_segs = [segments[idx] for idx in indices]
+        segments = torch.cat(shuffled_segs, dim=0)
+
+        # labels are : position of true seg, category of segment, image id, annotation id
+        labels = [
+            torch.LongTensor([indices[0], 1, 2, 3])
+            for x in range(self.distractors + 1)
+        ]
+        labels = [x.unsqueeze(dim=0) for x in labels]
+        labels = torch.cat(labels, dim=0)
+
+        return sender_inp, segments, labels
+
+    def __len__(self):
+        return self.data_len
+
+
+def get_dummy_data(data_len, timeout, opts):
+    d = DummyData(data_len=data_len, image_size=opts.image_resize, distractors=opts.distractors,
+                  data_seed=opts.data_seed)
+
+    d = DataLoader(
+        d,
+        shuffle=False,
+        drop_last=False,
+        num_workers=opts.num_workers,
+        batch_size=opts.batch_size,
+        collate_fn=collate,
+        timeout=timeout,
+    )
+
+    return d
+
+
+def collate(
+        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Manage input (samples, segmented) and labels to feed at sender and reciever
+
+    :return : sender input, labels, reciever input, aux_info
+            (( image, segment), bboxs, image), target dict
+    """
+
+    # extract infos
+    sender_inp = [elem[0] for elem in batch]
+    seg = [elem[1] for elem in batch]
+    labels = [elem[2] for elem in batch]
+
+    # save_data(labels, f"data_diff2.csv")
+
+    # stack on torch tensor
+    sender_inp = torch.stack(sender_inp).contiguous()
+    seg = torch.stack(seg).contiguous()
+    labels = torch.stack(labels).contiguous()
+
+    # transpose to have [batch,discriminants ...]-> [discriminants, batch, ...]
+    # seg= np.transpose(seg, axes=(1, 0, 2, 3, 4))
+    # labels= np.transpose(labels, axes=(1, 0, 2))
+
+    return sender_inp, labels, seg
 
 
 def filter_distractors(
@@ -137,9 +268,8 @@ def save_data(data_list, data_file="data.csv"):
 
 
 def check_data(train_data: CocoDetection, val_data: CocoDetection):
-
-    coco_train=train_data.coco
-    coco_val=val_data.coco
+    coco_train = train_data.coco
+    coco_val = val_data.coco
 
     train_imgs = coco_train.imgs.keys()
     val_imgs = coco_val.imgs.keys()
@@ -147,9 +277,9 @@ def check_data(train_data: CocoDetection, val_data: CocoDetection):
     train_imgs = set(train_imgs)
     val_imgs = set(val_imgs)
 
-    same_imgs=train_imgs.intersection(val_imgs)
+    same_imgs = train_imgs.intersection(val_imgs)
 
-    if len(same_imgs)>0:
+    if len(same_imgs) > 0:
         raise AttributeError("Test data and train data share same images")
 
     train_anns = coco_train.anns.keys()
@@ -162,4 +292,3 @@ def check_data(train_data: CocoDetection, val_data: CocoDetection):
 
     if len(same_anns) > 0:
         raise AttributeError("Test data and train data share same annotations")
-
