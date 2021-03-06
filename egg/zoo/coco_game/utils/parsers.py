@@ -96,30 +96,16 @@ def logs_parser(parser):
     )
 
     parser.add_argument(
-        "--train_log_prob",
-        type=float,
-        default=0.0,
-        help="Percentage of training interaction to save",
-    )
-
-    parser.add_argument(
-        "--val_log_prob",
-        type=float,
-        default=0.0,
-        help="Percentage of val interaction to save",
-    )
-
-    parser.add_argument(
         "--train_logging_step",
         type=int,
-        default=100,
+        default=10,
         help="Number of steps (in batches) before logging during training ",
     )
 
     parser.add_argument(
         "--val_logging_step",
         type=int,
-        default=5,
+        default=1,
         help="Number of steps (in batches) before logging during validation",
     )
 

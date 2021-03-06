@@ -95,7 +95,7 @@ def main(params=None):
     model = initialize_model()
 
     train_data, val_data = get_data(opts)
-    dummy = get_dummy_data(len(val_data), 10, opts)
+    dummy = get_dummy_data(len(val_data), opts)
     val_data = dummy
 
     class_weights = get_class_weight(train_data, opts)

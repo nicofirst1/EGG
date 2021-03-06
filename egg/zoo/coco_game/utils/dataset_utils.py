@@ -61,10 +61,14 @@ class DummyData(VisionDataset):
         """
 
         # preprocess segments
-        chosen_sgm = self.random_state.random((self.image_size, self.image_size))
-        resized_image = self.random_state.random((self.image_size, self.image_size))
-        distractors_sgm = [self.random_state.random((self.image_size, self.image_size)) for _ in
+        chosen_sgm = self.random_state.random((3,self.image_size, self.image_size))
+        resized_image = self.random_state.random((3,self.image_size, self.image_size))
+        distractors_sgm = [self.random_state.random((3,self.image_size, self.image_size)) for _ in
                            range(self.distractors)]
+
+        chosen_sgm = torch.Tensor(chosen_sgm)
+        resized_image = torch.Tensor(resized_image)
+        distractors_sgm = [torch.Tensor(x) for x in distractors_sgm]
         segments = [chosen_sgm] + distractors_sgm
 
         # define sender input
@@ -80,7 +84,7 @@ class DummyData(VisionDataset):
         # labels are : position of true seg, category of segment, image id, annotation id
         labels = [
             torch.LongTensor([indices[0], 1, 2, 3])
-            for x in range(self.distractors + 1)
+            for _ in range(self.distractors + 1)
         ]
         labels = [x.unsqueeze(dim=0) for x in labels]
         labels = torch.cat(labels, dim=0)
@@ -91,7 +95,7 @@ class DummyData(VisionDataset):
         return self.data_len
 
 
-def get_dummy_data(data_len, timeout, opts):
+def get_dummy_data(data_len, opts):
     d = DummyData(data_len=data_len, image_size=opts.image_resize, distractors=opts.distractors,
                   data_seed=opts.data_seed)
 
@@ -102,7 +106,6 @@ def get_dummy_data(data_len, timeout, opts):
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
-        timeout=timeout,
     )
 
     return d
