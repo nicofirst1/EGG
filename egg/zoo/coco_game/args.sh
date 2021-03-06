@@ -16,7 +16,7 @@ train_args=(
   "--val_data_perc"
   "1.0"
   "--num_workers"
-  "4"
+  "0"
   "--lr"
   "0.001"
   "--decay_rate"
@@ -36,49 +36,39 @@ log_args=(
   "1"
   "--use_rich_traceback"
   "--use_progress_bar"
+  "--use_custom_logging"
+  "--train_logging_step"
+  "10"
+  "--val_logging_step"
+  "1"
 
 )
 
 arch_args=(
   "--max_len"
-  "3"
+  "6"
   "--vocab_size"
-  "20"
+  "10"
   "--image_type"
-  "both"
+  "seg"
   "--image_union"
   "mul"
   "--image_resize"
   "224"
   "--head_choice"
-  "signal_expansion"
+  "feature_reduction"
   "--sender_hidden"
   "128"
   "--receiver_hidden"
   "128"
-  "--receiver_num_layers"
-  "1"
-  "--sender_num_layers"
-  "1"
-  "--box_head_hidden"
+  "--sender_receiver_hidden"
   "32"
-  "--sender_embedding"
-  "16"
-  "--receiver_embedding"
-  "16"
-  "--sender_cell_type"
-  "gru"
-  "--receiver_cell_type"
-  "gru"
+
 )
 
 data_args=(
-  "--min_area"
-  "0"
   "--num_classes"
   "80"
-  "--skip_first"
-  "0"
 )
 
 loss_args=(
@@ -89,7 +79,7 @@ loss_args=(
   "--lambda_f"
   "0"
   "--use_class_weights"
-  "True"
+  "False"
 
 )
 
