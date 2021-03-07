@@ -34,11 +34,8 @@ log_args=(
   "$checkpoint_path"
   "--checkpoint_freq"
   "1"
-  "--use_rich_traceback"
-  "--use_progress_bar"
-  "--use_custom_logging"
   "--train_logging_step"
-  "10"
+  "1"
   "--val_logging_step"
   "1"
 
