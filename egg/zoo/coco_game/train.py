@@ -95,8 +95,14 @@ def main(params=None):
     model = initialize_model()
 
     train_data, val_data = get_data(opts)
-    dummy = get_dummy_data(len(val_data), opts)
-    val_data = dummy
+
+    if opts.use_dummy_val:
+        console.log("Using Dummy dataset as validation")
+        dummy = get_dummy_data(len(val_data.dataset), opts)
+        val_data = dummy
+    elif opts.use_train_val:
+        console.log("Using train dataset as validation")
+        val_data=train_data
 
     class_weights = get_class_weight(train_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)

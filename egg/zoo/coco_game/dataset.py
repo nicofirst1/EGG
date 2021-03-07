@@ -340,7 +340,7 @@ def get_data(
         ann_file=path2json + "instances_val2017.json",
         base_transform=base_trans,
         distractors=opts.distractors,
-        data_seed=opts.data_seed,
+        data_seed=opts.data_seed+1,
 
     )
 

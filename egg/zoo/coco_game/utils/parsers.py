@@ -65,21 +65,24 @@ def image_parser(parser):
 def logs_parser(parser):
     parser.add_argument(
         "--use_custom_logging",
+        type=str2bool,
+        nargs="?",
         default=False,
-        action="store_true",
         help="If to use the custom tensorboard logger",
     )
     parser.add_argument(
         "--use_rich_traceback",
+        type=str2bool,
+        nargs="?",
         default=False,
-        action="store_true",
         help="If to use the traceback provided by the rich library",
     )
 
     parser.add_argument(
         "--use_progress_bar",
+        type=str2bool,
+        nargs="?",
         default=False,
-        action="store_true",
         help="If to use the traceback provided by the rich library",
     )
 
@@ -111,6 +114,22 @@ def logs_parser(parser):
 
 
 def dataloader_parsing(parser):
+    parser.add_argument(
+        "--use_dummy_val",
+        type=str2bool,
+        nargs="?",
+        default=False,
+        help="Random seed for dataloaders",
+    )
+
+    parser.add_argument(
+        "--use_train_val",
+        type=str2bool,
+        nargs="?",
+        default=False,
+        help="Random seed for dataloaders",
+    )
+
     parser.add_argument(
         "--data_seed",
         type=int,
