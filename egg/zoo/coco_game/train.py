@@ -3,15 +3,12 @@ from pathlib import Path
 import torch
 
 from egg import core
-from egg.core import ConsoleLogger, ProgressBarLogger, LoggingStrategy
+from egg.core import ConsoleLogger, LoggingStrategy, ProgressBarLogger
 from egg.core.baselines import MeanBaseline
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import (
-    RlScheduler,
-    TensorboardLogger,
-)
+from egg.zoo.coco_game.custom_logging import RlScheduler, TensorboardLogger
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import loss_init
 from egg.zoo.coco_game.pretrain.sender_reinforce import (
@@ -102,7 +99,7 @@ def main(params=None):
         val_data = dummy
     elif opts.use_train_val:
         console.log("Using train dataset as validation")
-        val_data=train_data
+        val_data = train_data
 
     class_weights = get_class_weight(train_data, opts)
     game, loggers = get_game(model, opts, class_weights=class_weights)
@@ -145,7 +142,8 @@ def main(params=None):
                 },
                 get_image_method=get_imgs,
                 hparams=vars(opts),
-            ), ]
+            ),
+        ]
 
         callbacks += clbs
 
@@ -157,7 +155,6 @@ def main(params=None):
                 val_data_len=len(val_data),
                 use_info_table=False,
             ),
-
         ]
         callbacks += clbs
 

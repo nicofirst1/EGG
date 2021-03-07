@@ -6,7 +6,7 @@ from typing import Dict
 import pandas as pd
 from rich.progress import track
 
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import path_parser, console
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import console, path_parser
 
 
 def get_infos(lines: list, max_len) -> Dict:
@@ -157,7 +157,7 @@ def language_analysis(interaction_path, out_dir):
         lines, symbols, sequences, classes, max_len
     )
 
-    tensor=language_tensor(sequence_cooc_tensor)
+    tensor = language_tensor(sequence_cooc_tensor)
 
     to_add = symbol_df.sum(axis=1)
     symbol_df["class_richness"] = to_add

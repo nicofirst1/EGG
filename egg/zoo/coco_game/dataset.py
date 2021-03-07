@@ -3,18 +3,18 @@ from argparse import Namespace
 from functools import reduce
 from typing import Dict, List, Tuple
 
-import PIL
 import albumentations as album
 import cv2
 import lycon
 import numpy as np
+import PIL
 import torch
 import torchvision
 from pycocotools.coco import COCO
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 
-from egg.zoo.coco_game.utils.dataset_utils import filter_distractors, collate
+from egg.zoo.coco_game.utils.dataset_utils import collate, filter_distractors
 from egg.zoo.coco_game.utils.utils import console
 from egg.zoo.coco_game.utils.vis_utils import visualize_bbox
 
@@ -31,12 +31,12 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-            self,
-            root: str,
-            ann_file: str,
-            base_transform: album.Compose,
-            distractors: int = 1,
-            data_seed: int = 42,
+        self,
+        root: str,
+        ann_file: str,
+        base_transform: album.Compose,
+        distractors: int = 1,
+        data_seed: int = 42,
     ):
         """
         Custom Dataset
@@ -59,7 +59,9 @@ class CocoDetection(VisionDataset):
         """
         n = int((1 - perc_ids) * len(self.ids))
         original_len = len(self.ids)
-        to_delete = self.random_state.choice(range(len(self.ids)), size=n, replace=False)
+        to_delete = self.random_state.choice(
+            range(len(self.ids)), size=n, replace=False
+        )
         to_delete = set(to_delete)
 
         ids = [x for i, x in enumerate(self.ids) if i not in to_delete]
@@ -96,7 +98,7 @@ class CocoDetection(VisionDataset):
 
         dataset = self.coco.dataset
         cats = dataset["categories"]
-        cats = cats[over_presented: num_classes + over_presented]
+        cats = cats[over_presented : num_classes + over_presented]
         ans = dataset["annotations"]
         ids = [elem["id"] for elem in cats]
         cat_map = {}
@@ -157,10 +159,10 @@ class CocoDetection(VisionDataset):
 
             # get normalized area
             area = (
-                    (an["bbox"][2] + eps)
-                    / img["width"]
-                    * (an["bbox"][3] + eps)
-                    / img["height"]
+                (an["bbox"][2] + eps)
+                / img["width"]
+                * (an["bbox"][3] + eps)
+                / img["height"]
             )
             if area < min_area:
                 self.ids[idx] = None
@@ -174,7 +176,7 @@ class CocoDetection(VisionDataset):
         )
 
     def get_images(
-            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
@@ -199,7 +201,7 @@ class CocoDetection(VisionDataset):
         return imgs
 
     def __getitem__(
-            self, index: int
+        self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -306,7 +308,7 @@ def torch_transformations(input_size: int) -> album.Compose:
 
 
 def get_data(
-        opts: Namespace,
+    opts: Namespace,
 ):
     """
     Get train and validation data loader
@@ -332,7 +334,6 @@ def get_data(
         base_transform=base_trans,
         distractors=opts.distractors,
         data_seed=opts.data_seed,
-
     )
 
     coco_val = CocoDetection(
@@ -340,8 +341,7 @@ def get_data(
         ann_file=path2json + "instances_val2017.json",
         base_transform=base_trans,
         distractors=opts.distractors,
-        data_seed=opts.data_seed+1,
-
+        data_seed=opts.data_seed + 1,
     )
 
     filter_distractors(

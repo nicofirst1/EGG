@@ -3,6 +3,7 @@ import torch
 from torch import nn
 
 from egg.zoo.coco_game.archs import FlatModule, HeadModule, get_flat, get_head
+from egg.zoo.coco_game.utils.vis_utils import torch2pil
 
 
 def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:

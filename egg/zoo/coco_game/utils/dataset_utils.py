@@ -21,11 +21,11 @@ class DummyData(VisionDataset):
     """
 
     def __init__(
-            self,
-            data_len,
-            image_size: int = 224,
-            distractors: int = 1,
-            data_seed: int = 42,
+        self,
+        data_len,
+        image_size: int = 224,
+        distractors: int = 1,
+        data_seed: int = 42,
     ):
         """
         Custom Dataset
@@ -41,19 +41,19 @@ class DummyData(VisionDataset):
         self.image_size = image_size
 
     def get_images(
-            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
         """
 
-        imgs = [self.random_state.random((self.image_size, self.image_size)) for _ in
-                range(img_id)]
+        imgs = [
+            self.random_state.random((self.image_size, self.image_size))
+            for _ in range(img_id)
+        ]
         return imgs
 
-    def __getitem__(
-            self, index: int
-    ):
+    def __getitem__(self, index: int):
         """
         Function called by the epoch iterator
         Returns:
@@ -61,10 +61,12 @@ class DummyData(VisionDataset):
         """
 
         # preprocess segments
-        chosen_sgm = self.random_state.random((3,self.image_size, self.image_size))
-        resized_image = self.random_state.random((3,self.image_size, self.image_size))
-        distractors_sgm = [self.random_state.random((3,self.image_size, self.image_size)) for _ in
-                           range(self.distractors)]
+        chosen_sgm = self.random_state.random((3, self.image_size, self.image_size))
+        resized_image = self.random_state.random((3, self.image_size, self.image_size))
+        distractors_sgm = [
+            self.random_state.random((3, self.image_size, self.image_size))
+            for _ in range(self.distractors)
+        ]
 
         chosen_sgm = torch.Tensor(chosen_sgm)
         resized_image = torch.Tensor(resized_image)
@@ -83,8 +85,7 @@ class DummyData(VisionDataset):
 
         # labels are : position of true seg, category of segment, image id, annotation id
         labels = [
-            torch.LongTensor([indices[0], 1, 2, 3])
-            for _ in range(self.distractors + 1)
+            torch.LongTensor([indices[0], 1, 2, 3]) for _ in range(self.distractors + 1)
         ]
         labels = [x.unsqueeze(dim=0) for x in labels]
         labels = torch.cat(labels, dim=0)
@@ -96,8 +97,12 @@ class DummyData(VisionDataset):
 
 
 def get_dummy_data(data_len, opts):
-    d = DummyData(data_len=data_len, image_size=opts.image_resize, distractors=opts.distractors,
-                  data_seed=opts.data_seed)
+    d = DummyData(
+        data_len=data_len,
+        image_size=opts.image_resize,
+        distractors=opts.distractors,
+        data_seed=opts.data_seed,
+    )
 
     d = DataLoader(
         d,
@@ -112,7 +117,7 @@ def get_dummy_data(data_len, opts):
 
 
 def collate(
-        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -141,7 +146,7 @@ def collate(
 
 
 def filter_distractors(
-        train_data: CocoDetection, val_data: CocoDetection, min_annotations: int
+    train_data: CocoDetection, val_data: CocoDetection, min_annotations: int
 ):
     """
     Filter both train and val given a minimum number of distractors per image.
@@ -167,7 +172,7 @@ def filter_distractors(
 
 
 def get_annotation_stats(
-        coco: COCO, min_annotations: int, min_perc_valid: float
+    coco: COCO, min_annotations: int, min_perc_valid: float
 ) -> List[str]:
     """
     Return the discarded categories and removes annotations/images and cats from coco
@@ -230,10 +235,10 @@ def remove_cats(coco: COCO, cat_list: set):
 
 
 def inner_filtering(
-        train_coco: CocoDetection,
-        val_coco: CocoDetection,
-        min_annotations: int,
-        min_perc_valid: float,
+    train_coco: CocoDetection,
+    val_coco: CocoDetection,
+    min_annotations: int,
+    min_perc_valid: float,
 ) -> bool:
     """
     After independently removing images/anns from train and val based on min distractors, cross check to see if val and

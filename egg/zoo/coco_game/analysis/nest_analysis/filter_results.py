@@ -4,14 +4,16 @@ import pathlib
 import pandas as pd
 
 # ADD COLUMNS HERE
-columns_of_interests = ["head_choice",
-                        "image_union",
-                        "max_len",
-                        "vocab_size",
-                        "sender_receiver_hidden",
-                        "train_epoch",
-                        "train_accuracy_receiver",
-                        "test_accuracy_receiver", ]
+columns_of_interests = [
+    "head_choice",
+    "image_union",
+    "max_len",
+    "vocab_size",
+    "sender_receiver_hidden",
+    "train_epoch",
+    "train_accuracy_receiver",
+    "test_accuracy_receiver",
+]
 
 
 parser = argparse.ArgumentParser()
@@ -35,7 +37,7 @@ if p.out_file_path == "":
     p.out_file_path = csv_path.parent
 
 out_path = pathlib.Path(p.out_file_path)
-out_path=out_path.joinpath(f"{csv_path.stem}_filtered.csv")
+out_path = out_path.joinpath(f"{csv_path.stem}_filtered.csv")
 
 
 columns_of_interests = set(columns_of_interests)

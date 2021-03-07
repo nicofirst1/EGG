@@ -6,7 +6,9 @@ import pandas as pd
 from sklearn import preprocessing
 
 
-def plot_confusion_matrix(df: pd.DataFrame, title, save_dir: Path, use_scaler=True, show=True):
+def plot_confusion_matrix(
+    df: pd.DataFrame, title, save_dir: Path, use_scaler=True, show=True
+):
     fig, ax = plt.subplots()
     plt.yticks(np.arange(0.9, len(df.index), 1), df.index)
     plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
@@ -42,7 +44,11 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
                 to_plot = plot_list[idx]
                 n1, n2, p1, p2, corr = to_plot
 
-                axs[jdx, kdx].scatter(p1, p2, s=10, )
+                axs[jdx, kdx].scatter(
+                    p1,
+                    p2,
+                    s=10,
+                )
                 axs[jdx, kdx].set_xlabel(n1)
                 axs[jdx, kdx].set_ylabel(n2)
                 axs[jdx, kdx].set_title(f"Corr {corr:.3f}")
@@ -53,4 +59,3 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
         if show:
             plt.show()
         plt.close()
-

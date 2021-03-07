@@ -4,7 +4,8 @@ import pathlib
 import pandas as pd
 from rich.console import Console
 
-console=Console()
+console = Console()
+
 
 def path_parser():
     parser = argparse.ArgumentParser()

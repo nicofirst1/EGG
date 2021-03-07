@@ -3,7 +3,11 @@ from typing import Dict
 
 import pandas as pd
 
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser, console
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import (
+    add_row,
+    console,
+    path_parser,
+)
 
 
 def get_infos(lines: list) -> Dict:

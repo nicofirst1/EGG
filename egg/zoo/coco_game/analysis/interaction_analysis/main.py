@@ -5,10 +5,14 @@ from pathlib import Path
 import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness, \
-    language_tensor
+from egg.zoo.coco_game.analysis.interaction_analysis.language import (
+    ambiguity_richness,
+    language_analysis,
+    language_tensor,
+)
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
-    plot_confusion_matrix, plot_multi_scatter,
+    plot_confusion_matrix,
+    plot_multi_scatter,
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
 
@@ -57,7 +61,7 @@ class Analysis:
         self.lang_sequence = analysis["lang_sequence"]
         self.lang_symbols = analysis["lang_symbol"]
         self.lang_sequence_cooc = analysis["lang_sequence_cooc"]
-        self.lang_tensor = analysis['lang_tensor']
+        self.lang_tensor = analysis["lang_tensor"]
 
         self.acc_class_infos = analysis["acc_class_infos"]
         self.acc_analysis = analysis["acc_analysis"]
@@ -111,15 +115,21 @@ class Analysis:
         )
 
     def plot_cm(self):
-        plot_confusion_matrix(self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path)
+        plot_confusion_matrix(
+            self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path
+        )
 
         to_plot = self.lang_symbols.drop("frequency")
         to_plot = to_plot.drop("class_richness", axis=1)
-        plot_confusion_matrix(to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path)
+        plot_confusion_matrix(
+            to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path
+        )
 
         to_plot = self.lang_sequence.drop("frequency")
         to_plot = to_plot.drop("class_richness", axis=1)
-        plot_confusion_matrix(to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path)
+        plot_confusion_matrix(
+            to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path
+        )
 
     def plot_infos(self):
 
@@ -131,8 +141,8 @@ class Analysis:
                 row_j = self.acc_class_infos.iloc[jdx]
 
                 # remove outlayers
-                quant_i = row_i.between(row_i.quantile(0.05), row_i.quantile(.95))
-                quant_j = row_j.between(row_j.quantile(0.05), row_j.quantile(.95))
+                quant_i = row_i.between(row_i.quantile(0.05), row_i.quantile(0.95))
+                quant_j = row_j.between(row_j.quantile(0.05), row_j.quantile(0.95))
 
                 idexes = quant_i & quant_j
 
@@ -155,7 +165,9 @@ class Analysis:
 
     def plot_language_tensor(self):
         for k, df in self.lang_tensor.items():
-            plot_confusion_matrix(df, k, self.language_tensor_path, use_scaler=True, show=False)
+            plot_confusion_matrix(
+                df, k, self.language_tensor_path, use_scaler=True, show=False
+            )
 
 
 if __name__ == "__main__":
