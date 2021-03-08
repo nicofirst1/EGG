@@ -5,11 +5,11 @@ from egg.zoo.coco_game.utils.utils import get_labels
 
 
 def final_loss(
-        sender_input,
-        message,
-        receiver_input,
-        receiver_output,
-        labels,
+    sender_input,
+    message,
+    receiver_input,
+    receiver_output,
+    labels,
 ):
     """
     Estimate complete loss, logs accuracy
@@ -21,7 +21,9 @@ def final_loss(
     # label_class = res_dict["class_id"]
     label_discr = res_dict["true_segment"]
 
-    x_loss = get_cross_entropy(receiver_output, label_discr)  # , weights=self.class_weights)
+    x_loss = get_cross_entropy(
+        receiver_output, label_discr
+    )  # , weights=self.class_weights)
     metrics["x_loss"] = x_loss
 
     rec_acc = get_accuracy(receiver_output, label_discr)

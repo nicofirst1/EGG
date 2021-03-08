@@ -3,10 +3,10 @@ from argparse import Namespace
 from functools import reduce
 from typing import Dict, List, Tuple
 
-import PIL
 import cv2
 import lycon
 import numpy as np
+import PIL
 import torch
 import torchvision
 from pycocotools.coco import COCO
@@ -31,12 +31,12 @@ class CocoDetection(VisionDataset):
     """
 
     def __init__(
-            self,
-            root: str,
-            ann_file: str,
-            base_transform: Compose,
-            distractors: int = 1,
-            data_seed: int = 42,
+        self,
+        root: str,
+        ann_file: str,
+        base_transform: Compose,
+        distractors: int = 1,
+        data_seed: int = 42,
     ):
         """
         Custom Dataset
@@ -92,10 +92,8 @@ class CocoDetection(VisionDataset):
         self.coco.catToImgs = catToImgs
         self.ids = list(self.coco.imgs.keys())
 
-
-
     def __getitem__(
-            self, index: int
+        self, index: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Function called by the epoch iterator
@@ -200,7 +198,7 @@ def torch_transformations(input_size: int) -> Compose:
 
 
 def get_data(
-        opts: Namespace,
+    opts: Namespace,
 ):
     """
     Get train and validation data loader

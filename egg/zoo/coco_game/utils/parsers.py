@@ -278,10 +278,5 @@ def parse_arguments(params=None):
 
         install()
 
-    # assert the number of classes is less than 90-skip_first
-    assert (
-            opt.num_classes + opt.skip_first <= 80
-    ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
-
     assert opt.image_resize >= 224, "The size of the image must be minimum 224"
     return opt

@@ -1,13 +1,10 @@
-from pathlib import Path
-
 import torch
 from torch import nn
 
 from egg.zoo.coco_game.archs import FlatModule, get_flat
-from egg.zoo.coco_game.utils.utils import load_pretrained_sender
 
 
-def build_sender(feature_extractor, opts, pretrain=False):
+def build_sender(feature_extractor, opts):
     flat_module = get_flat(opts.flat_choice_sender)()
 
     sender = VisionSender(
@@ -17,12 +14,8 @@ def build_sender(feature_extractor, opts, pretrain=False):
         image_type=opts.image_type,
         image_union=opts.image_union,
         n_hidden=opts.sender_hidden,
-        num_classes=opts.num_classes,
-        pretraining=pretrain,
     )
 
-    if opts.sender_pretrain != "":
-        load_pretrained_sender(Path(opts.sender_pretrain), sender)
     return sender
 
 
@@ -68,9 +61,7 @@ class VisionSender(nn.Module):
         image_size: int,
         image_type: str,
         image_union: str,
-        num_classes: int,
         n_hidden: int = 10,
-        pretraining: bool = False,
     ):
         super(VisionSender, self).__init__()
 
@@ -86,14 +77,6 @@ class VisionSender(nn.Module):
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
 
-        self.class_fc = nn.Linear(n_hidden, num_classes)
-        self.pretraining = pretraining
-        self.fc_out = None
-
-    def predict_class(self, inp):
-        class_logits = self.class_fc(self.fc_out)
-        return class_logits
-
     def forward(self, inp):
         """
         inp : tuple (image, segmented): containing original image and segmented part
@@ -106,12 +89,6 @@ class VisionSender(nn.Module):
         # vision out [batch , vision out]
         # then fc on vision out
         fc_out = self.fc(vision_out)
-        self.fc_out = fc_out
-
-        # if pretrain then train the sender to recognize the class based on the fc_out
-        if self.pretraining:
-            class_logit = self.class_fc(fc_out)
-            return class_logit
 
         # fc_out [batch, hidden size]
         return fc_out

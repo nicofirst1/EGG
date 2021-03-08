@@ -40,7 +40,6 @@ class HeadModule(nn.Module):
         self,
         signal_dim: int,
         vision_dim: int,
-        num_classes: int,
         hidden_dim: int,
         distractors: int,
         batch_size: int,
@@ -59,7 +58,6 @@ class HeadModule(nn.Module):
         self.vision_dim = vision_dim
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
-        self.num_classes = num_classes
         self.model = self.build_model()
 
     def build_model(self) -> torch.nn.Sequential:

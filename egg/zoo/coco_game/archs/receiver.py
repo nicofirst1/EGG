@@ -13,7 +13,6 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     head_module = head_module(
         signal_dim=opts.sender_hidden,
         vision_dim=flat_module.out_dim,
-        num_classes=opts.num_classes,
         hidden_dim=opts.box_head_hidden,
         distractors=opts.distractors,
         batch_size=opts.batch_size,

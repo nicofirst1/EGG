@@ -3,11 +3,17 @@ from pathlib import Path
 import torch
 
 from egg import core
-from egg.core import ConsoleLogger, LoggingStrategy, ProgressBarLogger, RnnSenderReinforce, SenderReceiverRnnReinforce
+from egg.core import (
+    ConsoleLogger,
+    LoggingStrategy,
+    ProgressBarLogger,
+    RnnSenderReinforce,
+    SenderReceiverRnnReinforce,
+)
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import RlScheduler, EarlyStopperAccuracy
+from egg.zoo.coco_game.custom_logging import EarlyStopperAccuracy, RlScheduler
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import final_loss
 from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data
