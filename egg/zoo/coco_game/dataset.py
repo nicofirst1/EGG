@@ -73,59 +73,6 @@ class CocoDetection(VisionDataset):
         )
         self.ids = ids
 
-    def get_class_weights(self) -> Dict[int, int]:
-        dataset = self.coco.dataset
-
-        ans = dataset["annotations"]
-        class_weights = {}
-
-        for idx in range(len(ans)):
-            cat = ans[idx]["category_id"]
-            if cat not in class_weights.keys():
-                class_weights[cat] = 0
-            class_weights[cat] += 1
-
-        class_weights = {k: v / idx for k, v in class_weights.items()}
-        class_weights = {k: 1 - v for k, v in class_weights.items()}
-        return class_weights
-
-    def filter_anns_classes(self, num_classes: int, over_presented: int):
-        """
-        Filter annotations based on minimum (mean) area
-        """
-
-        original_len = len(self.ids)
-
-        dataset = self.coco.dataset
-        cats = dataset["categories"]
-        cats = cats[over_presented: num_classes + over_presented]
-        ans = dataset["annotations"]
-        ids = [elem["id"] for elem in cats]
-        cat_map = {}
-        for idx in range(len(cats)):
-            cat_map[cats[idx]["id"]] = idx
-            cats[idx]["id"] = idx
-
-        dataset["categories"] = cats
-
-        for idx in range(len(ans)):
-            cat = ans[idx]["category_id"]
-            if cat not in ids:
-                ans[idx] = None
-            else:
-                ans[idx]["category_id"] = cat_map[ans[idx]["category_id"]]
-
-        dataset["annotations"] = [elem for elem in ans if elem is not None]
-
-        self.coco.dataset = dataset
-        self.coco.createIndex()
-        self.ids = list(self.coco.anns.keys())
-        new_len = len(self.ids)
-
-        console.log(
-            f"Classes filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
-        )
-
     def init_dicts(self):
         imgToAnns, catToImgs = {}, {}
 
@@ -145,60 +92,7 @@ class CocoDetection(VisionDataset):
         self.coco.catToImgs = catToImgs
         self.ids = list(self.coco.imgs.keys())
 
-    def filter_anns_area(self, min_area=0.1):
-        """
-        Filter annotations based on minimum (mean) area
-        """
-        eps = 0.0001
-        original_len = len(self.ids)
 
-        for idx in range(len(self.ids)):
-            an_id = self.ids[idx]
-            an = self.coco.anns[an_id]
-            img = self.coco.loadImgs(an["image_id"])[0]
-
-            # get normalized area
-            area = (
-                    (an["bbox"][2] + eps)
-                    / img["width"]
-                    * (an["bbox"][3] + eps)
-                    / img["height"]
-            )
-            if area < min_area:
-                self.ids[idx] = None
-
-        self.ids = [x for x in self.ids if x is not None]
-
-        new_len = len(self.ids)
-
-        console.log(
-            f"Area filtered len : {new_len}/{original_len} ({new_len / original_len * 100:.3f}%)"
-        )
-
-    def get_images(
-            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
-    ) -> List[np.array]:
-        """
-        Get images, draw bbox with class name, resize and return
-        """
-
-        infos = self.coco.loadImgs(img_id)
-        paths = [os.path.join(self.root, pt["file_name"]) for pt in infos]
-        anns = self.coco.loadAnns(image_anns)
-        cats_name = [self.coco.cats[x["category_id"]]["name"] for x in anns]
-        bboxs = [x["bbox"] for x in anns]
-
-        imgs = [lycon.load(pt) for pt in paths]
-        imgs = [
-            visualize_bbox(img, bbox, class_name, (0, 255, 0))
-            for img, bbox, class_name in zip(imgs, bboxs, cats_name)
-        ]
-
-        imgs = [
-            cv2.resize(img, dsize=size, interpolation=cv2.INTER_CUBIC) for img in imgs
-        ]
-
-        return imgs
 
     def __getitem__(
             self, index: int

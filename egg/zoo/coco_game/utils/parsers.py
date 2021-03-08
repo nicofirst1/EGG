@@ -6,38 +6,6 @@ from egg.zoo.coco_game.archs import FLAT_CHOICES, HEAD_CHOICES
 from egg.zoo.coco_game.utils.utils import console, str2bool
 
 
-def loss_parser(parser):
-    parser.add_argument(
-        "--lambda_cross",
-        type=float,
-        default=1,
-        help="Weight for cross entropy loss for classification task.",
-    )
-
-    parser.add_argument(
-        "--lambda_kl",
-        type=float,
-        default=0,
-        help="Weight for Kullback-Leibler divergence loss for classification task.",
-    )
-
-    parser.add_argument(
-        "--lambda_f",
-        type=float,
-        default=0,
-        help="Weight for Focal loss for classification task.",
-    )
-
-    parser.add_argument(
-        "--use_class_weights",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Extract class weights from the dataset and pass them to the loss function",
-    )
-
-
 def image_parser(parser):
     parser.add_argument(
         "--image_type",
@@ -63,13 +31,6 @@ def image_parser(parser):
 
 
 def logs_parser(parser):
-    parser.add_argument(
-        "--use_custom_logging",
-        type=str2bool,
-        nargs="?",
-        default=False,
-        help="If to use the custom tensorboard logger",
-    )
     parser.add_argument(
         "--use_rich_traceback",
         type=str2bool,
@@ -135,27 +96,6 @@ def dataloader_parsing(parser):
         type=int,
         default=42,
         help="Random seed for dataloaders",
-    )
-
-    parser.add_argument(
-        "--min_area",
-        type=float,
-        default=0,
-        help="Minimum percentage of the total image area for object. ",
-    )
-
-    parser.add_argument(
-        "--skip_first",
-        type=int,
-        default=0,
-        help="Number of first classes to skip. Default 5 bc the first 5 classes are over represented in coco",
-    )
-
-    parser.add_argument(
-        "--num_classes",
-        type=int,
-        default=80,
-        help="Number of classes to use, 80 for all",
     )
 
     parser.add_argument(
@@ -303,15 +243,6 @@ def training_parsing(parser):
     )
 
     parser.add_argument(
-        "--sender_pretrain",
-        type=str,
-        nargs="?",
-        const=True,
-        default="",
-        help="Path for pretrained sender weights",
-    )
-
-    parser.add_argument(
         "--decay_rate",
         type=float,
         default=0.8,
@@ -324,7 +255,6 @@ def parse_arguments(params=None):
 
     # populate the parser with different options
     training_parsing(parser)
-    loss_parser(parser)
     coco_arch_parsing(parser)
     image_parser(parser)
     logs_parser(parser)
@@ -350,7 +280,7 @@ def parse_arguments(params=None):
 
     # assert the number of classes is less than 90-skip_first
     assert (
-        opt.num_classes + opt.skip_first <= 80
+            opt.num_classes + opt.skip_first <= 80
     ), f"The number of classes plus the skip must be less than 90, currently {opt.num_classes + opt.skip_first} "
 
     assert opt.image_resize >= 224, "The size of the image must be minimum 224"
