@@ -1,15 +1,13 @@
 import torch
 from torch import nn
 
-from egg.zoo.coco_game.archs import FlatModule, get_flat
+from egg.zoo.coco_game.archs import get_vision_dim
+from egg.zoo.coco_game.utils.utils import console
 
 
 def build_sender(feature_extractor, opts):
-    flat_module = get_flat(opts.flat_choice_sender)()
-
     sender = VisionSender(
         feature_extractor,
-        flat_module=flat_module,
         image_size=opts.image_resize,
         image_type=opts.image_type,
         image_union=opts.image_union,
@@ -55,13 +53,12 @@ class VisionSender(nn.Module):
     """
 
     def __init__(
-        self,
-        model,
-        flat_module: FlatModule,
-        image_size: int,
-        image_type: str,
-        image_union: str,
-        n_hidden: int = 10,
+            self,
+            model,
+            image_size: int,
+            image_type: str,
+            image_union: str,
+            n_hidden: int = 10,
     ):
         super(VisionSender, self).__init__()
 
@@ -69,10 +66,15 @@ class VisionSender(nn.Module):
         self.image_size = image_size
         self.image_type = image_type
         self.image_union = image_union
-        self.out_features = flat_module.out_dim
 
-        self.fc = nn.Linear(self.out_features, n_hidden)
-        self.flat_module = flat_module
+        vision_dim = get_vision_dim()
+
+        if vision_dim == n_hidden:
+            console.log("Using Identity for sender out")
+            self.fc = nn.Identity()
+        else:
+            console.log(f"Using Linear [{vision_dim}]->[{n_hidden}] for sender out")
+            self.fc = nn.Linear(vision_dim, n_hidden)
 
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
@@ -122,24 +124,21 @@ class VisionSender(nn.Module):
         """
 
         # split image and segment
-        img = inp[:, :, :, : self.image_size]
-        seg = inp[:, :, :, self.image_size :]
+        img = inp[:, 0, :, :]
+        seg = inp[:, 1, :, :]
         # img and seg = [batch, channels, image_size, image_size]
 
         if self.image_type == "seg":
             out = self.vision(seg)
-            out = self.flat_module(out)
 
         elif self.image_type == "img":
             out = self.vision(img)
-            out = self.flat_module(out)
 
         else:
             # both, apply vision to both
             segment_out = self.vision(seg)
             image_out = self.vision(img)
-            segment_out = self.flat_module(segment_out)
-            image_out = self.flat_module(image_out)
             out = self.combine_images(segment_out, image_out)
 
+        out = out.squeeze()
         return out

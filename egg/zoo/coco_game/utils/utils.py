@@ -60,12 +60,12 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     """
     Only function to be used to extract labels information
     """
-    true_segment = labels[:, 0, 0]
+    target_position = labels[:, 0, 0]
     label_class = labels[:, :, 1]
     label_img_id = labels[:, 0, 2]
     ann_id = labels[:, :, 3]
     res = dict(
-        true_segment=true_segment,
+        target_position=target_position,
         class_id=label_class,
         image_id=label_img_id,
         ann_id=ann_id,

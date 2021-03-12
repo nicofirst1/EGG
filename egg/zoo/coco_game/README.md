@@ -10,7 +10,7 @@ The structure of the repos unfolds as follows:
 
 - [main](train.py): main python file, collects args, init classes and starts training
 - [dataset](dataset.py): handle the coco dataset pipeline
-- [custom logging](custom_logging.py): contains the callback necessary for the logging such as Tensorboard
+- [custom logging](custom_callbacks.py): contains the callback necessary for the logging such as Tensorboard
 - [losses](losses.py): define the custom losses used during the train
 - [architectures](archs): contains the model architectures for the sender and receiver
 - [utils](utils): a container of utility functions

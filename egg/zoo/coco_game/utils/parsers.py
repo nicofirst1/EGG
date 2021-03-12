@@ -2,7 +2,7 @@ import argparse
 import uuid
 
 from egg import core
-from egg.zoo.coco_game.archs import FLAT_CHOICES, HEAD_CHOICES
+from egg.zoo.coco_game.archs import  HEAD_CHOICES
 from egg.zoo.coco_game.utils.utils import console, str2bool
 
 
@@ -207,22 +207,6 @@ def coco_arch_parsing(parser):
         default="signal_expansion",
         help="Choose the receiver box head module",
         choices=list(HEAD_CHOICES.keys()),
-    )
-
-    parser.add_argument(
-        "--flat_choice_sender",
-        type=str,
-        default="AvgPool",
-        help="Choose the flat module type",
-        choices=list(FLAT_CHOICES.keys()),
-    )
-
-    parser.add_argument(
-        "--flat_choice_receiver",
-        type=str,
-        default="AvgPool",
-        help="Choose the flat module type",
-        choices=list(FLAT_CHOICES.keys()),
     )
 
     parser.add_argument(

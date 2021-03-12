@@ -13,7 +13,7 @@ from egg.core import (
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_logging import EarlyStopperAccuracy, RlScheduler
+from egg.zoo.coco_game.custom_callbacks import EarlyStopperAccuracy, RlScheduler
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import final_loss
 from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data
@@ -37,7 +37,7 @@ def get_game(feat_extractor, opts):
     ######################################
     #   Sender receiver wrappers
     ######################################
-    sender = RnnSenderReinforce(
+    sender = core.RnnSenderReinforce(
         sender,
         vocab_size=opts.vocab_size,
         embed_dim=opts.sender_embedding,
@@ -64,7 +64,7 @@ def get_game(feat_extractor, opts):
     train_log = LoggingStrategy().minimal()
     val_log = LoggingStrategy().minimal()
 
-    game = SenderReceiverRnnReinforce(
+    game = core.SenderReceiverRnnReinforce(
         sender,
         receiver,
         loss=final_loss,
@@ -73,7 +73,7 @@ def get_game(feat_extractor, opts):
         train_logging_strategy=train_log,
         test_logging_strategy=val_log,
     )
-    return game, dict(train=train_log, val=val_log)
+    return game
 
 
 def main(params=None):
@@ -92,7 +92,7 @@ def main(params=None):
         console.log("Using train dataset as validation")
         val_data = train_data
 
-    game, loggers = get_game(model, opts)
+    game = get_game(model, opts)
 
     optimizer = core.build_optimizer(game.parameters())
     rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(
@@ -100,6 +100,7 @@ def main(params=None):
     )
 
     callbacks = [
+        #todo: use egg rl scheduler
         RlScheduler(rl_optimizer=rl_optimizer),
         EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
         ConsoleLogger(print_train_loss=True, as_json=True),
@@ -123,7 +124,7 @@ def main(params=None):
         validation_data=val_data,
         callbacks=callbacks,
     )
-
+    # todo: try to remove resume_training
     if opts.resume_training:
         trainer.load_from_latest(Path(opts.checkpoint_dir))
 

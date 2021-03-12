@@ -19,16 +19,16 @@ def final_loss(
 
     res_dict = get_labels(labels)
     # label_class = res_dict["class_id"]
-    label_discr = res_dict["true_segment"]
+    target_position = res_dict["target_position"]
 
     x_loss = get_cross_entropy(
-        receiver_output, label_discr
-    )  # , weights=self.class_weights)
+        receiver_output, target_position
+    )
     metrics["x_loss"] = x_loss
 
-    rec_acc = get_accuracy(receiver_output, label_discr)
+    rec_acc = get_accuracy(receiver_output, target_position)
     rec_acc = rec_acc.unsqueeze(dim=-1)
-    metrics["accuracy_receiver"] = rec_acc
+    metrics["accuracy"] = rec_acc
 
     return x_loss, metrics
 

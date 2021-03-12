@@ -143,10 +143,10 @@ class CocoDetection(VisionDataset):
         segments = [chosen_sgm] + distractors_sgm
 
         # define sender input
-        sender_inp = torch.cat((resized_image, segments[0]), dim=-1)
+        sender_inp = torch.stack((resized_image, segments[0]))
 
         # shuffle segments
-        segments = [x.unsqueeze(dim=0) for x in segments]
+        segments = [imgs.unsqueeze(dim=0) for imgs in segments]
         indices = list(range(len(segments)))
         self.random_state.shuffle(indices)
         shuffled_segs = [segments[idx] for idx in indices]

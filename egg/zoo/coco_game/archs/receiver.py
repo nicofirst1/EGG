@@ -1,18 +1,15 @@
-import numpy as np
 import torch
 from torch import nn
 
-from egg.zoo.coco_game.archs import FlatModule, HeadModule, get_flat, get_head
-from egg.zoo.coco_game.utils.vis_utils import torch2pil
+from egg.zoo.coco_game.archs import HeadModule, get_head, get_vision_dim
 
 
 def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     head_module: HeadModule = get_head(opts.head_choice)
-    flat_module: FlatModule = get_flat(opts.flat_choice_receiver)()
 
     head_module = head_module(
         signal_dim=opts.sender_hidden,
-        vision_dim=flat_module.out_dim,
+        vision_dim=get_vision_dim(),
         hidden_dim=opts.box_head_hidden,
         distractors=opts.distractors,
         batch_size=opts.batch_size,
@@ -21,7 +18,6 @@ def build_receiver(feature_extractor: nn.Module, opts) -> nn.Module:
     rec = Receiver(
         feature_extractor=feature_extractor,
         head_module=head_module,
-        flat_module=flat_module,
     )
     return rec
 
@@ -32,33 +28,30 @@ class Receiver(nn.Module):
     """
 
     def __init__(
-        self,
-        feature_extractor: nn.Module,
-        head_module: HeadModule,
-        flat_module,
+            self,
+            feature_extractor: nn.Module,
+            head_module: HeadModule,
     ):
         super(Receiver, self).__init__()
         self.feature_extractor = feature_extractor
-        self.flat_module = flat_module
 
-        self.box_module = head_module
+        self.head_module = head_module
 
     def forward(self, signal, image):
-        # image is of dimension [discriminants, batch, channels=3, img_h, img_w]
+        # image is of dimension [ batch, discriminants, channels=3, img_h, img_w]
         vision_out = []
         for idx in range(image.shape[1]):
             seg = image[:, idx]
             vso = self.feature_extractor(seg)
-            vso = self.flat_module(vso)
+            vso= vso.squeeze()
             vision_out.append(vso)
 
         vision_out = torch.stack(vision_out)
-        # bring to [batch, distractors, features]
+        # from [distractors,batch, features] to [batch, distractors, features]
         vision_out = vision_out.permute((1, 0, 2))
 
-        signal = signal.float()
 
-        class_logits = self.box_module(signal, vision_out)
-        # class_logits [batch, num_classes]
+        class_logits = self.head_module(signal, vision_out)
+        # class_logits [batch, distractors]
 
         return class_logits

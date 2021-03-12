@@ -16,7 +16,7 @@ def initialize_model():
     """
     model = models.resnet18(pretrained=True)
     # remove last fully connected
-    model = nn.Sequential(*list(model.children())[:-2])
+    model = nn.Sequential(*list(model.children())[:-1])
 
     # Parameters of newly constructed modules have requires_grad=True by default
     for param in model.parameters():
@@ -25,6 +25,9 @@ def initialize_model():
     model = model.eval()
     return model
 
+
+def get_vision_dim():
+    return 512
 
 ########################################################
 #       ABSTRACT CLASS

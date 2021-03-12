@@ -50,13 +50,16 @@ class EarlyStopperAccuracy(Callback):
                 return False
 
             loss, logs = self.validation_stats[-1]
-            loss, prev_logs = self.validation_stats[-2]
+            prev_loss, prev_logs = self.validation_stats[-2]
 
             mean = logs.aux[self.val_field_name].mean()
             prev_mean = prev_logs.aux[self.val_field_name].mean()
 
             if mean - prev_mean > self.min_increase:
                 # if the increase is above the min thr, dont stop
+                return False
+
+            if loss - prev_loss < self.min_increase:
                 return False
 
             console.log(f"Early stopping! Current val {mean}, prev val {prev_mean}")
