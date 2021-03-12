@@ -73,7 +73,7 @@ class VisionSender(nn.Module):
             console.log("Using Identity for sender out")
             self.fc = nn.Identity()
         else:
-            console.log(f"Using Linear [{vision_dim}]->[{n_hidden}] for sender out")
+            console.log(f"Using Linear vision2hidden= [{vision_dim}]->[{n_hidden}] for sender out")
             self.fc = nn.Linear(vision_dim, n_hidden)
 
         if image_type == "both" and image_union == "cat":

@@ -100,9 +100,7 @@ def main(params=None):
     )
 
     callbacks = [
-        #todo: use egg rl scheduler
-        RlScheduler(rl_optimizer=rl_optimizer),
-        EarlyStopperAccuracy(max_threshold=0.6, min_increase=0.01),
+        EarlyStopperAccuracy(max_threshold=1.4, min_increase=0.01),
         ConsoleLogger(print_train_loss=True, as_json=True),
     ]
 
@@ -123,10 +121,10 @@ def main(params=None):
         train_data=train_data,
         validation_data=val_data,
         callbacks=callbacks,
+        optimizer_scheduler=rl_optimizer,
     )
-    # todo: try to remove resume_training
-    if opts.resume_training:
-        trainer.load_from_latest(Path(opts.checkpoint_dir))
+
+    trainer.load_from_latest(Path(opts.checkpoint_dir))
 
     trainer.train(n_epochs=opts.n_epochs)
     console.log("Train is over")
