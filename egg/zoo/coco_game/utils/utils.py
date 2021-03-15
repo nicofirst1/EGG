@@ -118,13 +118,11 @@ def define_project_dir(opts):
 
     """
 
-    console.log(f"New experiment with uuid: '{opts.log_dir_uid}' created ")
 
     opts.log_dir_uid = join(opts.log_dir, opts.log_dir_uid)
     # make log dir root for logging paths
-    if opts.checkpoint_dir is not None:
-        opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
+    console.log(f"New experiment with uuid: '{opts.log_dir_uid}' created ")
 
 
 def get_class_weight(train, opts):

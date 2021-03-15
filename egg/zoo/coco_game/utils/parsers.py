@@ -248,9 +248,6 @@ def parse_arguments(params=None):
     # add core opt and print
     opt = core.init(parser, params=params)
 
-    if opt.checkpoint_dir is None:
-        opt.checkpoint_dir = "checkpoints"
-
     if opt.sender_receiver_hidden is not None:
         opt.sender_hidden = opt.sender_receiver_hidden
         opt.receiver_hidden = opt.sender_receiver_hidden
