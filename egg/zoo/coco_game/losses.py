@@ -5,11 +5,11 @@ from egg.zoo.coco_game.utils.utils import get_labels
 
 
 def final_loss(
-    sender_input,
-    message,
-    receiver_input,
-    receiver_output,
-    labels,
+        sender_input,
+        message,
+        receiver_input,
+        receiver_output,
+        labels,
 ):
     """
     Estimate complete loss, logs accuracy
@@ -34,8 +34,9 @@ def final_loss(
 
 
 def get_accuracy(pred_class: torch.Tensor, true_class: torch.Tensor) -> torch.Tensor:
-    acc = (torch.argmax(pred_class, dim=1) == true_class).sum()
-    acc = torch.div(acc, pred_class.shape[0])
+    acc = torch.argmax(pred_class, dim=1) == true_class
+    acc = acc.double()
+    # acc = torch.div(acc.sum(), pred_class.shape[0])
 
     return acc
 
