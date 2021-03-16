@@ -25,7 +25,7 @@ class EarlyStopperAccuracy(Callback):
 
         self.max_threshold = max_threshold
         self.min_increase = min_increase
-        self.val_field_name = "accuracy_receiver"
+        self.val_field_name = "accuracy"
         self.under_max_thr = False
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int) -> None:
