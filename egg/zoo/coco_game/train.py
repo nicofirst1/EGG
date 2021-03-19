@@ -124,7 +124,8 @@ def main(params=None):
         optimizer_scheduler=rl_optimizer,
     )
 
-    trainer.load_from_latest(Path(opts.checkpoint_dir))
+    if opts.checkpoint_dir is not None:
+        trainer.load_from_latest(Path(opts.checkpoint_dir))
 
     trainer.train(n_epochs=opts.n_epochs)
     console.log("Train is over")
