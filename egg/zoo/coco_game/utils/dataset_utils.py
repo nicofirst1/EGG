@@ -166,8 +166,8 @@ def filter_distractors(
     removed_cats = set(train_cats) - set(new_train_cats)
 
     console.log(
-        f"A total of {len(new_train_cats)} classes are left from the distractor filtering\n"
-        f"Filtered classes are : {removed_cats}"
+        f"A total of {len(new_train_cats)}/{len(train_cats)} classes are left from the distractor filtering\n"
+        f"Filtered classes are {len(removed_cats)} : {removed_cats}"
     )
 
 
