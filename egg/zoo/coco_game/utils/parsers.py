@@ -75,12 +75,21 @@ def logs_parser(parser):
 
 
 def dataloader_parsing(parser):
+
+    parser.add_argument(
+        "--use_train_split",
+        type=str2bool,
+        nargs="?",
+        default=False,
+        help="Split train data into train/val",
+    )
+
     parser.add_argument(
         "--use_dummy_val",
         type=str2bool,
         nargs="?",
         default=False,
-        help="Random seed for dataloaders",
+        help="Use dummy data for validation",
     )
 
     parser.add_argument(
@@ -88,7 +97,7 @@ def dataloader_parsing(parser):
         type=str2bool,
         nargs="?",
         default=False,
-        help="Random seed for dataloaders",
+        help="Use train data for validation",
     )
 
     parser.add_argument(

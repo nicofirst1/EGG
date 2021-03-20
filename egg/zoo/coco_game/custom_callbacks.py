@@ -1,6 +1,7 @@
+import json
 from typing import List, Tuple
 
-from egg.core import Callback, Interaction
+from egg.core import Callback, Interaction, ConsoleLogger
 from egg.zoo.coco_game.utils.utils import console
 
 
@@ -72,3 +73,23 @@ class EarlyStopperAccuracy(Callback):
 
             if loss < self.max_threshold:
                 self.under_max_thr = True
+
+
+class CustomConsoleLogger(ConsoleLogger):
+
+
+    def aggregate_print(self, loss: float, logs: Interaction, mode: str, epoch: int):
+        dump = dict(loss=loss)
+        aggregated_metrics = dict((k, v.mean().item()) for k, v in logs.aux.items())
+        dump.update(aggregated_metrics)
+
+        if self.as_json:
+            dump.update(dict(mode=mode, epoch=epoch))
+            output_message = json.dumps(dump)
+        else:
+            output_message = ", ".join(sorted([f"{k}={v}" for k, v in dump.items()]))
+            output_message = f"{mode}: epoch {epoch}, loss {loss}, " + output_message
+        print(output_message, flush=True)
+        with open("std_out.txt","a+") as f:
+            f.write(output_message+"\n")
+

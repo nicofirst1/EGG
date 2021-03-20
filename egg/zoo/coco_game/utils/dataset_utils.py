@@ -21,11 +21,11 @@ class DummyData(VisionDataset):
     """
 
     def __init__(
-        self,
-        data_len,
-        image_size: int = 224,
-        distractors: int = 1,
-        data_seed: int = 42,
+            self,
+            data_len,
+            image_size: int = 224,
+            distractors: int = 1,
+            data_seed: int = 42,
     ):
         """
         Custom Dataset
@@ -41,7 +41,7 @@ class DummyData(VisionDataset):
         self.image_size = image_size
 
     def get_images(
-        self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
     ) -> List[np.array]:
         """
         Get images, draw bbox with class name, resize and return
@@ -74,7 +74,7 @@ class DummyData(VisionDataset):
         segments = [chosen_sgm] + distractors_sgm
 
         # define sender input
-        sender_inp = torch.cat((resized_image, segments[0]), dim=-1)
+        sender_inp = torch.stack((resized_image, segments[0]))
 
         # shuffle segments
         segments = [x.unsqueeze(dim=0) for x in segments]
@@ -117,7 +117,7 @@ def get_dummy_data(data_len, opts):
 
 
 def collate(
-    batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        batch: List[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Manage input (samples, segmented) and labels to feed at sender and reciever
@@ -146,7 +146,7 @@ def collate(
 
 
 def filter_distractors(
-    train_data: CocoDetection, val_data: CocoDetection, min_annotations: int
+        train_data: CocoDetection, val_data: CocoDetection, min_annotations: int
 ):
     """
     Filter both train and val given a minimum number of distractors per image.
@@ -172,7 +172,7 @@ def filter_distractors(
 
 
 def get_annotation_stats(
-    coco: COCO, min_annotations: int, min_perc_valid: float
+        coco: COCO, min_annotations: int, min_perc_valid: float
 ) -> List[str]:
     """
     Return the discarded categories and removes annotations/images and cats from coco
@@ -235,10 +235,10 @@ def remove_cats(coco: COCO, cat_list: set):
 
 
 def inner_filtering(
-    train_coco: CocoDetection,
-    val_coco: CocoDetection,
-    min_annotations: int,
-    min_perc_valid: float,
+        train_coco: CocoDetection,
+        val_coco: CocoDetection,
+        min_annotations: int,
+        min_perc_valid: float,
 ) -> bool:
     """
     After independently removing images/anns from train and val based on min distractors, cross check to see if val and
@@ -300,3 +300,12 @@ def check_data(train_data: CocoDetection, val_data: CocoDetection):
 
     if len(same_anns) > 0:
         raise AttributeError("Test data and train data share same annotations")
+
+
+def split_dataset(dataset: DataLoader):
+    data_len = len(dataset)
+    train_len = int(data_len * 0.8)
+    val_len = data_len - train_len
+    train, val = torch.utils.data.random_split(dataset, [train_len, val_len])
+
+    return train.dataset, val.dataset

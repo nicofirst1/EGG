@@ -4,25 +4,21 @@ import torch
 
 from egg import core
 from egg.core import (
-    ConsoleLogger,
     LoggingStrategy,
     ProgressBarLogger,
-    RnnSenderReinforce,
-    SenderReceiverRnnReinforce,
 )
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_callbacks import EarlyStopperAccuracy, RlScheduler
+from egg.zoo.coco_game.custom_callbacks import CustomConsoleLogger
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import final_loss
-from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data
+from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data, split_dataset
 from egg.zoo.coco_game.utils.parsers import parse_arguments
 from egg.zoo.coco_game.utils.utils import (
     console,
     define_project_dir,
     dump_params,
-    get_class_weight,
 )
 
 
@@ -91,6 +87,9 @@ def main(params=None):
     elif opts.use_train_val:
         console.log("Using train dataset as validation")
         val_data = train_data
+    elif opts.use_train_split:
+        console.log("Use train split as validation")
+        train_data, val_data=split_dataset(train_data)
 
     game = get_game(model, opts)
 
@@ -100,8 +99,8 @@ def main(params=None):
     )
 
     callbacks = [
-        EarlyStopperAccuracy(max_threshold=1.4, min_increase=0.01),
-        ConsoleLogger(print_train_loss=True, as_json=True),
+        # EarlyStopperAccuracy(max_threshold=1.4, min_increase=0.01),
+        CustomConsoleLogger(print_train_loss=True, as_json=True),
     ]
 
     if opts.use_progress_bar:
