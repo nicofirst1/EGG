@@ -73,19 +73,6 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     return res
 
 
-def get_images(train_method, val_method):
-    def inner(
-        image_ids: List[int],
-        image_ann_ids: List[int],
-        is_training: bool,
-        img_size: Tuple[int, int],
-    ):
-        if is_training:
-            return train_method(image_ids, image_ann_ids, img_size)
-        else:
-            return val_method(image_ids, image_ann_ids, img_size)
-
-    return inner
 
 
 def str2bool(v):
@@ -124,51 +111,3 @@ def define_project_dir(opts):
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
     console.log(f"New experiment with uuid: '{opts.log_dir_uid}' created ")
 
-
-def get_class_weight(train, opts):
-    if opts.use_class_weights:
-        class_weights = train.dataset.get_class_weights()
-        # transform from dict to sorted tensor
-        class_weights = [x[1] for x in sorted(class_weights.items())]
-        class_weights = torch.Tensor(class_weights)
-        class_weights = class_weights.to(opts.device)
-
-    else:
-        class_weights = None
-
-    return class_weights
-
-
-def get_true_elems(true_segments, classes, annotations):
-    true_classes = []
-    true_annotations = []
-
-    for idx in range(len(true_segments)):
-        ts = true_segments[idx]
-        tc = classes[idx][ts]
-        ta = annotations[idx][ts]
-
-        true_classes.append(tc)
-        true_annotations.append(ta)
-
-    return true_classes, true_annotations
-
-
-def load_pretrained_sender(path, sender: torch.nn.Module):
-    latest_file, latest_time = None, None
-
-    for file in path.glob("*.tar"):
-        creation_time = os.stat(file).st_ctime
-        if latest_time is None or creation_time > latest_time:
-            latest_file, latest_time = file, creation_time
-
-    if latest_file is not None:
-        """
-        Loads the game, agents, and optimizer state from a file
-        :param path: Path to the file
-        """
-        console.log(f"# loading trainer state from {latest_file}")
-        checkpoint = torch.load(latest_file)
-        sender.load_state_dict(checkpoint.model_state_dict)
-    else:
-        console.log(f"Could not state from {path}")
