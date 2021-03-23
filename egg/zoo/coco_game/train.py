@@ -22,13 +22,14 @@ from egg.zoo.coco_game.utils.utils import (
 )
 
 
-def get_game(feat_extractor, opts):
+def get_game(opts):
     ######################################
     #   Sender receiver modules
     ######################################
+    model = initialize_model()
 
-    receiver = build_receiver(feature_extractor=feat_extractor, opts=opts)
-    sender = build_sender(feature_extractor=feat_extractor, opts=opts)
+    receiver = build_receiver(feature_extractor=model, opts=opts)
+    sender = build_sender(feature_extractor=model, opts=opts)
 
     ######################################
     #   Sender receiver wrappers
@@ -76,7 +77,6 @@ def main(params=None):
     opts = parse_arguments(params=params)
     define_project_dir(opts)
     dump_params(opts)
-    model = initialize_model()
 
     train_data, val_data = get_data(opts)
 
@@ -89,9 +89,14 @@ def main(params=None):
         val_data = train_data
     elif opts.use_train_split:
         console.log("Use train split as validation")
-        train_data, val_data=split_dataset(train_data)
+        train_data, val_data = split_dataset(train_data)
+    elif opts.use_invert_data:
+        console.log("Using train as val and val as train")
+        d = train_data
+        train_data = val_data
+        val_data = d
 
-    game = get_game(model, opts)
+    game = get_game(opts)
 
     optimizer = core.build_optimizer(game.parameters())
     rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(

@@ -2,7 +2,7 @@ import argparse
 import uuid
 
 from egg import core
-from egg.zoo.coco_game.archs import  HEAD_CHOICES
+from egg.zoo.coco_game.archs import HEAD_CHOICES
 from egg.zoo.coco_game.utils.utils import console, str2bool
 
 
@@ -75,6 +75,13 @@ def logs_parser(parser):
 
 
 def dataloader_parsing(parser):
+    parser.add_argument(
+        "--use_invert_data",
+        type=str2bool,
+        nargs="?",
+        default=False,
+        help="Use train as val and val as train",
+    )
 
     parser.add_argument(
         "--use_train_split",

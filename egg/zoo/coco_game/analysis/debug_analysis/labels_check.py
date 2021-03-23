@@ -56,5 +56,8 @@ if __name__ == '__main__':
     check_sequence(train['indice'])
     check_sequence(test['indice'])
 
+    check_sequence(train['image_id'])
+    check_sequence(test['image_id'])
+
     print("Everything ok")
     a=12

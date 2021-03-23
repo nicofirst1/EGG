@@ -11,10 +11,16 @@ of NOT possible causes:
   the same dataset and multiple epochs.
 - Removing MeanBaseline: using the NoBaseline instead does not alleviate the pattern, but it does slow down the
   learning.
-  
+- Reduce train samples to match val samples: the pattern still persists when len(val)/len(train)= 87% and 210%
+- Use val to train and train to val: the pattern persist, showing that is not a data problem.
+- RL Optimizer: not it
+- Train eval mode: correct for the phase.
+- Loss.backward/optimizer.step: maybe the loss.backward is called between the end of the training and the start of the
+  validation -> Nope
+- Removed filtering: class filtering based on number of distractors is not the culprit
+
 Todo:
-- Use val to train and train to val
-- Reduce train samples to match val samples.
+- ?
 
 ## Observations
 

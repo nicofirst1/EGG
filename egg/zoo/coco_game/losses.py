@@ -41,8 +41,8 @@ def get_accuracy(pred_class: torch.Tensor, true_class: torch.Tensor) -> torch.Te
     return acc
 
 
-def get_cross_entropy(pred_classes: torch.Tensor, targets, weights=None):
+def get_cross_entropy(pred_classes: torch.Tensor, targets):
     targets = targets.long()
     targets = targets.to(pred_classes.device)
     # pytorch does softmax inside cross entropy
-    return F.cross_entropy(pred_classes, targets, weight=weights, reduction="none")
+    return F.cross_entropy(pred_classes, targets, reduction="none")
