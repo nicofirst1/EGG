@@ -1,3 +1,37 @@
+# Validation problem
+
+The problem is that the validation accuracy is much higher than the training one in most of the epochs. Following a list
+of NOT possible causes:
+
+- Resnet18: tried with Resnet50, same behavior
+- Model sharing: tried initializing a resnet for both sender and receiver to no result.
+- Data sharing: between train and validation there is no sharing in terms of images or annotations
+- Number of distractors: same behavior can be seen with distractors = 1, 2, 3
+- Target predictability: there is no predictable pattern for the location of the target between train and val or between
+  the same dataset and multiple epochs.
+- Removing MeanBaseline: using the NoBaseline instead does not alleviate the pattern, but it does slow down the
+  learning.
+  
+Todo:
+- Use val to train and train to val
+- Reduce train samples to match val samples.
+
+## Observations
+
+Some observations on the pattern:
+
+- The same pattern occurs when the validation data is set to the train data. That is the two datasets are identical.
+- The same pattern occurs when the validation data is taken as a split from the train data (20%). In this instance the
+  two dataset are not identical.
+- The pattern does NOT occur when the validation data is replaced with a dummy dataset. The dummy dataset is created at
+  random and has no (visual) meaning what so ever.
+- The gap between validation and train accuracy decreases the more epochs there are.
+
+Observation on the other metrics:
+
+- The pattern is followed by an initial increase in the loss. At the same time the x_loss (cross entropy) decreases
+  which is to be expected since the accuracy increases.
+
 # Experiments Discrimination
 
 These esperiments were ran with 80 classes from the coco dataset on the discrimination task. The sender is shown the
@@ -41,16 +75,17 @@ The receiver architectures are currently 3 + 4 control ones:
 
 The control ones are:
 
-- Only signal: the receiver uses only the signal to perform the prediction. It is now more difficult to guess using
-  only the signal since the sender has no information on the amount or position of the distractors.
+- Only signal: the receiver uses only the signal to perform the prediction. It is now more difficult to guess using only
+  the signal since the sender has no information on the amount or position of the distractors.
 
 - Random signal: same as before, but the signal is randomized.
 
 - Only image: similar to only signal, but the receiver uses the images only to perform the prediction.
 - Random signal image: the receiver uses both the signal and the image as in FeatureReduction, but the signal is
   randomized.
-  
+
 ## Results
+
 coming soon
 
 # Experiments Clasification (old)
