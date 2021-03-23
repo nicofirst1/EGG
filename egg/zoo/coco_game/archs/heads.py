@@ -27,6 +27,11 @@ def initialize_model():
 
 
 def get_vision_dim():
+    # resnet18 = 512
+    # resnet34 = 1024
+    # resnet50 = 2048
+    # resnet101 =
+    # resnet152 =
     return 512
 
 ########################################################
