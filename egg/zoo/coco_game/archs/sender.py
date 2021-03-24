@@ -12,6 +12,8 @@ def build_sender(feature_extractor, opts):
         image_type=opts.image_type,
         image_union=opts.image_union,
         n_hidden=opts.sender_hidden,
+        out_features=get_vision_dim(),
+
     )
 
     return sender
@@ -58,6 +60,7 @@ class VisionSender(nn.Module):
             image_size: int,
             image_type: str,
             image_union: str,
+            out_features: int,
             n_hidden: int = 10,
     ):
         super(VisionSender, self).__init__()
@@ -77,7 +80,7 @@ class VisionSender(nn.Module):
             self.fc = nn.Linear(vision_dim, n_hidden)
 
         if image_type == "both" and image_union == "cat":
-            self.cat_fc = nn.Linear(2 * self.out_features, self.out_features)
+            self.cat_fc = nn.Linear(2 * out_features, out_features)
 
     def forward(self, inp):
         """
@@ -106,6 +109,7 @@ class VisionSender(nn.Module):
         # so use linear to get to  [batch size, vision_out]
         if self.image_union == "cat":
             vision_in = torch.cat((segment_out, image_out), dim=1)
+            vision_in = vision_in.squeeze()
             vision_out = self.cat_fc(vision_in)
         # else just multiply
         else:

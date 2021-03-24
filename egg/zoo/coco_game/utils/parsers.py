@@ -220,7 +220,7 @@ def coco_arch_parsing(parser):
     parser.add_argument(
         "--head_choice",
         type=str,
-        default="signal_expansion",
+        default="feature_reduction",
         help="Choose the receiver box head module",
         choices=list(HEAD_CHOICES.keys()),
     )

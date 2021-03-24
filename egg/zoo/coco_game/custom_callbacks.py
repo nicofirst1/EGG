@@ -5,14 +5,6 @@ from egg.core import Callback, Interaction, ConsoleLogger
 from egg.zoo.coco_game.utils.utils import console
 
 
-class RlScheduler(Callback):
-    def __init__(self, rl_optimizer):
-        self.rl_optimizer = rl_optimizer
-
-    def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
-        self.rl_optimizer.step()
-
-
 class EarlyStopperAccuracy(Callback):
     """
     A base class, supports the running statistic which is could be used for early stopping

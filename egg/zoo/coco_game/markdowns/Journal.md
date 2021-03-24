@@ -18,8 +18,14 @@ of NOT possible causes:
 - Loss.backward/optimizer.step: maybe the loss.backward is called between the end of the training and the start of the
   validation -> Nope
 - Removed filtering: class filtering based on number of distractors is not the culprit
+- Random item deletion: nope
+- Change sender image process: same pattern appears for the first 3 epochs, then train>val.
+- Do only val: obv not train, stuck at 50%
 
 Todo:
+
+- First val then train
+- Change recevier head: signal_expansion same thing; only_image not learning
 - ?
 
 ## Observations
@@ -32,11 +38,14 @@ Some observations on the pattern:
 - The pattern does NOT occur when the validation data is replaced with a dummy dataset. The dummy dataset is created at
   random and has no (visual) meaning what so ever.
 - The gap between validation and train accuracy decreases the more epochs there are.
+- 
 
 Observation on the other metrics:
 
-- The pattern is followed by an initial increase in the loss. At the same time the x_loss (cross entropy) decreases
-  which is to be expected since the accuracy increases.
+- Loss starts low (0.5), then increases during ~4 epochs (1.4), during this time train loss < val loss.
+  then decreases again with train loss > val loss.  
+
+- X loss: decreases steadily during the train
 
 # Experiments Discrimination
 
