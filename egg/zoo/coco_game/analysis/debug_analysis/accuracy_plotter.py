@@ -6,9 +6,54 @@ def inrange(val, mid, epsilon=0.01):
     return val - epsilon <= mid <= val + epsilon
 
 
-if __name__ == '__main__':
+def normal_plot(epocs):
+    counter = 0
 
-    file = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/std_out.txt"
+    for idx in range(len(epocs['test'])):
+        train = epocs['train'][idx]
+        test = epocs['test'][idx]
+
+        train_len = len(train) + counter
+        test_len = train_len + len(test)
+
+        pyplot.scatter(range(counter, train_len), train, s=3, c="b")
+        pyplot.scatter(range(train_len, test_len), test, s=3, c="r")
+        pyplot.vlines(test_len + 1, min(train + test), max(train + test))
+        pyplot.hlines(np.mean(train), counter, test_len, colors="orange", linestyles="dashed")
+        pyplot.hlines(np.mean(test), counter, test_len, colors="r", linestyles="dashed")
+        counter = test_len + 1
+        # pyplot.show()
+
+
+def condensed_plot(epocs):
+    counter = 0
+
+    train_mean = 0
+    test_mean = 0
+    for idx in range(len(epocs['test'])):
+        train = epocs['train'][idx]
+        test = epocs['test'][idx]
+
+        train = np.mean(train)
+        test = np.mean(test)
+
+        pyplot.scatter(counter, train, s=3, c="b")
+        counter += 1
+        pyplot.scatter(counter, test, s=3, c="r")
+
+        train_mean+=train
+        test_mean+=test
+
+        counter += 1
+        # pyplot.show()
+
+    train_mean /= (idx+1)
+    test_mean /= (idx+1)
+
+    pyplot.hlines(train_mean, 0, counter, colors="orange", linestyles="dashed")
+    pyplot.hlines(test_mean, 0, counter, colors="r", linestyles="dashed")
+
+def epochs_extractor(file):
     with open(file, "r") as f:
         lines = f.readlines()
 
@@ -33,23 +78,15 @@ if __name__ == '__main__':
         except NameError:
             continue
 
-    counter = 0
-    for idx in range(len(epocs['test'])):
-        train = epocs['train'][idx]
-        test = epocs['test'][idx]
+    return epocs
 
-        train_len = len(train) + counter
-        test_len = train_len + len(test)
 
-        pyplot.scatter(range(counter, train_len), train, s=3, c="b")
-        pyplot.scatter(range(train_len, test_len), test, s=3, c="r")
-        pyplot.vlines(test_len + 1, min(train + test), max(train + test))
-        pyplot.hlines(np.mean(train), counter, test_len, colors="orange", linestyles="dashed")
-        pyplot.hlines(np.mean(test), counter, test_len, colors="r", linestyles="dashed")
-        counter = test_len + 1
-        # pyplot.show()
+if __name__ == '__main__':
+    file = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/std_out.txt"
 
-        a = 1
+    epocs = epochs_extractor(file)
+
+    normal_plot(epocs)
 
     pyplot.ylabel("Accuracy")
     pyplot.xlabel("Batches")

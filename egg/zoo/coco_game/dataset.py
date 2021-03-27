@@ -124,6 +124,7 @@ class CocoDetection(VisionDataset):
 
         # if segmented area is empty get next item
         if reduce(lambda x, y: x * y, chosen_sgm.size) == 0:
+            print(f"Segment area is zero at index {index}")
             return self.__getitem__(index + 1)
 
         try:

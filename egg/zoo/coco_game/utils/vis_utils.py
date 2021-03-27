@@ -1,6 +1,6 @@
+import PIL
 import cv2
 import numpy as np
-import PIL
 import torch
 from PIL import Image
 
@@ -82,7 +82,9 @@ def visualize_bbox(img, bbox, class_name, color, thickness=2):
     ]
     x_min, y_min, x_max, y_max = [int(x) for x in bbox]
 
-    cv2.rectangle(img, (x_min, y_min), (x_max, y_max), color, thickness)
+    pt1 = (x_min, y_min)
+    pt2 = (x_max, y_max)
+    cv2.rectangle(img, pt1, pt2, color, thickness=thickness)
 
     ((text_width, text_height), _) = cv2.getTextSize(
         class_name, cv2.FONT_HERSHEY_SIMPLEX, 0.35, 1

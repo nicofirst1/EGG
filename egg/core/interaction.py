@@ -121,12 +121,14 @@ class Interaction:
         """
 
         def _check_cat(lst):
-
             if all(x is None for x in lst):
                 return None
             # if some but not all are None: not good
             if any(x is None for x in lst):
-                lst = [x for x in lst if x is not None]
+                raise RuntimeError(
+                    "Appending empty and non-empty interactions logs. "
+                    "Normally this shouldn't happen!"
+                )
             return torch.cat(lst, dim=0)
 
         assert interactions, "list must not be empty"

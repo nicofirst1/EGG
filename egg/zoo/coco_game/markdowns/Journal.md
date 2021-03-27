@@ -21,11 +21,16 @@ of NOT possible causes:
 - Random item deletion: nope
 - Change sender image process: same pattern appears for the first 3 epochs, then train>val.
 - Do only val: obv not train, stuck at 50%
+- First val then train: Nope
+- Drop last batch = True: Nope
+- Change data seed: Nope
+- Debug with batchsize = 16: not learnig, the first three epochs the val seems to learn then goes back to 50%
+- add CenterCrop to transformation: maybe this is it? Nope it got thing worse
+- Could be feature extraction Sender/Receiver: check with same image in train eval if features are the same for both: they are the
+  same...
 
 Todo:
-
-- First val then train
-- Change recevier head: signal_expansion same thing; only_image not learning
+- Change receiver head: signal_expansion same thing; only_image not learning
 - ?
 
 ## Observations
@@ -38,7 +43,8 @@ Some observations on the pattern:
 - The pattern does NOT occur when the validation data is replaced with a dummy dataset. The dummy dataset is created at
   random and has no (visual) meaning what so ever.
 - The gap between validation and train accuracy decreases the more epochs there are.
-- 
+- The system does not learn with 20 samples... i was expecting overfitting but nope
+- Datasamples: with 20 samples the first two trains follows the same patter as always
 
 Observation on the other metrics:
 

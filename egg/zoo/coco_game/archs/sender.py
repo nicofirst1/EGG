@@ -65,7 +65,7 @@ class VisionSender(nn.Module):
     ):
         super(VisionSender, self).__init__()
 
-        self.vision = model
+        self.feature_extractor = model
         self.image_size = image_size
         self.image_type = image_type
         self.image_union = image_union
@@ -87,9 +87,12 @@ class VisionSender(nn.Module):
         inp : tuple (image, segmented): containing original image and segmented part
         """
 
-        # inp is of dimension [batch, channels=3, img_h, img_w * 2]
+        # inp is of dimension [batch,2,  channels=3, img_h, img_w]
         # get the output of the vision module
-        vision_out = self.process_image(inp)
+        with torch.no_grad():
+            self.feature_extractor.eval()
+            vision_out = self.process_image(inp)
+
 
         # vision out [batch , vision out]
         # then fc on vision out
@@ -97,6 +100,7 @@ class VisionSender(nn.Module):
 
         # fc_out [batch, hidden size]
         return fc_out
+
 
     def combine_images(self, segment_out, image_out):
         """
@@ -133,15 +137,15 @@ class VisionSender(nn.Module):
         # img and seg = [batch, channels, image_size, image_size]
 
         if self.image_type == "seg":
-            out = self.vision(seg)
+            out = self.feature_extractor(seg)
 
         elif self.image_type == "img":
-            out = self.vision(img)
+            out = self.feature_extractor(img)
 
         else:
             # both, apply vision to both
-            segment_out = self.vision(seg)
-            image_out = self.vision(img)
+            segment_out = self.feature_extractor(seg)
+            image_out = self.feature_extractor(img)
             out = self.combine_images(segment_out, image_out)
 
         out = out.squeeze()

@@ -39,19 +39,28 @@ class Receiver(nn.Module):
 
     def forward(self, signal, image):
         # image is of dimension [ batch, discriminants, channels=3, img_h, img_w]
-        vision_out = []
-        for idx in range(image.shape[1]):
-            seg = image[:, idx]
-            vso = self.feature_extractor(seg)
-            vso= vso.squeeze()
-            vision_out.append(vso)
 
-        vision_out = torch.stack(vision_out)
-        # from [distractors,batch, features] to [batch, distractors, features]
-        vision_out = vision_out.permute((1, 0, 2))
+        with torch.no_grad():
+            self.feature_extractor.eval()
+            vision_out=self.extract_features(image)
 
 
         class_logits = self.head_module(signal, vision_out)
         # class_logits [batch, distractors]
 
         return class_logits
+
+ 
+
+    def extract_features(self, image):
+        vision_out = []
+        for idx in range(image.shape[1]):
+            seg = image[:, idx]
+            vso = self.feature_extractor(seg)
+            vso = vso.squeeze()
+            vision_out.append(vso)
+
+        vision_out = torch.stack(vision_out)
+        # from [distractors,batch, features] to [batch, distractors, features]
+        vision_out = vision_out.permute((1, 0, 2))
+        return vision_out

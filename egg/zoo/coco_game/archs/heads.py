@@ -16,11 +16,39 @@ def initialize_model():
     """
     model = models.resnet18(pretrained=True)
     # remove last fully connected
-    model = nn.Sequential(*list(model.children())[:-1])
+    model.fc=nn.Identity()
 
     # Parameters of newly constructed modules have requires_grad=True by default
     for param in model.parameters():
         param.requires_grad = False
+
+    for bb in model.layer1:
+        bb.bn1.track_running_stats = False
+        bb.bn2.track_running_stats = False
+        bb.bn1.momentum = 0.0
+        bb.bn2.momentum = 0.0
+
+    for bb in model.layer2:
+        bb.bn1.track_running_stats = False
+        bb.bn2.track_running_stats = False
+        bb.bn1.momentum = 0.0
+        bb.bn2.momentum = 0.0
+
+    for bb in model.layer3:
+        bb.bn1.track_running_stats = False
+        bb.bn2.track_running_stats = False
+        bb.bn1.momentum = 0.0
+        bb.bn2.momentum = 0.0
+
+    for bb in model.layer4:
+        bb.bn1.track_running_stats = False
+        bb.bn2.track_running_stats = False
+        bb.bn1.momentum = 0.0
+        bb.bn2.momentum = 0.0
+
+    model.bn1.track_running_stats=False
+    model.bn1.momentum = 0.0
+
 
     model = model.eval()
     return model
@@ -343,3 +371,7 @@ class OnlyImage(HeadModule):
         class_logits = torch.squeeze(class_logits)
 
         return class_logits
+
+
+if __name__ == '__main__':
+    initialize_model()
