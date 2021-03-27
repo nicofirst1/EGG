@@ -138,9 +138,6 @@ def collate(
     seg = torch.stack(seg).contiguous()
     labels = torch.stack(labels).contiguous()
 
-    # transpose to have [batch,discriminants ...]-> [discriminants, batch, ...]
-    # seg= np.transpose(seg, axes=(1, 0, 2, 3, 4))
-    # labels= np.transpose(labels, axes=(1, 0, 2))
 
     return sender_inp, labels, seg
 

@@ -25,6 +25,21 @@ def normal_plot(epocs):
         # pyplot.show()
 
 
+def shifted_plot(epocs):
+    train = [np.mean(e) for e in epocs['train']]
+    test = [np.mean(e) for e in epocs['test']]
+
+    train_range = range(len(train))
+    test_range = range(len(test))
+    pyplot.plot(train_range, train, c="b")
+    pyplot.plot(test_range, test, c="r")
+
+    pyplot.scatter(train_range, train, s=10, c="b")
+    pyplot.scatter(test_range, test, s=10, c="r")
+
+    # pyplot.show()
+
+
 def condensed_plot(epocs):
     counter = 0
 
@@ -86,7 +101,7 @@ if __name__ == '__main__':
 
     epocs = epochs_extractor(file)
 
-    normal_plot(epocs)
+    shifted_plot(epocs)
 
     pyplot.ylabel("Accuracy")
     pyplot.xlabel("Batches")

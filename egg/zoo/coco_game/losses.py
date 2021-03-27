@@ -36,7 +36,9 @@ def final_loss(
 def get_accuracy(pred_class: torch.Tensor, true_class: torch.Tensor) -> torch.Tensor:
     acc = torch.argmax(pred_class, dim=1) == true_class
     acc = acc.double()
-    # acc = torch.div(acc.sum(), pred_class.shape[0])
+    with open("std_out.txt", "a+") as f:
+        m = float(acc.mean())
+        f.write(f"{m}\n")
 
     return acc
 
