@@ -152,7 +152,7 @@ class CocoDetection(VisionDataset):
         path = os.path.join(self.root, path)
         img_original = PIL.Image.open(path)
 
-        self.log_labels(img_id, chosen_target, distractors, path)
+        #self.log_labels(img_id, chosen_target, distractors, path)
         # convert to rgb if grayscale
         if img_original.mode != "RGB":
             img_original = img_original.convert("RGB")

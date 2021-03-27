@@ -78,9 +78,6 @@ def main(params=None):
     define_project_dir(opts)
     dump_params(opts)
 
-    with open("std_out.txt", "w+") as f:
-        pass
-
     train_data, val_data = get_data(opts)
 
     if opts.use_dummy_val:

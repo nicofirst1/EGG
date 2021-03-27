@@ -171,8 +171,40 @@ class Trainer:
                 batch = move_to(batch, self.device)
                 optimized_loss, interaction = self.game(*batch)
                 if (
-                    self.distributed_context.is_distributed
-                    and self.aggregate_interaction_logs
+                        self.distributed_context.is_distributed
+                        and self.aggregate_interaction_logs
+                ):
+                    interaction = Interaction.gather_distributed_interactions(
+                        interaction
+                    )
+                interaction = interaction.to("cpu")
+                mean_loss += optimized_loss
+
+                for callback in self.callbacks:
+                    callback.on_batch_end(
+                        interaction, optimized_loss, n_batches, is_training=False
+                    )
+
+                interactions.append(interaction)
+                n_batches += 1
+
+        mean_loss /= n_batches
+        full_interaction = Interaction.from_iterable(interactions)
+
+        return mean_loss.item(), full_interaction
+
+    def train_eval(self):
+        mean_loss = 0.0
+        interactions = []
+        n_batches = 0
+        self.game.eval()
+        with torch.no_grad():
+            for batch in self.train_data:
+                batch = move_to(batch, self.device)
+                optimized_loss, interaction = self.game(*batch)
+                if (
+                        self.distributed_context.is_distributed
+                        and self.aggregate_interaction_logs
                 ):
                     interaction = Interaction.gather_distributed_interactions(
                         interaction
@@ -238,8 +270,8 @@ class Trainer:
             n_batches += 1
             mean_loss += optimized_loss.detach()
             if (
-                self.distributed_context.is_distributed
-                and self.aggregate_interaction_logs
+                    self.distributed_context.is_distributed
+                    and self.aggregate_interaction_logs
             ):
                 interaction = Interaction.gather_distributed_interactions(interaction)
             interaction = interaction.to("cpu")
@@ -256,6 +288,7 @@ class Trainer:
         full_interaction = Interaction.from_iterable(interactions)
         return mean_loss.item(), full_interaction
 
+
     def train(self, n_epochs):
         for callback in self.callbacks:
             callback.on_train_begin(self)
@@ -265,6 +298,7 @@ class Trainer:
                 callback.on_epoch_begin(epoch + 1)  # noqa: E226
 
             train_loss, train_interaction = self.train_epoch()
+            _, train_interaction=self.train_eval()
 
             for callback in self.callbacks:
                 callback.on_epoch_end(

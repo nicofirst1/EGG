@@ -25,7 +25,7 @@ def normal_plot(epocs):
         # pyplot.show()
 
 
-def shifted_plot(epocs):
+def condensed_plot(epocs):
     train = [np.mean(e) for e in epocs['train']]
     test = [np.mean(e) for e in epocs['test']]
 
@@ -39,34 +39,6 @@ def shifted_plot(epocs):
 
     # pyplot.show()
 
-
-def condensed_plot(epocs):
-    counter = 0
-
-    train_mean = 0
-    test_mean = 0
-    for idx in range(len(epocs['test'])):
-        train = epocs['train'][idx]
-        test = epocs['test'][idx]
-
-        train = np.mean(train)
-        test = np.mean(test)
-
-        pyplot.scatter(counter, train, s=3, c="b")
-        counter += 1
-        pyplot.scatter(counter, test, s=3, c="r")
-
-        train_mean+=train
-        test_mean+=test
-
-        counter += 1
-        # pyplot.show()
-
-    train_mean /= (idx+1)
-    test_mean /= (idx+1)
-
-    pyplot.hlines(train_mean, 0, counter, colors="orange", linestyles="dashed")
-    pyplot.hlines(test_mean, 0, counter, colors="r", linestyles="dashed")
 
 def epochs_extractor(file):
     with open(file, "r") as f:
@@ -96,14 +68,32 @@ def epochs_extractor(file):
     return epocs
 
 
+def condensed_epochs_extractor(file):
+    with open(file, "r") as f:
+        lines = f.readlines()
+
+    epocs = dict(
+        train=[],
+        test=[]
+    )
+    for l in lines:
+
+        l = eval(l)
+
+        if isinstance(l, dict):
+            epocs[l['mode']].append(l['accuracy'])
+
+    return epocs
+
+
 if __name__ == '__main__':
     file = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/std_out.txt"
 
-    epocs = epochs_extractor(file)
+    epocs = condensed_epochs_extractor(file)
 
-    shifted_plot(epocs)
+    condensed_plot(epocs)
 
     pyplot.ylabel("Accuracy")
     pyplot.xlabel("Batches")
-    pyplot.title("Without RL scheduler")
+    pyplot.title("Train computed after learning")
     pyplot.show()
