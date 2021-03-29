@@ -193,13 +193,13 @@ class Trainer:
 
         return mean_loss.item(), full_interaction
 
-    def train_eval(self):
+    def train_eval(self, batches):
         mean_loss = 0.0
         interactions = []
         n_batches = 0
         self.game.eval()
         with torch.no_grad():
-            for batch in self.train_data:
+            for batch in batches:
                 batch = move_to(batch, self.device)
                 optimized_loss, interaction = self.game(*batch)
                 if (
@@ -229,12 +229,14 @@ class Trainer:
         mean_loss = 0
         n_batches = 0
         interactions = []
+        batches=[]
 
         self.game.train()
 
         self.optimizer.zero_grad()
 
         for batch_id, batch in enumerate(self.train_data):
+            batches.append(batch)
             batch = move_to(batch, self.device)
 
             context = autocast() if self.scaler else nullcontext()
@@ -286,7 +288,7 @@ class Trainer:
 
         mean_loss /= n_batches
         full_interaction = Interaction.from_iterable(interactions)
-        return mean_loss.item(), full_interaction
+        return mean_loss.item(), full_interaction, batches
 
 
     def train(self, n_epochs):
@@ -297,8 +299,9 @@ class Trainer:
             for callback in self.callbacks:
                 callback.on_epoch_begin(epoch + 1)  # noqa: E226
 
-            train_loss, train_interaction = self.train_epoch()
-            _, train_interaction=self.train_eval()
+            train_loss, train_interaction, batches = self.train_epoch()
+            _, train_interaction=self.train_eval(batches)
+            del batches
 
             for callback in self.callbacks:
                 callback.on_epoch_end(
