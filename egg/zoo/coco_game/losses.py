@@ -18,7 +18,6 @@ def final_loss(
     metrics = {}
 
     res_dict = get_labels(labels)
-    # label_class = res_dict["class_id"]
     target_position = res_dict["target_position"]
 
     x_loss = get_cross_entropy(
