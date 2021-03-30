@@ -41,16 +41,16 @@ class Trainer:
     """
 
     def __init__(
-        self,
-        game: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        train_data: DataLoader,
-        optimizer_scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-        validation_data: Optional[DataLoader] = None,
-        device: torch.device = None,
-        callbacks: Optional[List[Callback]] = None,
-        grad_norm: float = None,
-        aggregate_interaction_logs: bool = True,
+            self,
+            game: torch.nn.Module,
+            optimizer: torch.optim.Optimizer,
+            train_data: DataLoader,
+            optimizer_scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+            validation_data: Optional[DataLoader] = None,
+            device: torch.device = None,
+            callbacks: Optional[List[Callback]] = None,
+            grad_norm: float = None,
+            aggregate_interaction_logs: bool = True,
     ):
         """
         :param game: A nn.Module that implements forward(); it is expected that forward returns a tuple of (loss, d),
@@ -91,7 +91,7 @@ class Trainer:
             print("# Distributed context: ", self.distributed_context)
 
         if self.distributed_context.is_leader and not any(
-            isinstance(x, CheckpointSaver) for x in self.callbacks
+                isinstance(x, CheckpointSaver) for x in self.callbacks
         ):
             if common_opts.preemptable:
                 assert (
@@ -194,14 +194,13 @@ class Trainer:
         return mean_loss.item(), full_interaction
 
     def train_eval(self, batches):
-        mean_loss = 0.0
         interactions = []
         n_batches = 0
         self.game.eval()
         with torch.no_grad():
             for batch in batches:
                 batch = move_to(batch, self.device)
-                optimized_loss, interaction = self.game(*batch)
+                _, interaction = self.game(*batch)
                 if (
                         self.distributed_context.is_distributed
                         and self.aggregate_interaction_logs
@@ -210,26 +209,19 @@ class Trainer:
                         interaction
                     )
                 interaction = interaction.to("cpu")
-                mean_loss += optimized_loss
-
-                for callback in self.callbacks:
-                    callback.on_batch_end(
-                        interaction, optimized_loss, n_batches, is_training=False
-                    )
 
                 interactions.append(interaction)
                 n_batches += 1
 
-        mean_loss /= n_batches
         full_interaction = Interaction.from_iterable(interactions)
 
-        return mean_loss.item(), full_interaction
+        return full_interaction
 
     def train_epoch(self):
         mean_loss = 0
         n_batches = 0
         interactions = []
-        batches=[]
+        batches = []
 
         self.game.train()
 
@@ -290,7 +282,6 @@ class Trainer:
         full_interaction = Interaction.from_iterable(interactions)
         return mean_loss.item(), full_interaction, batches
 
-
     def train(self, n_epochs):
         for callback in self.callbacks:
             callback.on_train_begin(self)
@@ -299,8 +290,8 @@ class Trainer:
             for callback in self.callbacks:
                 callback.on_epoch_begin(epoch + 1)  # noqa: E226
 
-            train_loss, train_interaction, batches = self.train_epoch()
-            _, train_interaction=self.train_eval(batches)
+            train_loss, _, batches = self.train_epoch()
+            train_interaction = self.train_eval(batches)
             del batches
 
             for callback in self.callbacks:
@@ -310,9 +301,9 @@ class Trainer:
 
             validation_loss = validation_interaction = None
             if (
-                self.validation_data is not None
-                and self.validation_freq > 0
-                and (epoch + 1) % self.validation_freq == 0
+                    self.validation_data is not None
+                    and self.validation_freq > 0
+                    and (epoch + 1) % self.validation_freq == 0
             ):  # noqa: E226, E501
                 for callback in self.callbacks:
                     callback.on_test_begin(epoch + 1)  # noqa: E226
@@ -337,7 +328,6 @@ class Trainer:
         for callback in self.callbacks:
             callback.on_train_end()
 
-  
     def load(self, checkpoint: Checkpoint):
         self.game.load_state_dict(checkpoint.model_state_dict)
         self.optimizer.load_state_dict(checkpoint.optimizer_state_dict)
