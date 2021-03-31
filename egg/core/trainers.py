@@ -194,13 +194,15 @@ class Trainer:
         return mean_loss.item(), full_interaction
 
     def train_eval(self, batches):
+        mean_loss = 0
+
         interactions = []
         n_batches = 0
         self.game.eval()
         with torch.no_grad():
             for batch in batches:
                 batch = move_to(batch, self.device)
-                _, interaction = self.game(*batch)
+                optimized_loss, interaction = self.game(*batch)
                 if (
                         self.distributed_context.is_distributed
                         and self.aggregate_interaction_logs
@@ -209,18 +211,20 @@ class Trainer:
                         interaction
                     )
                 interaction = interaction.to("cpu")
+                mean_loss += optimized_loss.detach()
+                for callback in self.callbacks:
+                    callback.on_batch_end(interaction, optimized_loss, n_batches)
 
                 interactions.append(interaction)
                 n_batches += 1
 
         full_interaction = Interaction.from_iterable(interactions)
+        mean_loss /= n_batches
 
-        return full_interaction
+        return mean_loss.item(), full_interaction
 
     def train_epoch(self):
-        mean_loss = 0
         n_batches = 0
-        interactions = []
         batches = []
 
         self.game.train()
@@ -233,7 +237,7 @@ class Trainer:
 
             context = autocast() if self.scaler else nullcontext()
             with context:
-                optimized_loss, interaction = self.game(*batch)
+                optimized_loss, _ = self.game(*batch)
 
                 if self.update_freq > 1:
                     # throughout EGG, we minimize _mean_ loss, not sum
@@ -262,25 +266,11 @@ class Trainer:
                 self.optimizer.zero_grad()
 
             n_batches += 1
-            mean_loss += optimized_loss.detach()
-            if (
-                    self.distributed_context.is_distributed
-                    and self.aggregate_interaction_logs
-            ):
-                interaction = Interaction.gather_distributed_interactions(interaction)
-            interaction = interaction.to("cpu")
-
-            for callback in self.callbacks:
-                callback.on_batch_end(interaction, optimized_loss, batch_id)
-
-            interactions.append(interaction)
 
         if self.optimizer_scheduler:
             self.optimizer_scheduler.step()
 
-        mean_loss /= n_batches
-        full_interaction = Interaction.from_iterable(interactions)
-        return mean_loss.item(), full_interaction, batches
+        return batches
 
     def train(self, n_epochs):
         for callback in self.callbacks:
@@ -290,8 +280,8 @@ class Trainer:
             for callback in self.callbacks:
                 callback.on_epoch_begin(epoch + 1)  # noqa: E226
 
-            train_loss, _, batches = self.train_epoch()
-            train_interaction = self.train_eval(batches)
+            batches = self.train_epoch()
+            train_loss, train_interaction = self.train_eval(batches)
             del batches
 
             for callback in self.callbacks:
