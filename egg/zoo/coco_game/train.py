@@ -113,7 +113,7 @@ def main(params=None):
         clbs = [
             ProgressBarLogger(
                 n_epochs=opts.n_epochs,
-                train_data_len=len(train_data),
+                train_data_len=len(train_data)*2,
                 val_data_len=len(val_data),
                 use_info_table=False,
             ),
