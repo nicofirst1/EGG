@@ -152,7 +152,7 @@ if __name__ == "__main__":
     nest_path = path_parser()
     csv_name = nest_path.joinpath(f"results_{nest_path.stem}.csv")
 
-    ids = parse_results(nest_path, tag="accuracy_receiver")
+    ids = parse_results(nest_path, tag="accuracy")
     configs = config_check([x["configs"] for x in ids])
 
     for idx in range(len(configs)):
