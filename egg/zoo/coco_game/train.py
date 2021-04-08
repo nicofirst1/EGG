@@ -11,7 +11,7 @@ from egg.core import (
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy
+from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy, InteractionCSV
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import final_loss
 from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data, split_dataset
@@ -107,6 +107,7 @@ def main(params=None):
     callbacks = [
         CustomEarlyStopperAccuracy(min_threshold=0.6, min_increase=0.01, field_name="accuracy"),
         ConsoleLogger(print_train_loss=True, as_json=True),
+        InteractionCSV(opts.tensorboard_dir, val_data),
     ]
 
     if opts.use_progress_bar:
