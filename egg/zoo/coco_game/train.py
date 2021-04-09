@@ -6,12 +6,12 @@ from egg.core.early_stopping import EarlyStopper, EarlyStopperAccuracy
 from egg import core
 from egg.core import (
     LoggingStrategy,
-    ProgressBarLogger, ConsoleLogger,
+    ProgressBarLogger, ConsoleLogger, CheckpointSaver,
 )
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy, InteractionCSV
+from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy, InteractionCSV, SyncLogging
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import final_loss
 from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data, split_dataset
@@ -56,11 +56,11 @@ def get_game(opts):
     ######################################
     #   Game wrapper
     ######################################
-    # train_log = SyncLogging(logging_step=opts.train_logging_step)
-    # val_log = SyncLogging(logging_step=opts.val_logging_step)
+    train_log = SyncLogging(logging_step=opts.train_logging_step)
+    val_log = SyncLogging(logging_step=opts.val_logging_step)
 
-    train_log = LoggingStrategy().minimal()
-    val_log = LoggingStrategy().minimal()
+    # train_log = LoggingStrategy().minimal()
+    # val_log = LoggingStrategy().minimal()
 
     game = core.SenderReceiverRnnReinforce(
         sender,
@@ -107,7 +107,8 @@ def main(params=None):
     callbacks = [
         CustomEarlyStopperAccuracy(min_threshold=0.6, min_increase=0.01, field_name="accuracy"),
         ConsoleLogger(print_train_loss=True, as_json=True),
-        InteractionCSV(opts.tensorboard_dir, val_data),
+        CheckpointSaver(checkpoint_path=opts.checkpoint_dir, max_checkpoints=3, prefix="checkpoint"),
+        #InteractionCSV(opts.tensorboard_dir, val_data.dataset.coco),
     ]
 
     if opts.use_progress_bar:

@@ -95,8 +95,11 @@ def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
                 total += len(v2)
                 total_perc += sum(v2.values())
 
-        ar_res[k] /= total
-        ar_perc_res[k] /= total_perc
+        try:
+            ar_res[k] /= total
+            ar_perc_res[k] /= total_perc
+        except ZeroDivisionError:
+            pass
 
     return ar_res, ar_perc_res
 

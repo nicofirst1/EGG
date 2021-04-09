@@ -176,7 +176,7 @@ if __name__ == "__main__":
     analysis = Analysis(interaction_path, out_dir)
     analysis.update_analysis()
     analysis.update_infos()
-    # analysis.plot_cm()
-    # analysis.plot_infos()
+    analysis.plot_cm()
+    analysis.plot_infos()
     analysis.plot_language_tensor()
     a = 1

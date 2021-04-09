@@ -20,16 +20,15 @@ class LoggingStrategy:
     store_message_length: bool = True
 
     def filtered_interaction(
-        self,
-        sender_input: Optional[torch.Tensor],
-        receiver_input: Optional[torch.Tensor],
-        labels: Optional[torch.Tensor],
-        message: Optional[torch.Tensor],
-        receiver_output: Optional[torch.Tensor],
-        message_length: Optional[torch.Tensor],
-        aux: Dict[str, torch.Tensor],
+            self,
+            sender_input: Optional[torch.Tensor],
+            receiver_input: Optional[torch.Tensor],
+            labels: Optional[torch.Tensor],
+            message: Optional[torch.Tensor],
+            receiver_output: Optional[torch.Tensor],
+            message_length: Optional[torch.Tensor],
+            aux: Dict[str, torch.Tensor],
     ):
-
         return Interaction(
             sender_input=sender_input if self.store_sender_input else None,
             receiver_input=receiver_input if self.store_receiver_input else None,
@@ -124,11 +123,8 @@ class Interaction:
             if all(x is None for x in lst):
                 return None
             # if some but not all are None: not good
-            if any(x is None for x in lst):
-                raise RuntimeError(
-                    "Appending empty and non-empty interactions logs. "
-                    "Normally this shouldn't happen!"
-                )
+            lst = [x for x in lst if x is not None]
+           
             return torch.cat(lst, dim=0)
 
         assert interactions, "list must not be empty"

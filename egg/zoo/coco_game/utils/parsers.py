@@ -62,14 +62,14 @@ def logs_parser(parser):
     parser.add_argument(
         "--train_logging_step",
         type=int,
-        default=10,
+        default=20,
         help="Number of steps (in batches) before logging during training ",
     )
 
     parser.add_argument(
         "--val_logging_step",
         type=int,
-        default=1,
+        default=2,
         help="Number of steps (in batches) before logging during validation",
     )
 
@@ -267,6 +267,7 @@ def parse_arguments(params=None):
     if opt.sender_receiver_hidden is not None:
         opt.sender_hidden = opt.sender_receiver_hidden
         opt.receiver_hidden = opt.sender_receiver_hidden
+
 
     console.log(sorted(vars(opt).items()))
 

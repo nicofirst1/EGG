@@ -1,12 +1,11 @@
 import argparse
 import json
-import os
 import re
 from copy import copy
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import torch
 from rich.console import Console
@@ -73,8 +72,6 @@ def get_labels(labels: torch.Tensor) -> Dict[str, torch.Tensor]:
     return res
 
 
-
-
 def str2bool(v):
     if isinstance(v, bool):
         return v
@@ -111,3 +108,5 @@ def define_project_dir(opts):
     opts.tensorboard_dir = join(opts.log_dir_uid, opts.tensorboard_dir)
     console.log(f"New experiment with uuid: '{opts.log_dir_uid}' created ")
 
+    if opts.checkpoint_dir is not None:
+        opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
