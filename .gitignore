@@ -116,3 +116,5 @@ egg/zoo/coco_game/pretrain/*Logs/
 
 egg/zoo/coco_game/pretrain/*Logs/
 *.json
+
+*.tar

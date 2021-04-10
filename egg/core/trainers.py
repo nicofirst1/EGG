@@ -326,7 +326,7 @@ class Trainer:
     def load(self, checkpoint: Checkpoint):
         self.game.load_state_dict(checkpoint.model_state_dict)
         self.optimizer.load_state_dict(checkpoint.optimizer_state_dict)
-        if checkpoint.optimizer_scheduler_state_dict:
+        if checkpoint.optimizer_scheduler_state_dict and self.optimizer_scheduler is not None:
             self.optimizer_scheduler.load_state_dict(checkpoint.optimizer_scheduler_state_dict)
         self.start_epoch = checkpoint.epoch
 

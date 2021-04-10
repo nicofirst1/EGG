@@ -34,8 +34,7 @@ def main(params=None):
         validation_data=None,
     )
 
-    if opts.checkpoint_dir is not None:
-        trainer.load_from_latest(Path(opts.checkpoint_dir))
+    trainer.load_from_latest(Path("/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/train/check"))
 
     loss, logs = trainer.train_eval()
     interaction_saver.on_test_end(loss, logs, 0)
