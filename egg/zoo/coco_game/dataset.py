@@ -255,7 +255,7 @@ def get_data(
     coco_train = DataLoader(
         coco_train,
         shuffle=True,
-        drop_last=True,
+        drop_last=False,
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
@@ -264,7 +264,7 @@ def get_data(
     coco_val = DataLoader(
         coco_val,
         shuffle=True,
-        drop_last=True,
+        drop_last=False,
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
         collate_fn=collate,
