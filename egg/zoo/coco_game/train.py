@@ -81,22 +81,6 @@ def main(params=None):
 
     train_data, val_data = get_data(opts)
 
-    if opts.use_dummy_val:
-        console.log("Using Dummy dataset as validation")
-        dummy = get_dummy_data(len(val_data.dataset), opts)
-        val_data = dummy
-    elif opts.use_train_val:
-        console.log("Using train dataset as validation")
-        val_data = train_data
-    elif opts.use_train_split:
-        console.log("Use train split as validation")
-        train_data, val_data = split_dataset(train_data)
-    elif opts.use_invert_data:
-        console.log("Using train as val and val as train")
-        d = train_data
-        train_data = val_data
-        val_data = d
-
     game = get_game(opts)
 
     optimizer = core.build_optimizer(game.parameters())
@@ -108,7 +92,6 @@ def main(params=None):
         CustomEarlyStopperAccuracy(min_threshold=0.6, min_increase=0.01, field_name="accuracy"),
         ConsoleLogger(print_train_loss=True, as_json=True),
         CheckpointSaver(checkpoint_path=opts.checkpoint_dir, max_checkpoints=3, prefix="checkpoint"),
-        #InteractionCSV(opts.tensorboard_dir, val_data.dataset.coco),
     ]
 
     if opts.use_progress_bar:

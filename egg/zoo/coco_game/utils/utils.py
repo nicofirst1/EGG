@@ -110,3 +110,5 @@ def define_project_dir(opts):
 
     if opts.checkpoint_dir is not None:
         opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
+
+

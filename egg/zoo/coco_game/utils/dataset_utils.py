@@ -306,3 +306,23 @@ def split_dataset(dataset: DataLoader):
     train, val = torch.utils.data.random_split(dataset, [train_len, val_len])
 
     return train.dataset, val.dataset
+
+
+def get_data_degub(opts, train_data, val_data):
+    if opts.use_dummy_val:
+        console.log("Using Dummy dataset as validation")
+        dummy = get_dummy_data(len(val_data.dataset), opts)
+        val_data = dummy
+    elif opts.use_train_val:
+        console.log("Using train dataset as validation")
+        val_data = train_data
+    elif opts.use_train_split:
+        console.log("Use train split as validation")
+        train_data, val_data = split_dataset(train_data)
+    elif opts.use_invert_data:
+        console.log("Using train as val and val as train")
+        d = train_data
+        train_data = val_data
+        val_data = d
+
+    return train_data, val_data
