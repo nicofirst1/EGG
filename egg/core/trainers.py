@@ -16,6 +16,7 @@ except ImportError:
 
 import torch
 from torch.utils.data import DataLoader
+import gc
 
 from .callbacks import (
     Callback,
@@ -283,6 +284,8 @@ class Trainer:
             # save random state and restore for train eval
             state = self.train_data.dataset.random_state.get_state()
             self.train_epoch()
+            gc.collect()
+            torch.cuda.empty_cache()
             self.train_data.dataset.random_state.set_state(state)
             train_loss, train_interaction = self.train_eval()
 
