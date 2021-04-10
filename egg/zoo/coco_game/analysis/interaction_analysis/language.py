@@ -84,23 +84,22 @@ def language_tensor(lang_sequence_cooc):
 def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
     ar_res = {}
     ar_perc_res = {}
-    for k, v in lang_sequence_cooc.items():
+    for trg, v in lang_sequence_cooc.items():
         total = 0
         total_perc = 0
-        ar_res[k] = 0
-        ar_perc_res[k] = 0
+        ar_res[trg] = 0
+        ar_perc_res[trg] = 0
 
-        for k2, v2 in v.items():
-            if k2 == k:
-                ar_res[k] += len(v2)
-                ar_perc_res[k] += sum(v2.values())
-            else:
-                total += len(v2)
-                total_perc += sum(v2.values())
+        for dstr, v2 in v.items():
+            if dstr == trg:
+                ar_res[trg] += len(v2)
+                ar_perc_res[trg] += sum(v2.values())
+            total += len(v2)
+            total_perc += sum(v2.values())
 
         try:
-            ar_res[k] /= total
-            ar_perc_res[k] /= total_perc
+            ar_res[trg] /= total
+            ar_perc_res[trg] /= total_perc
         except ZeroDivisionError:
             pass
 

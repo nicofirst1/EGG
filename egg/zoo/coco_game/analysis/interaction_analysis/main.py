@@ -69,12 +69,26 @@ class Analysis:
         self.acc_class_cooc = analysis["acc_class_cooc"]
 
         self.cm_path = out_dir.joinpath("ConfusionMatrix")
-        self.infos_path = out_dir.joinpath("Infos")
+        self.correlations_path = out_dir.joinpath("Correlations")
         self.language_tensor_path = out_dir.joinpath("LanguageTensor")
 
         self.cm_path.mkdir(parents=True, exist_ok=True)
-        self.infos_path.mkdir(parents=True, exist_ok=True)
+        self.correlations_path.mkdir(parents=True, exist_ok=True)
         self.language_tensor_path.mkdir(parents=True, exist_ok=True)
+
+        self.add_readme()
+
+    def add_readme(self):
+
+        readme_path = self.correlations_path.joinpath("README.md")
+        explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
+
+        with open(readme_path, "w+") as f:
+            f.write("This file contains the correlation indices between any pair of implemented metric\n"
+                    "Each figure reports a number of plots sorted by the corrleation value\n"
+                    "Please find below the meaning of each metric:\n")
+
+            f.writelines(explenations)
 
     def update_analysis(self):
         to_add = self.acc_class_infos.loc[ARt, :].corr(
@@ -132,12 +146,14 @@ class Analysis:
             to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path
         )
 
-    def plot_infos(self):
+    def plot_correlations(self):
 
         info_len = len(self.acc_class_infos)
-        to_plot = []
-        for idx in track(range(info_len - 1),"Plotting infos..." ):
-            for jdx in range(idx + 1, info_len):
+        for idx in track(range(info_len), "Plotting Correlations..."):
+            metric = self.acc_class_infos.index[idx]
+            to_plot = []
+
+            for jdx in range(info_len):
                 row_i = self.acc_class_infos.iloc[idx]
                 row_j = self.acc_class_infos.iloc[jdx]
 
@@ -162,7 +178,10 @@ class Analysis:
 
                 to_plot.append((name_i, name_j, row_i, row_j, corr))
 
-        plot_multi_scatter(to_plot, save_dir=self.infos_path, show=False)
+            to_plot = sorted(to_plot, key=lambda tup: tup[-1], reverse=True)
+            path = self.correlations_path.joinpath(metric)
+            path.mkdir(exist_ok=True)
+            plot_multi_scatter(to_plot, save_dir=path, show=False)
 
     def plot_language_tensor(self):
         for k, df in track(self.lang_tensor.items(), "Plotting language tensor..."):
@@ -180,6 +199,6 @@ if __name__ == "__main__":
     analysis.update_analysis()
     analysis.update_infos()
     analysis.plot_cm()
-    analysis.plot_infos()
+    analysis.plot_correlations()
     analysis.plot_language_tensor()
     a = 1

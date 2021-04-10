@@ -20,13 +20,12 @@ def plot_confusion_matrix(
         x_scaled = min_max_scaler.fit_transform(x)
         df = pd.DataFrame(x_scaled, index=df.index, columns=df.columns)
 
-    annot=x if df.shape[0]*df.shape[1]<100 else False
+    annot = x if df.shape[0] * df.shape[1] < 100 else False
     sn.heatmap(df, annot=annot, fmt=".2f")
 
     fig.suptitle(title, fontsize=15)
     ax.tick_params(axis="x", labelrotation=90, labelsize=5)
     ax.tick_params(axis="y", labelrotation=0, labelsize=5)
-    # fig.autofmt_xdate()
     plt.savefig(save_dir.joinpath(f"{title}.jpg"))
 
     if show:
@@ -62,7 +61,7 @@ def plot_confusion_matrix2(
 
 
 def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
-    figures = len(plot_list) // max_plot_figure
+    figures = len(plot_list) // max_plot_figure + 1
     square_len = max_plot_figure // 2
     idx = 0
     for _ in range(figures):
@@ -70,6 +69,9 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
 
         for jdx in range(square_len):
             for kdx in range(square_len):
+
+                if idx >= len(plot_list): continue
+
                 to_plot = plot_list[idx]
                 n1, n2, p1, p2, corr = to_plot
 
