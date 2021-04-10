@@ -23,7 +23,7 @@ def get_infos(lines: list, max_len) -> Dict:
     classes = []
 
     for l in lines:
-        data=split_line(l)
+        data = split_line(l)
         message = data['message']
         true_class = data['target']
         distract = data['distractor']
@@ -75,10 +75,23 @@ def language_tensor(lang_sequence_cooc):
             for seq_k, seq_v in seqs.items():
                 df[dist_k][seq_k] += seq_v
 
-        df/= df.sum().sum()
+        df /= df.sum().sum()
         tensor[true_c] = df
 
     return tensor
+
+
+def class_richness(lang_sequence_cooc: Dict) -> Dict:
+    richness = {}
+    total = 0
+    for trg, v in lang_sequence_cooc.items():
+        total_class = sum([len(v2) for v2 in v.values()])
+        richness[trg] = total_class
+
+        total += total_class
+
+    richness = {k: v / total for k, v in richness.items()}
+    return richness
 
 
 def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
@@ -119,7 +132,7 @@ def target_distractor_language_coccurence(lines, symbols, sequences, classes, ma
     sequence_cooc_tensor = {k: {} for k in classes}
 
     for l in track(lines, description="Computing language analysis..."):
-        data= split_line(l)
+        data = split_line(l)
         message = data['message']
         true_class = data['target']
         distract = data['distractor']

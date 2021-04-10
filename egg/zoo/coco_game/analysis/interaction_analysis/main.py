@@ -9,11 +9,11 @@ from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.language import (
     ambiguity_richness,
-    language_analysis,
+    language_analysis, class_richness,
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix,
-    plot_multi_scatter, plot_histogram,
+    plot_multi_scatter, plot_histogram, sort_dataframe,
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
 
@@ -73,7 +73,7 @@ class Analysis:
         self.acc_analysis = analysis["acc_analysis"]
         self.acc_class_cooc = analysis["acc_class_cooc"]
 
-        self.out_dir=out_dir
+        self.out_dir = out_dir
         self.cm_path = out_dir.joinpath("ClassesOccurences")
         self.correlations_path = out_dir.joinpath("Correlations")
         self.language_tensor_path = out_dir.joinpath("LanguageTensor")
@@ -104,7 +104,6 @@ class Analysis:
 
         readme_path = self.correlations_path.joinpath("README.md")
 
-
         with open(readme_path, "w+") as f:
             f.write("This folder contains the correlation indices between any pair of implemented metric\n"
                     "Each figure reports a number of plots sorted by the corrleation value\n"
@@ -120,6 +119,7 @@ class Analysis:
                     "- *ClassCoOccurence* : a cell ij reports the number a class i appears together with a class j \n"
                     "- *Class-Symbol CoOccurence*: a cell ij reports the number a symbol i appears together with a class j \n"
                     "- *Class-Sequence CoOccurence*: a cell ij reports the number a sequence i appears together with a class j \n"
+                    "Moreover the two weighted figures are presented for the last two dataframes. The weightening is done based on the frequency of the class, i.e. the more frequent the less important.\n"
                     )
 
         readme_path = self.language_tensor_path.joinpath("README.md")
@@ -129,6 +129,7 @@ class Analysis:
                 "The data shown inside is a matrix where the rows are a number of classes which appear as distractors with the current target class.\n"
                 "The columns are the sequences appearing with that target.\n"
                 "A cell in position ij (row-col) reports the times the sequence i is used with the distractor j, normalize by the total number of sequences for the target class.\n"
+                "The image is sorted so to have the classes with the most sequences to the left\n"
 
             )
 
@@ -139,7 +140,6 @@ class Analysis:
                 "You can find a file called *infos* which maps all the classes to various metrics (see below).\n"
                 "Moreover each metric is plotted for all the classes (between the 95% and 5% percentile) in the *Histograms* folder\n\n"
 
-
             )
             f.writelines(explenations)
 
@@ -148,7 +148,7 @@ class Analysis:
             self.lang_symbols[CR]
         )
         self.acc_analysis = add_row(
-            to_add, f"Correlation {ARt}-{SyCR}", self.acc_analysis
+            float(to_add), f"Correlation {ARt}-{SyCR}", self.acc_analysis
         )
 
         to_add = self.acc_class_infos.loc[Frq, :].corr(
@@ -182,6 +182,11 @@ class Analysis:
             to_add2, f"{ARc}_perc", self.acc_class_infos
         )
 
+        to_add = class_richness(self.lang_sequence_cooc)
+        self.acc_class_infos = add_row(
+            to_add, CR, self.acc_class_infos
+        )
+
     def plot_cm(self):
         plot_confusion_matrix(
             self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path, show=False
@@ -189,14 +194,37 @@ class Analysis:
 
         to_plot = self.lang_symbols.drop(Frq)
         to_plot = to_plot.drop(CR, axis=1)
+        to_plot = sort_dataframe(to_plot, True)
+
         plot_confusion_matrix(
             to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path, show=False
         )
 
         to_plot = self.lang_sequence.drop(Frq)
         to_plot = to_plot.drop(CR, axis=1)
+        to_plot = sort_dataframe(to_plot, True)
         plot_confusion_matrix(
             to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path, show=False
+        )
+
+        class_freq = self.acc_class_infos.loc[Frq]
+
+        to_plot = self.lang_symbols.drop(Frq)
+        to_plot = to_plot.drop(CR, axis=1)
+        to_plot = to_plot.multiply(1 - class_freq, axis=0)
+        to_plot = sort_dataframe(to_plot, True)
+
+        plot_confusion_matrix(
+            to_plot, "Class-Symbol CoOccurence Weighted", save_dir=self.cm_path, show=False
+        )
+
+        to_plot = self.lang_sequence.drop(Frq)
+        to_plot = to_plot.drop(CR, axis=1)
+        to_plot = to_plot.multiply(1 - class_freq, axis=0)
+        to_plot = sort_dataframe(to_plot, True)
+
+        plot_confusion_matrix(
+            to_plot, "Class-Sequence CoOccurence Weighted", save_dir=self.cm_path, show=False
         )
 
     def plot_correlations(self):
@@ -240,26 +268,28 @@ class Analysis:
         for k, df in track(self.lang_tensor.items(), "Plotting language tensor..."):
 
             if len(df) > 0:
+                df = sort_dataframe(df, False)
+
                 plot_confusion_matrix(
                     df, k, self.language_tensor_path, use_scaler=False, show=False
                 )
 
     def add_class_infos(self):
 
-        csv_path=self.class_infos_path.joinpath("infos")
+        csv_path = self.class_infos_path.joinpath("infos.csv")
         self.acc_class_infos.to_csv(csv_path)
 
-        images_path=self.class_infos_path.joinpath("Histograms")
+        images_path = self.class_infos_path.joinpath("Histograms")
         images_path.mkdir(exist_ok=True)
 
-
-        for idx in track(range(len(self.acc_class_infos)),"Plotting Class infos"):
-            metric=self.acc_class_infos.index[idx]
-            data= self.acc_class_infos.iloc[idx]
+        for idx in track(range(len(self.acc_class_infos)), "Plotting Class infos"):
+            metric = self.acc_class_infos.index[idx]
+            data = self.acc_class_infos.iloc[idx]
             quant = data.between(data.quantile(0.05), data.quantile(0.95))
-            data= data[quant]
+            data = data[quant]
 
-            plot_histogram(data,metric,images_path, show=False)
+            plot_histogram(data, metric, images_path, show=False)
+
 
 if __name__ == "__main__":
     interaction_path, out_dir = path_parser()
@@ -267,8 +297,8 @@ if __name__ == "__main__":
     analysis = Analysis(interaction_path, out_dir)
     analysis.update_analysis()
     analysis.update_infos()
-    # analysis.plot_cm()
+    analysis.plot_cm()
     # analysis.plot_correlations()
     # analysis.plot_language_tensor()
-    analysis.add_class_infos()
+    # analysis.add_class_infos()
     a = 1

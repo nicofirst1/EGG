@@ -8,7 +8,7 @@ Crr = "correct"
 Acc = "accuracy"
 Frq = "frequency"
 
-OCL = "other_classes_len"
+OCL = "other_classes_num"
 TF = "target_freq"
 
 PSC = "precision_sc"
@@ -17,10 +17,10 @@ ARt = "ambiguity_rate"
 ARc = "ambiguity_richness"
 CR = "class_richness"
 
-Sy = "Symbol"
-Se = "Sequence"
-SyCR = f"{Sy}{CR}"
-SeCR = f"{Se}{CR}"
+Sy = "symbol"
+Se = "sequence"
+SyCR = f"{Sy}_{CR}"
+SeCR = f"{Se}_{CR}"
 
 EXPLENATIONS = {
     CTED: "Number of correct predictions when the target and the distractor belong to the same class",

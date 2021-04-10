@@ -15,7 +15,6 @@ columns_of_interests = [
     "test_accuracy_receiver",
 ]
 
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
@@ -38,7 +37,6 @@ if p.out_file_path == "":
 
 out_path = pathlib.Path(p.out_file_path)
 out_path = out_path.joinpath(f"{csv_path.stem}_filtered.csv")
-
 
 columns_of_interests = set(columns_of_interests)
 df = pd.read_csv(csv_path, index_col=0)

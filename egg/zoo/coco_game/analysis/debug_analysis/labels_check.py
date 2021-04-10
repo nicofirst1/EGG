@@ -23,15 +23,15 @@ def check_no_intersection(train, test):
 
 
 def check_sequence(seq):
-
-    seq=list(seq)
+    seq = list(seq)
     guess = 1
     max_len = len(seq) // 2
     for x in range(2, max_len):
         if seq[0:x] == seq[x:2 * x]:
             return x
 
-    assert guess==1
+    assert guess == 1
+
 
 def check_same_cats(train, test):
     train_data = list(train['cat_true']) + list(train['cat_false'])
@@ -42,8 +42,8 @@ def check_same_cats(train, test):
 
     assert train_data == test_data
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     train_file = "../../data_debug_train.csv"
     test_file = "../../data_debug_test.csv"
 
@@ -60,4 +60,4 @@ if __name__ == '__main__':
     check_sequence(test['image_id'])
 
     print("Everything ok")
-    a=12
+    a = 12

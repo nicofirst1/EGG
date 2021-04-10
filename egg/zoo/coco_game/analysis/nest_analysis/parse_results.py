@@ -7,6 +7,7 @@ import pandas as pd
 # prov_lines = prov_lines.split("\n")
 from egg.zoo.coco_game.analysis.nest_analysis.nest_utils import path_parser
 
+
 # prov_lines = """
 # {"loss": 0.6343242526054382, "f_loss": 0.3030605614185333, "x_loss": 0.7756949663162231, "kl_loss": 2.823378086090088, "accuracy_receiver": 0.5036764740943909, "accuracy_sender": 0.1875, "custom_loss": 0.7756949663162231, "sender_entropy": 0.15114206075668335, "receiver_entropy": 0.0, "length": 3.808823585510254, "policy_loss": -0.28811606764793396, "weighted_entropy": 0.015770524740219116, "mode": "train", "epoch": 1}
 # {"loss": 0.7026403546333313, "f_loss": 0.18539749085903168, "x_loss": 0.7048177123069763, "kl_loss": 2.6629514694213867, "accuracy_receiver": 0.46875, "accuracy_sender": 0.3333333432674408, "custom_loss": 0.7048177123069763, "sender_entropy": 1.240893103332183e-13, "receiver_entropy": 0.0, "length": 4.0, "policy_loss": 0.0, "weighted_entropy": 1.240893103332183e-14, "mode": "test", "epoch": 1}
