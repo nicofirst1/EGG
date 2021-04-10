@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+from rich.progress import track
 
 from egg import core
 from egg.zoo.coco_game.custom_callbacks import InteractionCSV
@@ -21,7 +22,7 @@ def main(params=None):
 
     _, test_data = get_data(opts)
 
-    game = get_game(opts)
+    game = get_game(opts, is_test=True)
 
     optimizer = core.build_optimizer(game.parameters())
 
@@ -36,8 +37,9 @@ def main(params=None):
 
     trainer.load_from_latest(Path("/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/train/check"))
 
-    loss, logs = trainer.train_eval()
-    interaction_saver.on_test_end(loss, logs, 0)
+    for _ in track(range(3), "Testing..."):
+        loss, logs = trainer.train_eval()
+        interaction_saver.on_test_end(loss, logs, 0)
     console.log("Test is over")
 
 

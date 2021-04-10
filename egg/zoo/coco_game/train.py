@@ -23,7 +23,7 @@ from egg.zoo.coco_game.utils.utils import (
 )
 
 
-def get_game(opts):
+def get_game(opts, is_test=False):
     ######################################
     #   Sender receiver modules
     ######################################
@@ -56,11 +56,12 @@ def get_game(opts):
     ######################################
     #   Game wrapper
     ######################################
-    # train_log = SyncLogging(logging_step=opts.train_logging_step)
-    # val_log = SyncLogging(logging_step=opts.val_logging_step)
-
-    train_log = LoggingStrategy().minimal()
-    val_log = LoggingStrategy().minimal()
+    if is_test:
+        train_log = SyncLogging(logging_step=opts.train_logging_step)
+        val_log = SyncLogging(logging_step=opts.val_logging_step)
+    else:
+        train_log = LoggingStrategy().minimal()
+        val_log = LoggingStrategy().minimal()
 
     game = core.SenderReceiverRnnReinforce(
         sender,
