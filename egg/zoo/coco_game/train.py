@@ -56,11 +56,11 @@ def get_game(opts):
     ######################################
     #   Game wrapper
     ######################################
-    train_log = SyncLogging(logging_step=opts.train_logging_step)
-    val_log = SyncLogging(logging_step=opts.val_logging_step)
+    # train_log = SyncLogging(logging_step=opts.train_logging_step)
+    # val_log = SyncLogging(logging_step=opts.val_logging_step)
 
-    # train_log = LoggingStrategy().minimal()
-    # val_log = LoggingStrategy().minimal()
+    train_log = LoggingStrategy().minimal()
+    val_log = LoggingStrategy().minimal()
 
     game = core.SenderReceiverRnnReinforce(
         sender,
