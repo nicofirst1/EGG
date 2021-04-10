@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.language import (
     ambiguity_richness,
     language_analysis,
-    language_tensor,
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix,
@@ -76,42 +76,42 @@ class Analysis:
         self.language_tensor_path.mkdir(parents=True, exist_ok=True)
 
     def update_analysis(self):
-        to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
-            self.lang_symbols["class_richness"]
+        to_add = self.acc_class_infos.loc[ARt, :].corr(
+            self.lang_symbols[CR]
         )
         self.acc_analysis = add_row(
-            to_add, "Correlation AmbiguityRate-SymbolClassRichness", self.acc_analysis
+            to_add, f"Correlation {ARt}-{SyCR}", self.acc_analysis
         )
 
-        to_add = self.acc_class_infos.loc["frequency", :].corr(
-            self.lang_symbols["class_richness"]
+        to_add = self.acc_class_infos.loc[Frq, :].corr(
+            self.lang_symbols[CR]
         )
         self.acc_analysis = add_row(
-            to_add, "Correlation Frequency-SymbolClassRichness", self.acc_analysis
+            to_add, f"Correlation {Frq}-{SyCR}", self.acc_analysis
         )
 
-        to_add = self.acc_class_infos.loc["ambiguity_rate", :].corr(
-            self.lang_sequence["class_richness"]
+        to_add = self.acc_class_infos.loc[ARt, :].corr(
+            self.lang_sequence[CR]
         )
         self.acc_analysis = add_row(
-            to_add, "Correlation AmbiguityRate-SeqClassRichness", self.acc_analysis
+            to_add, f"Correlation {ARt}-{SeCR}", self.acc_analysis
         )
 
-        to_add = self.acc_class_infos.loc["frequency", :].corr(
-            self.lang_sequence["class_richness"]
+        to_add = self.acc_class_infos.loc[Frq, :].corr(
+            self.lang_sequence[CR]
         )
         self.acc_analysis = add_row(
-            to_add, "Correlation Frequency-SeqClassRichness", self.acc_analysis
+            to_add, f"Correlation {Frq}-{SeCR}", self.acc_analysis
         )
 
     def update_infos(self):
         to_add, to_add2 = ambiguity_richness(self.lang_sequence_cooc)
         self.acc_class_infos = add_row(
-            to_add, "ambiguity_richness", self.acc_class_infos
+            to_add, ARc, self.acc_class_infos
         )
 
         self.acc_class_infos = add_row(
-            to_add2, "ambiguity_richness_perc", self.acc_class_infos
+            to_add2, f"{ARc}_perc", self.acc_class_infos
         )
 
     def plot_cm(self):
@@ -119,14 +119,14 @@ class Analysis:
             self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path
         )
 
-        to_plot = self.lang_symbols.drop("frequency")
-        to_plot = to_plot.drop("class_richness", axis=1)
+        to_plot = self.lang_symbols.drop(Frq)
+        to_plot = to_plot.drop(CR, axis=1)
         plot_confusion_matrix(
             to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path
         )
 
-        to_plot = self.lang_sequence.drop("frequency")
-        to_plot = to_plot.drop("class_richness", axis=1)
+        to_plot = self.lang_sequence.drop(Frq)
+        to_plot = to_plot.drop(CR, axis=1)
         plot_confusion_matrix(
             to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path
         )

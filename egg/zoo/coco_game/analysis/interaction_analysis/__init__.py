@@ -1,0 +1,22 @@
+CTED = "correct_tartget==distr"
+WTED = "wrong_tartget==distr"
+Tot = "total"
+Crr = "correct"
+Acc = "accuracy"
+Frq = "frequency"
+CTND = "correct_tartget!=distr"
+WTND = "wrong_tartget!=distr"
+
+OCL = "other_classes_len"
+TF = "target_freq"
+
+PSC = "precision_sc"
+POC = "precision_oc"
+ARt = "ambiguity_rate"
+ARc = "ambiguity_richness"
+CR = "class_richness"
+
+Sy = "Symbol"
+Se = "Sequence"
+SyCR = f"{Sy}{CR}"
+SeCR = f"{Se}{CR}"

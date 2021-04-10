@@ -3,6 +3,7 @@ from typing import Dict
 
 import pandas as pd
 
+from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import (
     add_row,
     console,
@@ -13,20 +14,22 @@ from egg.zoo.coco_game.analysis.interaction_analysis.utils import (
 def get_infos(lines: list) -> Dict:
     """
     Estimate the per class accuracy based on the sample found in the interactions.csv
+    The names follow this convension;
+    X_target Y distr: where X is correct orr wrong based on the prediction and Y is == or != if the target is the same as the distractor.
     """
     accuracy_dict = {}
 
     def empty_dict():
 
         return {
-            "total": 0,
-            "correct": 0,
-            "correct_tartget=distr": 0,
-            "wrong_target=distr": 0,
-            "correct_target!=distr": 0,
-            "wrong_target!=distr": 0,
-            "other_classes_len": 0,
-            "target_freq": 0,
+            Tot: 0,
+            Crr: 0,
+            CTED: 0,
+            WTED: 0,
+            CTND: 0,
+            WTND: 0,
+            OCL: 0,
+            TF: 0,
         }
 
     for l in lines:
@@ -43,50 +46,50 @@ def get_infos(lines: list) -> Dict:
         if distract not in accuracy_dict:
             accuracy_dict[distract] = empty_dict()
 
-        accuracy_dict[pred_class]["total"] += 1
-        accuracy_dict[pred_class]["other_classes_len"] += len(other_classes.split(";"))
+        accuracy_dict[pred_class][Tot] += 1
+        accuracy_dict[pred_class][OCL] += len(other_classes.split(";"))
 
-        accuracy_dict[pred_class]["target_freq"] += 1
+        accuracy_dict[pred_class][TF] += 1
 
         if eval(correct):
-            accuracy_dict[pred_class]["correct"] += 1
+            accuracy_dict[pred_class][Crr] += 1
 
             if distract == true_class:
-                accuracy_dict[pred_class]["correct_tartget=distr"] += 1
+                accuracy_dict[pred_class][CTED] += 1
             else:
-                accuracy_dict[pred_class]["correct_target!=distr"] += 1
+                accuracy_dict[pred_class][CTND] += 1
         else:
             if distract == true_class:
-                accuracy_dict[pred_class]["wrong_target=distr"] += 1
+                accuracy_dict[pred_class][WTED] += 1
             else:
-                accuracy_dict[pred_class]["wrong_target!=distr"] += 1
+                accuracy_dict[pred_class][WTND] += 1
 
     infos = pd.DataFrame.from_dict(accuracy_dict)
 
     # normalize number of other classes len
-    infos.loc["other_classes_len", :] = (
-        infos.loc["other_classes_len", :] / infos.loc["total", :]
+    infos.loc[OCL, :] = (
+            infos.loc[OCL, :] / infos.loc[Tot, :]
     )
 
-    to_add = infos.loc["correct", :] / infos.loc["total", :]
-    infos = add_row(to_add, "accuracy", infos)
+    to_add = infos.loc[Crr, :] / infos.loc[Tot, :]
+    infos = add_row(to_add, Acc, infos)
 
-    to_add = infos.loc["correct_tartget=distr", :] / (
-        infos.loc["wrong_target=distr", :] + infos.loc["correct_tartget=distr", :]
+    to_add = infos.loc[CTED, :] / (
+            infos.loc[WTED, :] + infos.loc[CTED, :]
     )
-    infos = add_row(to_add, "precision_sc", infos)
+    infos = add_row(to_add, PSC, infos)
 
-    to_add = infos.loc["correct_target!=distr", :] / (
-        infos.loc["wrong_target!=distr", :] + infos.loc["correct_target!=distr", :]
+    to_add = infos.loc[CTND, :] / (
+            infos.loc[WTND, :] + infos.loc[CTND, :]
     )
-    infos = add_row(to_add, "precision_oc", infos)
+    infos = add_row(to_add, POC, infos)
 
-    to_add = infos.loc["total", :] / sum(infos.loc["total", :])
+    to_add = infos.loc[Tot, :] / sum(infos.loc[Tot, :])
     infos = add_row(to_add, "frequency", infos)
 
-    to_add = infos.loc["correct_tartget=distr", :] + infos.loc["wrong_target=distr", :]
-    to_add /= infos.loc["total", :]
-    infos = add_row(to_add, "ambiguity_rate", infos)
+    to_add = infos.loc[CTED, :] + infos.loc[WTED, :]
+    to_add /= infos.loc[Tot, :]
+    infos = add_row(to_add, ARt, infos)
 
     infos = infos.fillna(0)
 
@@ -109,30 +112,29 @@ def coccurence(lines, classes):
 def analysis_df(infos):
     analysis = pd.DataFrame()
 
-    to_add = infos.loc["accuracy", :].sum() / infos.shape[1]
+    to_add = infos.loc[Acc, :].sum() / infos.shape[1]
     analysis = add_row(to_add, "Total Accuracy", analysis)
 
     to_add = (
-        infos.loc["precision_sc", :]
-        - infos.loc["precision_oc", :].sum() / infos.shape[1]
+            infos.loc[PSC, :] - infos.loc[POC, :].sum() / infos.shape[1]
     )
     to_add = to_add.mean()
     analysis = add_row(to_add, "Precision difference sc/oc", analysis)
 
-    to_add = infos.loc["accuracy", :].corr(infos.loc["frequency", :])
-    analysis = add_row(to_add, "Corr Accuracy-Frequency", analysis)
+    to_add = infos.loc[Acc, :].corr(infos.loc[Frq, :])
+    analysis = add_row(to_add, f"Corr {Acc}-{Frq}", analysis)
 
-    to_add = infos.loc["other_classes_len", :].corr(infos.loc["frequency", :])
-    analysis = add_row(to_add, "Corr OtherClassLen-Frequency", analysis)
+    to_add = infos.loc[OCL, :].corr(infos.loc[Frq, :])
+    analysis = add_row(to_add, f"Corr {OCL}-{Frq}", analysis)
 
-    to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["frequency", :])
-    analysis = add_row(to_add, "Corr AmbiguityRate-Frequency", analysis)
+    to_add = infos.loc[ARt, :].corr(infos.loc[Frq, :])
+    analysis = add_row(to_add, f"Corr {ARt}-{Frq}", analysis)
 
-    to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["accuracy", :])
-    analysis = add_row(to_add, "Corr AmbiguityRate-Accuracy", analysis)
+    to_add = infos.loc[ARt, :].corr(infos.loc[Acc, :])
+    analysis = add_row(to_add, f"Corr {ARt}-{Acc}", analysis)
 
-    to_add = infos.loc["ambiguity_rate", :].corr(infos.loc["other_classes_len", :])
-    analysis = add_row(to_add, "Corr AmbiguityRate-OtherClassLen", analysis)
+    to_add = infos.loc[ARt, :].corr(infos.loc[OCL, :])
+    analysis = add_row(to_add, f"Corr {ARt}-{OCL}", analysis)
 
     return analysis
 

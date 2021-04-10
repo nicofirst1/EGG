@@ -6,6 +6,7 @@ from typing import Dict
 import pandas as pd
 from rich.progress import track
 
+from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import console, path_parser
 
 
@@ -13,11 +14,11 @@ def get_infos(lines: list, max_len) -> Dict:
     """
     Estimate the per class accuracy based on the sample found in the interactions.csv
     """
-    infos = dict(
-        message_len=0,
-        symbols={},
-        sequences={},
-    )
+    infos = {
+        "message_len":0,
+        Sy:{},
+        Se:{},
+    }
 
     classes = []
 
@@ -36,23 +37,23 @@ def get_infos(lines: list, max_len) -> Dict:
 
         for m in message[:max_len]:
 
-            if m not in infos["symbols"].keys():
-                infos["symbols"][m] = 0
-            infos["symbols"][m] += 1
+            if m not in infos[Sy].keys():
+                infos[Sy][m] = 0
+            infos[Sy][m] += 1
 
         symbol_seq = "".join(message[:msg_len])
-        if symbol_seq not in infos["sequences"].keys():
-            infos["sequences"][symbol_seq] = 0
+        if symbol_seq not in infos[Se].keys():
+            infos[Se][symbol_seq] = 0
 
-        infos["sequences"][symbol_seq] += 1
+        infos[Se][symbol_seq] += 1
 
     lines_len = len(lines)
     infos["message_len"] /= lines_len
-    infos["sequences"] = {k: v / lines_len for k, v in infos["sequences"].items()}
+    infos[Se] = {k: v / lines_len for k, v in infos[Se].items()}
 
-    for k in infos["symbols"].keys():
-        infos["symbols"][k] /= lines_len
-        infos["symbols"][k] /= max_len
+    for k in infos[Sy].keys():
+        infos[Sy][k] /= lines_len
+        infos[Sy][k] /= max_len
 
     return infos, classes
 
@@ -154,8 +155,8 @@ def language_analysis(interaction_path, out_dir):
     max_len = len(max_len) - 1
 
     infos, classes = get_infos(lines, max_len)
-    symbols = infos["symbols"].keys()
-    sequences = infos["sequences"].keys()
+    symbols = infos[Sy].keys()
+    sequences = infos[Se].keys()
     symbol_df, sequence_df, sequence_cooc_tensor = coccurence(
         lines, symbols, sequences, classes, max_len
     )
@@ -163,17 +164,17 @@ def language_analysis(interaction_path, out_dir):
     tensor = language_tensor(sequence_cooc_tensor)
 
     to_add = symbol_df.sum(axis=1)
-    symbol_df["class_richness"] = to_add
+    symbol_df[CR] = to_add
 
-    to_add = pd.Series(infos["symbols"])
-    to_add.name = "frequency"
+    to_add = pd.Series(infos[Sy])
+    to_add.name = Frq
     symbol_df = symbol_df.append(to_add)
 
     to_add = sequence_df.sum(axis=1)
-    sequence_df["class_richness"] = to_add
+    sequence_df[CR] = to_add
 
-    to_add = pd.Series(infos["sequences"])
-    to_add.name = "frequency"
+    to_add = pd.Series(infos[Se])
+    to_add.name = Frq
     sequence_df = sequence_df.append(to_add)
 
     symbol_path = out_dir.joinpath("lang_symbol.csv")
