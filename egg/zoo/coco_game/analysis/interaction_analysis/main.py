@@ -13,7 +13,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import (
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix,
-    plot_multi_scatter,
+    plot_multi_scatter, plot_histogram,
 )
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
 
@@ -37,6 +37,7 @@ def load_generate_files(out_dir):
                 df = pickle.load(f)
         else:
             raise KeyError(f"Unrecognized stem {path.stem}")
+
         res_dict[path.stem] = df
 
     return res_dict
@@ -57,7 +58,11 @@ def get_analysis(interaction_path, out_dir):
 
 class Analysis:
     def __init__(self, interaction_path: Path, out_dir: Path):
-        analysis = get_analysis(interaction_path, out_dir)
+
+        analysis_helper = out_dir.joinpath(".helpers")
+        analysis_helper.mkdir(exist_ok=True)
+
+        analysis = get_analysis(interaction_path, analysis_helper)
 
         self.lang_sequence = analysis["lang_sequence"]
         self.lang_symbols = analysis["lang_symbol"]
@@ -68,26 +73,74 @@ class Analysis:
         self.acc_analysis = analysis["acc_analysis"]
         self.acc_class_cooc = analysis["acc_class_cooc"]
 
-        self.cm_path = out_dir.joinpath("ConfusionMatrix")
+        self.out_dir=out_dir
+        self.cm_path = out_dir.joinpath("ClassesOccurences")
         self.correlations_path = out_dir.joinpath("Correlations")
         self.language_tensor_path = out_dir.joinpath("LanguageTensor")
+        self.class_infos_path = out_dir.joinpath("ClassInfos")
 
         self.cm_path.mkdir(parents=True, exist_ok=True)
         self.correlations_path.mkdir(parents=True, exist_ok=True)
         self.language_tensor_path.mkdir(parents=True, exist_ok=True)
+        self.class_infos_path.mkdir(parents=True, exist_ok=True)
 
-        self.add_readme()
+        self.add_readme(interaction_path)
 
-    def add_readme(self):
-
-        readme_path = self.correlations_path.joinpath("README.md")
+    def add_readme(self, interaction_path):
         explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
 
+        readme_path = self.out_dir.joinpath("README.md")
         with open(readme_path, "w+") as f:
-            f.write("This file contains the correlation indices between any pair of implemented metric\n"
+            f.write(
+                f"This folder contain the output of the analysis ran on the interaction file `{interaction_path}`\n"
+                f"It is divided into subfolder each one reporting different informations about the interactions:\n"
+                f"- *ClassesOccurences* : information based on the co-occurence of classes with other classes, symbols and sequences\n"
+                f"- *ClassInfos* : a diverse set of metrics gatherd from the classes. Contains a csv and some histograms.\n"
+                f"- *Correlations* : Has the previous metrics correlated with one another.\n"
+                f"- *LanguageTensor* : informations regarding the triple (target, distractor, sequence)\n"
+                f"\nFind below the information regarding the metrics:\n"
+            )
+            f.writelines(explenations)
+
+        readme_path = self.correlations_path.joinpath("README.md")
+
+
+        with open(readme_path, "w+") as f:
+            f.write("This folder contains the correlation indices between any pair of implemented metric\n"
                     "Each figure reports a number of plots sorted by the corrleation value\n"
                     "Please find below the meaning of each metric:\n")
 
+            f.writelines(explenations)
+
+        readme_path = self.cm_path.joinpath("README.md")
+        with open(readme_path, "w+") as f:
+            f.write("This folder contains statistics about the co-occurence of a class with other metrics\n"
+                    "Each point in the matrix is scaled in range 0-1 to appear more bright than it is, thus the figure may appear not normalized\n"
+                    "Following the meaning of the plots:\n"
+                    "- *ClassCoOccurence* : a cell ij reports the number a class i appears together with a class j \n"
+                    "- *Class-Symbol CoOccurence*: a cell ij reports the number a symbol i appears together with a class j \n"
+                    "- *Class-Sequence CoOccurence*: a cell ij reports the number a sequence i appears together with a class j \n"
+                    )
+
+        readme_path = self.language_tensor_path.joinpath("README.md")
+        with open(readme_path, "w+") as f:
+            f.write(
+                "This folder contains an image for each class. The image name is the class when it is considered as a target\n"
+                "The data shown inside is a matrix where the rows are a number of classes which appear as distractors with the current target class.\n"
+                "The columns are the sequences appearing with that target.\n"
+                "A cell in position ij (row-col) reports the times the sequence i is used with the distractor j, normalize by the total number of sequences for the target class.\n"
+
+            )
+
+        readme_path = self.class_infos_path.joinpath("README.md")
+        with open(readme_path, "w+") as f:
+            f.write(
+                "This folder encapsules the information coming from the lasses.\n"
+                "You can find a file called *infos* which maps all the classes to various metrics (see below).\n"
+                "Moreover each metric is plotted for all the classes (between the 95% and 5% percentile) in the *Histograms* folder\n\n"
+
+
+            )
             f.writelines(explenations)
 
     def update_analysis(self):
@@ -131,19 +184,19 @@ class Analysis:
 
     def plot_cm(self):
         plot_confusion_matrix(
-            self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path
+            self.acc_class_cooc, "Class CoOccurence", save_dir=self.cm_path, show=False
         )
 
         to_plot = self.lang_symbols.drop(Frq)
         to_plot = to_plot.drop(CR, axis=1)
         plot_confusion_matrix(
-            to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path
+            to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path, show=False
         )
 
         to_plot = self.lang_sequence.drop(Frq)
         to_plot = to_plot.drop(CR, axis=1)
         plot_confusion_matrix(
-            to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path
+            to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path, show=False
         )
 
     def plot_correlations(self):
@@ -191,6 +244,22 @@ class Analysis:
                     df, k, self.language_tensor_path, use_scaler=False, show=False
                 )
 
+    def add_class_infos(self):
+
+        csv_path=self.class_infos_path.joinpath("infos")
+        self.acc_class_infos.to_csv(csv_path)
+
+        images_path=self.class_infos_path.joinpath("Histograms")
+        images_path.mkdir(exist_ok=True)
+
+
+        for idx in track(range(len(self.acc_class_infos)),"Plotting Class infos"):
+            metric=self.acc_class_infos.index[idx]
+            data= self.acc_class_infos.iloc[idx]
+            quant = data.between(data.quantile(0.05), data.quantile(0.95))
+            data= data[quant]
+
+            plot_histogram(data,metric,images_path, show=False)
 
 if __name__ == "__main__":
     interaction_path, out_dir = path_parser()
@@ -198,7 +267,8 @@ if __name__ == "__main__":
     analysis = Analysis(interaction_path, out_dir)
     analysis.update_analysis()
     analysis.update_infos()
-    analysis.plot_cm()
-    analysis.plot_correlations()
-    analysis.plot_language_tensor()
+    # analysis.plot_cm()
+    # analysis.plot_correlations()
+    # analysis.plot_language_tensor()
+    analysis.add_class_infos()
     a = 1

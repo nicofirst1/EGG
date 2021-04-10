@@ -3,7 +3,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sn
+import seaborn as sns
+
+sns.set_theme(style="ticks", color_codes=True)
 from sklearn import preprocessing
 
 
@@ -21,37 +23,13 @@ def plot_confusion_matrix(
         df = pd.DataFrame(x_scaled, index=df.index, columns=df.columns)
 
     annot = x if df.shape[0] * df.shape[1] < 100 else False
-    sn.heatmap(df, annot=annot, fmt=".2f")
+    sns.heatmap(df, annot=annot, fmt=".2f")
 
     fig.suptitle(title, fontsize=15)
     ax.tick_params(axis="x", labelrotation=90, labelsize=5)
     ax.tick_params(axis="y", labelrotation=0, labelsize=5)
-    plt.savefig(save_dir.joinpath(f"{title}.jpg"))
 
-    if show:
-        plt.show()
-
-    plt.close()
-
-
-def plot_confusion_matrix2(
-        df: pd.DataFrame, title, save_dir: Path, use_scaler=True, show=True
-):
-    fig, ax = plt.subplots()
-    plt.yticks(np.arange(0.9, len(df.index), 1), df.index)
-    plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
-
-    if use_scaler:
-        x = df.values  # returns a numpy array
-        min_max_scaler = preprocessing.MinMaxScaler()
-        x_scaled = min_max_scaler.fit_transform(x)
-        df = pd.DataFrame(x_scaled)
-
-    plt.pcolor(df)
-    fig.suptitle(title, fontsize=15)
-    ax.tick_params(axis="x", labelrotation=90, labelsize=5)
-    ax.tick_params(axis="y", labelrotation=0, labelsize=5)
-    # fig.autofmt_xdate()
+    title = title.replace(" ", "_")
     plt.savefig(save_dir.joinpath(f"{title}.jpg"))
 
     if show:
@@ -90,3 +68,26 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
         if show:
             plt.show()
         plt.close()
+
+
+def plot_histogram(
+        data: pd.Series, title, save_dir: Path, show=True
+):
+    fig, ax = plt.subplots()
+
+    data=pd.DataFrame(dict(classes=data.index, value=data.values))
+
+    sns.barplot(x="classes", y="value", data=data)
+
+    fig.suptitle(title, fontsize=15)
+    fig.subplots_adjust(bottom=0.2)
+    ax.tick_params(axis="x", labelrotation=90, labelsize=5)
+    ax.tick_params(axis="y", labelrotation=0, labelsize=5)
+
+    title = title.replace(" ", "_")
+    plt.savefig(save_dir.joinpath(f"{title}.jpg"))
+
+    if show:
+        plt.show()
+
+    plt.close()
