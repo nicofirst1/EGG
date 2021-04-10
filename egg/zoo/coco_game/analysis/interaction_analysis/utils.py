@@ -36,8 +36,24 @@ def path_parser():
 
 
 def add_row(row_value, row_name, df: pd.DataFrame):
-
     s = pd.Series(row_value)
     s.name = row_name
 
     return df.append(s)
+
+
+def split_line(line):
+    """
+    Parse the line coming from the csv into a dict
+    """
+    data = {}
+
+    data['epoch'] = line[0]
+    data['message'] = line[1].split(";")
+    data['predicted'] = line[2]
+    data['target'] = line[3]
+    data['is_correct'] = line[4]
+    data['distractor'] = line[5]
+    data['other_classes'] = line[6]
+
+    return data

@@ -3,6 +3,7 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
+from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
@@ -135,7 +136,7 @@ class Analysis:
 
         info_len = len(self.acc_class_infos)
         to_plot = []
-        for idx in range(info_len - 1):
+        for idx in track(range(info_len - 1),"Plotting infos..." ):
             for jdx in range(idx + 1, info_len):
                 row_i = self.acc_class_infos.iloc[idx]
                 row_j = self.acc_class_infos.iloc[jdx]
@@ -164,10 +165,12 @@ class Analysis:
         plot_multi_scatter(to_plot, save_dir=self.infos_path, show=False)
 
     def plot_language_tensor(self):
-        for k, df in self.lang_tensor.items():
-            plot_confusion_matrix(
-                df, k, self.language_tensor_path, use_scaler=True, show=False
-            )
+        for k, df in track(self.lang_tensor.items(), "Plotting language tensor..."):
+
+            if len(df) > 0:
+                plot_confusion_matrix(
+                    df, k, self.language_tensor_path, use_scaler=False, show=False
+                )
 
 
 if __name__ == "__main__":

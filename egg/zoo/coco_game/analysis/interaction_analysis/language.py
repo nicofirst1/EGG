@@ -7,25 +7,26 @@ import pandas as pd
 from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import console, path_parser
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import console, path_parser, split_line
 
 
 def get_infos(lines: list, max_len) -> Dict:
     """
-    Estimate the per class accuracy based on the sample found in the interactions.csv
+    Estimate the frequency of symbols and sequences normalized by the total number of messages
     """
     infos = {
-        "message_len":0,
-        Sy:{},
-        Se:{},
+        "message_len": 0,
+        Sy: {},
+        Se: {},
     }
 
     classes = []
 
     for l in lines:
-        message = l[1].split(";")
-        true_class = l[3]
-        distract = l[5]
+        data=split_line(l)
+        message = data['message']
+        true_class = data['target']
+        distract = data['distractor']
 
         if true_class not in classes:
             classes.append(true_class)
@@ -74,6 +75,7 @@ def language_tensor(lang_sequence_cooc):
             for seq_k, seq_v in seqs.items():
                 df[dist_k][seq_k] += seq_v
 
+        df/= df.sum().sum()
         tensor[true_c] = df
 
     return tensor
@@ -105,7 +107,10 @@ def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
     return ar_res, ar_perc_res
 
 
-def coccurence(lines, symbols, sequences, classes, max_len):
+def target_distractor_language_coccurence(lines, symbols, sequences, classes, max_len):
+    """
+    Return the number of times a sequence or a symbol is used when a particular pair of target/distractors is in place
+    """
     symbol_df = pd.DataFrame(index=classes, columns=symbols)
     symbol_df = symbol_df.fillna(0)
 
@@ -115,12 +120,10 @@ def coccurence(lines, symbols, sequences, classes, max_len):
     sequence_cooc_tensor = {k: {} for k in classes}
 
     for l in track(lines, description="Computing language analysis..."):
-        message = l[1].split(";")
-        true_class = l[3]
-        pred_class = l[2]
-        correct = l[4]
-        distract = l[5]
-        other_classes = l[6]
+        data= split_line(l)
+        message = data['message']
+        true_class = data['target']
+        distract = data['distractor']
 
         msg_len = message.index("0")
         for m in message[:max_len]:
@@ -157,7 +160,7 @@ def language_analysis(interaction_path, out_dir):
     infos, classes = get_infos(lines, max_len)
     symbols = infos[Sy].keys()
     sequences = infos[Se].keys()
-    symbol_df, sequence_df, sequence_cooc_tensor = coccurence(
+    symbol_df, sequence_df, sequence_cooc_tensor = target_distractor_language_coccurence(
         lines, symbols, sequences, classes, max_len
     )
 
