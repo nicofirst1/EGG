@@ -2,6 +2,7 @@ import json
 import pickle
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from rich.progress import track
 
@@ -15,7 +16,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.plotting import (
     plot_confusion_matrix,
     plot_multi_scatter, plot_histogram, sort_dataframe,
 )
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import add_row, path_parser, console
 
 
 def load_generate_files(out_dir):
@@ -86,18 +87,21 @@ class Analysis:
 
         self.add_readme(interaction_path)
 
+        console.log(f"Analyzing run with accuracy: {self.acc_analysis.iloc[0][0]:.3f}")
+
     def add_readme(self, interaction_path):
         explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
 
         readme_path = self.out_dir.joinpath("README.md")
         with open(readme_path, "w+") as f:
             f.write(
-                f"This folder contain the output of the analysis ran on the interaction file `{interaction_path}`\n"
+                f"This folder contain the output of the analysis ran on the interaction file `{interaction_path}` "
+                f"which has an accuracy of  {self.acc_analysis.iloc[0][0]:.3f}\n"
                 f"It is divided into subfolder each one reporting different informations about the interactions:\n"
                 f"- *ClassesOccurences* : information based on the co-occurence of classes with other classes, symbols and sequences\n"
                 f"- *ClassInfos* : a diverse set of metrics gatherd from the classes. Contains a csv and some histograms.\n"
                 f"- *Correlations* : Has the previous metrics correlated with one another.\n"
-                f"- *LanguageTensor* : informations regarding the triple (target, distractor, sequence)\n"
+                f"- *LanguageTensor* : information regarding the triple (target, distractor, sequence)\n"
                 f"\nFind below the information regarding the metrics:\n"
             )
             f.writelines(explenations)
@@ -264,7 +268,7 @@ class Analysis:
             path.mkdir(exist_ok=True)
             plot_multi_scatter(to_plot, save_dir=path, show=False)
 
-    def plot_language_tensor(self):
+    def plot_2d_language_tensor(self):
         for k, df in track(self.lang_tensor.items(), "Plotting language tensor..."):
 
             if len(df) > 0:

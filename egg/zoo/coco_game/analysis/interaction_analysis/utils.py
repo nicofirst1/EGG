@@ -12,7 +12,7 @@ def path_parser():
 
     parser.add_argument(
         "--interaction_path",
-        default="/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/test/runs/interactions.csv",
+        default="/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/seg/runs/interactions.csv",
         type=str,
     )
 
@@ -50,10 +50,14 @@ def split_line(line):
 
     data['epoch'] = line[0]
     data['message'] = line[1].split(";")
-    data['predicted'] = line[2]
-    data['target'] = line[3]
-    data['is_correct'] = line[4]
-    data['distractor'] = line[5]
-    data['other_classes'] = line[6]
+    data['pred_class'] = line[2]
+    data['pred_superclass'] = line[3]
+    data['target_class'] = line[4]
+    data['target_superclass'] = line[5]
+    data['is_correct'] = line[6]
+    data['distractor_class'] = line[7]
+    data['distractor_superclass'] = line[8]
+    data['other_classes'] = line[9]
+    data['other_superclasses'] = line[10]
 
     return data

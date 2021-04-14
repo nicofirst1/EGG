@@ -7,7 +7,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import (
     add_row,
     console,
-    path_parser,
+    path_parser, split_line,
 )
 
 
@@ -33,18 +33,20 @@ def get_infos(lines: list) -> Dict:
         }
 
     for l in lines:
-        pred_class = l[2]
-        true_class = l[3]
-        correct = l[4]
-        distract = l[5]
-        other_classes = l[6]
+
+        data= split_line(l)
+        pred_class = data['pred_class']
+        target_class = data['target_class']
+        correct = data['is_correct']
+        distractor_class = data['distractor_class']
+        other_classes = data['other_classes']
 
         if pred_class not in accuracy_dict:
             accuracy_dict[pred_class] = empty_dict()
-        if true_class not in accuracy_dict:
-            accuracy_dict[true_class] = empty_dict()
-        if distract not in accuracy_dict:
-            accuracy_dict[distract] = empty_dict()
+        if target_class not in accuracy_dict:
+            accuracy_dict[target_class] = empty_dict()
+        if distractor_class not in accuracy_dict:
+            accuracy_dict[distractor_class] = empty_dict()
 
         accuracy_dict[pred_class][Tot] += 1
         accuracy_dict[pred_class][OCL] += len(other_classes.split(";"))
@@ -54,12 +56,12 @@ def get_infos(lines: list) -> Dict:
         if eval(correct):
             accuracy_dict[pred_class][Crr] += 1
 
-            if distract == true_class:
+            if distractor_class == target_class:
                 accuracy_dict[pred_class][CTED] += 1
             else:
                 accuracy_dict[pred_class][CTND] += 1
         else:
-            if distract == true_class:
+            if distractor_class == target_class:
                 accuracy_dict[pred_class][WTED] += 1
             else:
                 accuracy_dict[pred_class][WTND] += 1
@@ -101,10 +103,12 @@ def coccurence(lines, classes):
     df = df.fillna(0)
 
     for l in lines:
-        true_class = l[3]
-        distract = l[5]
 
-        df[true_class][distract] += 1
+        data=split_line(l)
+        target_class = data['target_class']
+        distractor_class = data['distractor_class']
+
+        df[target_class][distractor_class] += 1
 
     return df
 

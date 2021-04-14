@@ -25,8 +25,8 @@ def get_infos(lines: list, max_len) -> Dict:
     for l in lines:
         data = split_line(l)
         message = data['message']
-        true_class = data['target']
-        distract = data['distractor']
+        true_class = data['target_class']
+        distract = data['distractor_class']
 
         if true_class not in classes:
             classes.append(true_class)
@@ -134,8 +134,8 @@ def target_distractor_language_coccurence(lines, symbols, sequences, classes, ma
     for l in track(lines, description="Computing language analysis..."):
         data = split_line(l)
         message = data['message']
-        true_class = data['target']
-        distract = data['distractor']
+        true_class = data['target_class']
+        distract = data['distractor_class']
 
         msg_len = message.index("0")
         for m in message[:max_len]:

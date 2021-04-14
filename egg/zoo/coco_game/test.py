@@ -1,3 +1,4 @@
+from argparse import Namespace
 from pathlib import Path
 
 import torch
@@ -15,9 +16,39 @@ from egg.zoo.coco_game.utils.utils import (
 )
 
 
+def load_params(params_path):
+    # parse x:
+    with open(params_path, "r") as file:
+        lines = file.readline()
+
+    lines = lines.replace("null", "None")
+    lines = lines.replace("false", "False")
+    lines = lines.replace("true", "True")
+    lines = eval(lines)
+    lines.pop("log_dir")
+    lines.pop("log_dir_uid")
+    lines.pop("data_root")
+    lines.pop("checkpoint_dir")
+    lines.pop("tensorboard_dir")
+
+    return lines
+
+
+def update_namespace(opts: Namespace, update_dict):
+
+    tmp=vars(opts)
+    tmp.update(update_dict)
+    opts=Namespace(**tmp)
+    return opts
+
+
 def main(params=None):
     opts = parse_arguments(params=params)
+
+    params = load_params("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Seg_Median/b407ecb5/params.json")
+    opts=update_namespace(opts, params)
     define_project_dir(opts)
+
     dump_params(opts)
 
     _, test_data = get_data(opts)
@@ -35,9 +66,10 @@ def main(params=None):
         validation_data=None,
     )
 
-    trainer.load_from_latest(Path("/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/train/check"))
+    trainer.load_from_latest(
+        Path("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Seg_Median/b407ecb5/best_seg_median_seed_nest_out"))
 
-    for _ in track(range(3), "Testing..."):
+    for _ in track(range(1), "Testing..."):
         loss, logs = trainer.train_eval()
         interaction_saver.on_test_end(loss, logs, 0)
     console.log("Test is over")
