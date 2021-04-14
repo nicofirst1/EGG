@@ -1,5 +1,7 @@
 import argparse
+import json
 import pathlib
+import pickle
 
 import pandas as pd
 from rich.console import Console
@@ -61,3 +63,29 @@ def split_line(line):
     data['other_superclasses'] = line[10]
 
     return data
+
+
+def load_generate_files(out_dir, filter):
+    filter=f"*_{filter}"
+    files = list(out_dir.rglob(f"{filter}*.json"))
+    files += list(out_dir.rglob(f"{filter}*.csv"))
+    files += list(out_dir.rglob(f"{filter}*.pkl"))
+    res_dict = {}
+
+    for path in files:
+
+        if path.suffix == ".csv":
+            df = pd.read_csv(path, index_col=0)
+        elif path.suffix == ".json":
+            with open(path, "r") as f:
+                df = json.load(f)
+
+        elif path.suffix == ".pkl":
+            with open(path, "rb") as f:
+                df = pickle.load(f)
+        else:
+            raise KeyError(f"Unrecognized stem {path.stem}")
+
+        res_dict[path.stem] = df
+
+    return res_dict
