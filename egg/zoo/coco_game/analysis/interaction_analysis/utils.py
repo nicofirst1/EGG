@@ -66,7 +66,7 @@ def split_line(line):
 
 
 def load_generate_files(out_dir, filter):
-    filter=f"*_{filter}"
+    filter = f"*_{filter}"
     files = list(out_dir.rglob(f"{filter}*.json"))
     files += list(out_dir.rglob(f"{filter}*.csv"))
     files += list(out_dir.rglob(f"{filter}*.pkl"))

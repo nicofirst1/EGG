@@ -64,7 +64,7 @@ def get_infos(lines: list) -> Dict:
 
     for l in lines:
 
-        data= split_line(l)
+        data = split_line(l)
         pred_class = data['pred_class']
         pred_superclass = data['pred_superclass']
         target_class = data['target_class']
@@ -88,7 +88,6 @@ def get_infos(lines: list) -> Dict:
             accuracy_superclass_dict[target_superclass] = empty_dict()
         if distractor_superclass not in accuracy_superclass_dict:
             accuracy_superclass_dict[distractor_superclass] = empty_dict()
-
 
         accuracy_class_dict[pred_class][Tot] += 1
         accuracy_superclass_dict[pred_superclass][Tot] += 1
@@ -131,8 +130,7 @@ def coccurence(lines, classes, superclasses):
     scdf = scdf.fillna(0)
 
     for l in lines:
-
-        data=split_line(l)
+        data = split_line(l)
         target_class = data['target_class']
         distractor_class = data['distractor_class']
 
