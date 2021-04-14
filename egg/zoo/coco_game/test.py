@@ -37,7 +37,10 @@ def load_params(params_path):
 def update_namespace(opts: Namespace, update_dict):
 
     tmp=vars(opts)
-    tmp.update(update_dict)
+
+    for k,v in update_dict.items():
+        tmp[k]=v
+
     opts=Namespace(**tmp)
     return opts
 
@@ -45,8 +48,11 @@ def update_namespace(opts: Namespace, update_dict):
 def main(params=None):
     opts = parse_arguments(params=params)
 
-    params = load_params("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Seg_Median/b407ecb5/params.json")
+
+    params = load_params("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Both_Median/0f33c569/params.json")
     opts=update_namespace(opts, params)
+    console.log(sorted(vars(opts).items()))
+
     define_project_dir(opts)
 
     dump_params(opts)
@@ -67,7 +73,7 @@ def main(params=None):
     )
 
     trainer.load_from_latest(
-        Path("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Seg_Median/b407ecb5/best_seg_median_seed_nest_out"))
+        Path("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Both_Median/0f33c569/best_both_median_seed_nest_out"))
 
     for _ in track(range(1), "Testing..."):
         loss, logs = trainer.train_eval()

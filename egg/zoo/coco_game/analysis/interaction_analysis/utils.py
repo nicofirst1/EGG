@@ -28,13 +28,9 @@ def path_parser():
 
     interaction_path = pathlib.Path(p.interaction_path)
 
-    if not p.out_dir:
-        p.out_dir = interaction_path.parent.joinpath("Analysis_out")
+    return interaction_path
 
-    out_dir = pathlib.Path(p.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
 
-    return interaction_path, out_dir
 
 
 def add_row(row_value, row_name, df: pd.DataFrame):

@@ -51,6 +51,9 @@ class Analysis:
             f"Analyzing {filter_str} run with accuracy: {self.acc_analysis.iloc[0][0]:.3f} at path {interaction_path}."
             f"\nSaving results in {out_dir}")
 
+        self.update_analysis()
+        self.update_infos()
+
     def add_readme(self, interaction_path):
         explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
 

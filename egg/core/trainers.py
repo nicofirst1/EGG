@@ -349,3 +349,5 @@ class Trainer:
 
         if latest_file is not None:
             self.load_from_checkpoint(latest_file)
+        else:
+            print(f"Could not load model from checkpoint at {path}")

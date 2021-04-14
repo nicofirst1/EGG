@@ -268,7 +268,6 @@ def parse_arguments(params=None):
         opt.sender_hidden = opt.sender_receiver_hidden
         opt.receiver_hidden = opt.sender_receiver_hidden
 
-
     console.log(sorted(vars(opt).items()))
 
     if opt.use_rich_traceback:
