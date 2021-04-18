@@ -207,10 +207,10 @@ def accuracy_analysis(interaction_path, out_dir):
     return dict(
         acc_class_cooc=cooc,
         acc_superclass_cooc=scooc,
-        acc_class_infos=class_infos_path,
-        acc_superclass_infos=superclass_infos_path,
-        acc_class_analysis=class_analysis_path,
-        acc_superclass_analysis=superclass_analysis_path,
+        acc_class_infos=class_infos,
+        acc_superclass_infos=superclass_infos,
+        acc_class_analysis=class_analysis,
+        acc_superclass_analysis=superclass_analysis,
     )
 
 

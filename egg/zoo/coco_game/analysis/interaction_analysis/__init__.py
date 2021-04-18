@@ -17,10 +17,13 @@ ARt = "ambiguity_rate"
 ARc = "ambiguity_richness"
 CR = "class_richness"
 
-Sy = "symbol"
-Se = "sequence"
+Sy = "symbols"
+Se = "sequences"
 SyCR = f"{Sy}_{CR}"
 SeCR = f"{Se}_{CR}"
+
+SeS = f"{Se}_specificity"
+ISeU = f"intraclass_{Se}_uniqueness"
 
 EXPLENATIONS = {
     CTED: "Number of correct predictions when the target and the distractor belong to the same class",
@@ -32,6 +35,9 @@ EXPLENATIONS = {
     PSC: f"Precision of the prediction when the disctractor and target belong to the same class.\nDerived from the formula :\n ```{CTED} / ({WTED}+{CTED})```",
     POC: f"Precision of the prediction when the disctractor and target belong to different classes.\nDerived from the formula :\n ```{CTND} / ({WTND}+{CTND})```",
     ARt: f"The {ARt} is the number of times the class happens both as a target and a distractors divided the total number of appearances.\nThe formula is derived as follos:\n```({CTED}+{WTED})/{Tot}```",
-    CR: f"The {CR} is the number of {Sy}/{Se} used for specific class divided the total amount of {Sy}/{Se} for that class",
+    CR: f"Given a target class *TRG* and a set of distractors associated with the target *DST_trg*, the {CR} is the number of {Sy}/{Se} used for *DST_trg* divided by the total amount of {Sy}/{Se} for all the target classes",
     ARc: f"The {ARc} is ratio between number of unique {Se} used when target=distractor  and when target!= distractor. ",
+    SeS: f"The {SeS} is the proportion of {Se} used mainly for one supercategory in relation to the total length of all {Se}. ",
+    ISeU: f"The {ISeU} is calculated onto the {SeS}. For all the {Se} in one superclass it counts the time a {Se} is used with more than one class. For example a superclass with {ISeU} zero has an unique {Se} for each class, while a  {ISeU} of 1 means that all the symbols are shared among each class.",
 }
+EXPLENATIONS[SeCR] = f"{SeCR} refers to the {CR} on the {Se}.\nThe {CR} is defined as: {EXPLENATIONS[CR]}."

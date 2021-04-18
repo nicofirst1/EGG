@@ -32,6 +32,14 @@ def path_parser():
 
 
 
+def define_out_dir(interaction_path):
+    out_dir = interaction_path.parent.joinpath("Analysis_out")
+
+    out_dir = pathlib.Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    return out_dir
+
 
 def add_row(row_value, row_name, df: pd.DataFrame):
     s = pd.Series(row_value)
@@ -62,7 +70,7 @@ def split_line(line):
 
 
 def load_generate_files(out_dir, filter):
-    filter = f"*_{filter}"
+    filter = f"*{filter}"
     files = list(out_dir.rglob(f"{filter}*.json"))
     files += list(out_dir.rglob(f"{filter}*.csv"))
     files += list(out_dir.rglob(f"{filter}*.pkl"))

@@ -4,6 +4,7 @@ from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
+from egg.zoo.coco_game.analysis.interaction_analysis.joined import joined_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness, \
     class_richness
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
@@ -31,19 +32,19 @@ class Analysis:
         analysis = get_analysis(interaction_path, analysis_path, filter_str)
 
         for key in analysis:
-            new_key = key.replace(f"_{filter_str}", "")
+            new_key = key.replace(f"{filter_str}", "")
             self.__setattr__(new_key, analysis[key])
 
-        self.out_dir = out_dir
-        self.cm_path = out_dir.joinpath("ClassesOccurences")
-        self.correlations_path = out_dir.joinpath("Correlations")
-        self.language_tensor_path = out_dir.joinpath("LanguageTensor")
-        self.infos_path = out_dir.joinpath("ClassInfos")
+        self.path_out_dir = out_dir
+        self.path_cm = out_dir.joinpath("ClassesOccurences")
+        self.path_correlations = out_dir.joinpath("Correlations")
+        self.path_lang_tensor = out_dir.joinpath("LanguageTensor")
+        self.path_infos = out_dir.joinpath("ClassInfos")
 
-        self.cm_path.mkdir(parents=True, exist_ok=True)
-        self.correlations_path.mkdir(parents=True, exist_ok=True)
-        self.language_tensor_path.mkdir(parents=True, exist_ok=True)
-        self.infos_path.mkdir(parents=True, exist_ok=True)
+        self.path_cm.mkdir(parents=True, exist_ok=True)
+        self.path_correlations.mkdir(parents=True, exist_ok=True)
+        self.path_lang_tensor.mkdir(parents=True, exist_ok=True)
+        self.path_infos.mkdir(parents=True, exist_ok=True)
 
         self.add_readme(interaction_path)
 
@@ -57,7 +58,7 @@ class Analysis:
     def add_readme(self, interaction_path):
         explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
 
-        readme_path = self.out_dir.joinpath("README.md")
+        readme_path = self.path_out_dir.joinpath("README.md")
         with open(readme_path, "w+") as f:
             f.write(
                 f"This folder contain the output of the analysis ran on the interaction file `{interaction_path}` "
@@ -71,7 +72,7 @@ class Analysis:
             )
             f.writelines(explenations)
 
-        readme_path = self.correlations_path.joinpath("README.md")
+        readme_path = self.path_correlations.joinpath("README.md")
 
         with open(readme_path, "w+") as f:
             f.write("This folder contains the correlation indices between any pair of implemented metric\n"
@@ -80,7 +81,7 @@ class Analysis:
 
             f.writelines(explenations)
 
-        readme_path = self.cm_path.joinpath("README.md")
+        readme_path = self.path_cm.joinpath("README.md")
         with open(readme_path, "w+") as f:
             f.write("This folder contains statistics about the co-occurence of a class with other metrics\n"
                     "Each point in the matrix is scaled in range 0-1 to appear more bright than it is, thus the figure may appear not normalized\n"
@@ -91,7 +92,7 @@ class Analysis:
                     "Moreover the two weighted figures are presented for the last two dataframes. The weightening is done based on the frequency of the class, i.e. the more frequent the less important.\n"
                     )
 
-        readme_path = self.language_tensor_path.joinpath("README.md")
+        readme_path = self.path_lang_tensor.joinpath("README.md")
         with open(readme_path, "w+") as f:
             f.write(
                 "This folder contains an image for each class. The image name is the class when it is considered as a target\n"
@@ -102,7 +103,7 @@ class Analysis:
 
             )
 
-        readme_path = self.infos_path.joinpath("README.md")
+        readme_path = self.path_infos.joinpath("README.md")
         with open(readme_path, "w+") as f:
             f.write(
                 "This folder encapsules the information coming from the lasses.\n"
@@ -117,29 +118,34 @@ class Analysis:
             self.lang_symbol[CR]
         )
         self.acc_analysis = add_row(
-            float(to_add), f"Correlation {ARt}-{SyCR}", self.acc_analysis
+            float(to_add), f"Corr {ARt}-{SyCR}", self.acc_analysis
         )
 
         to_add = self.acc_infos.loc[Frq, :].corr(
             self.lang_symbol[CR]
         )
         self.acc_analysis = add_row(
-            to_add, f"Correlation {Frq}-{SyCR}", self.acc_analysis
+            to_add, f"Corr {Frq}-{SyCR}", self.acc_analysis
         )
 
         to_add = self.acc_infos.loc[ARt, :].corr(
             self.lang_sequence[CR]
         )
         self.acc_analysis = add_row(
-            to_add, f"Correlation {ARt}-{SeCR}", self.acc_analysis
+            to_add, f"Corr {ARt}-{SeCR}", self.acc_analysis
         )
 
         to_add = self.acc_infos.loc[Frq, :].corr(
             self.lang_sequence[CR]
         )
         self.acc_analysis = add_row(
-            to_add, f"Correlation {Frq}-{SeCR}", self.acc_analysis
+            to_add, f"Corr {Frq}-{SeCR}", self.acc_analysis
         )
+
+        # add means
+        for row in self.acc_infos.index:
+            mean = self.acc_infos.loc[row].mean()
+            self.acc_analysis = add_row(mean, f"mean {row}", self.acc_analysis)
 
     def update_infos(self):
         to_add, to_add2 = ambiguity_richness(self.lang_sequence_cooc)
@@ -158,7 +164,7 @@ class Analysis:
 
     def plot_cm(self):
         plot_confusion_matrix(
-            self.acc_cooc, "Class CoOccurence", save_dir=self.cm_path, show=False
+            self.acc_cooc, "Class CoOccurence", save_dir=self.path_cm, show=False
         )
 
         to_plot = self.lang_symbol.drop(Frq)
@@ -166,14 +172,14 @@ class Analysis:
         to_plot = sort_dataframe(to_plot, True)
 
         plot_confusion_matrix(
-            to_plot, "Class-Symbol CoOccurence", save_dir=self.cm_path, show=False
+            to_plot, "Class-Symbol CoOccurence", save_dir=self.path_cm, show=False
         )
 
         to_plot = self.lang_sequence.drop(Frq)
         to_plot = to_plot.drop(CR, axis=1)
         to_plot = sort_dataframe(to_plot, True)
         plot_confusion_matrix(
-            to_plot, "Class-Sequence CoOccurence", save_dir=self.cm_path, show=False
+            to_plot, "Class-Sequence CoOccurence", save_dir=self.path_cm, show=False
         )
 
         class_freq = self.acc_infos.loc[Frq]
@@ -184,7 +190,7 @@ class Analysis:
         to_plot = sort_dataframe(to_plot, True)
 
         plot_confusion_matrix(
-            to_plot, "Class-Symbol CoOccurence Weighted", save_dir=self.cm_path, show=False
+            to_plot, "Class-Symbol CoOccurence Weighted", save_dir=self.path_cm, show=False
         )
 
         to_plot = self.lang_sequence.drop(Frq)
@@ -193,7 +199,7 @@ class Analysis:
         to_plot = sort_dataframe(to_plot, True)
 
         plot_confusion_matrix(
-            to_plot, "Class-Sequence CoOccurence Weighted", save_dir=self.cm_path, show=False
+            to_plot, "Class-Sequence CoOccurence Weighted", save_dir=self.path_cm, show=False
         )
 
     def plot_correlations(self):
@@ -229,7 +235,7 @@ class Analysis:
                 to_plot.append((name_i, name_j, row_i, row_j, corr))
 
             to_plot = sorted(to_plot, key=lambda tup: tup[-1], reverse=True)
-            path = self.correlations_path.joinpath(metric)
+            path = self.path_correlations.joinpath(metric)
             path.mkdir(exist_ok=True)
             plot_multi_scatter(to_plot, save_dir=path, show=False)
 
@@ -240,15 +246,15 @@ class Analysis:
                 df = sort_dataframe(df, False)
 
                 plot_confusion_matrix(
-                    df, k, self.language_tensor_path, use_scaler=False, show=False
+                    df, k, self.path_lang_tensor, use_scaler=False, show=False
                 )
 
     def add_infos(self):
 
-        csv_path = self.infos_path.joinpath("infos.csv")
+        csv_path = self.path_infos.joinpath("infos.csv")
         self.acc_infos.to_csv(csv_path)
 
-        images_path = self.infos_path.joinpath("Histograms")
+        images_path = self.path_infos.joinpath("Histograms")
         images_path.mkdir(exist_ok=True)
 
         for idx in track(range(len(self.acc_infos)), "Plotting Class infos"):
@@ -258,3 +264,116 @@ class Analysis:
             data = data[quant]
 
             plot_histogram(data, metric, images_path, show=False)
+
+
+class JoinedAnalysis:
+
+    def __init__(self, interaction_path, out_dir, analysis_path, class_analysis, superclass_analysis):
+        self.class_analysis = class_analysis
+        self.superclass_analysis = superclass_analysis
+
+        filter = "joined_"
+        res_dict = load_generate_files(analysis_path, filter)
+
+        if not any(['joined' in x for x in res_dict.keys()]):
+            joined_res = joined_analysis(interaction_path, out_dir)
+            res_dict.update(joined_res)
+
+        for key in res_dict:
+            new_key = key.replace(f"{filter}", "")
+            self.__setattr__(new_key, res_dict[key])
+
+        self.path_out_dir = out_dir
+        self.data = {}
+
+    def add_readme(self):
+        readme_path = self.path_out_dir.joinpath("README.md")
+
+        classPSC = self.class_analysis.acc_infos.loc[PSC].mean()
+        classPOC = self.class_analysis.acc_infos.loc[POC].mean()
+
+        superclassPSC = self.superclass_analysis.acc_infos.loc[PSC].mean()
+        superclassPOC = self.superclass_analysis.acc_infos.loc[POC].mean()
+
+        class_diff = abs(classPOC - classPSC)
+        superclass_diff = abs(superclassPOC - superclassPSC)
+
+        with open(readme_path, "w+") as file:
+            file.write(
+                f"In the following file some metrics are reported together with a brief analysis\n"
+                f"Considering the discrimination objective (predicting the correct target) as a classification one (predicting the class of the target) we have that\n\n"
+                f"- The prediction precision when the target is the class as the distractor is {classPSC:.3f} vs when is not {classPOC:.3f}\n"
+                f"The difference between the two is {class_diff:.3f}, which implies that it is easier to classify object when they belong to  "
+            )
+
+            if classPSC > classPOC:
+                file.write(f"the same class")
+            else:
+                file.write("different classes")
+
+            file.write(".\n\n"
+                       f"- On the other hand the same kind of precision on the superclasses is {superclassPSC:.3f} when target==distractor and {superclassPOC:.3f} otherwise.\n"
+                       f"Still the difference between the two implies that is easier to classify images belonging to different superclasses")
+
+            if superclass_diff < class_diff:
+                file.write(
+                    f", although the difference ({superclass_diff:.3f}) is not as important as the one xclass one.\n")
+            else:
+                file.write(f"TODO")
+
+            file.write("\n\n")
+            sequence_len = self.class_analysis.lang_sequence.shape[1]
+            file.write(f"Another interesting aspect of the data is {SeS}.\n"
+                       f"{SeS} is defined as: {EXPLENATIONS[SeS]}\n"
+                       f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} ({sequence_len * self.data[SeS]:.2f}/{sequence_len}) is unique per superclass.\n\n"
+                       f"It is also important to consider how much of these symbols are shared across the members of a specific superclass. This is measured by {ISeU}.\n"
+                       f"The {ISeU} is defined as: {EXPLENATIONS[ISeU]}\n"
+                       f"Its value is {self.data[ISeU]:3f}\n\n")
+
+            corr_frq_serc = self.class_analysis.acc_analysis.loc[f"Corr {Frq}-{SeCR}"]
+            corr_frq_serc = corr_frq_serc[0]
+            file.write(
+                f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} defined as: {EXPLENATIONS[SeCR]}\n"
+                f"This implies that more frequent classes are mapped to more {Se}.\n")
+
+        a = 1
+
+    def column_normalization(self, df):
+        df = df.drop('frequency')
+        df = df.multiply(1 / df['class_richness'], axis=0)
+        df = df.drop('class_richness', axis=1)
+        df = df.multiply(1 / df.sum(), axis=1)
+        return df
+
+    def same_superclass_sequence(self):
+
+        seqclass = self.column_normalization(self.superclass_analysis.lang_sequence)
+
+        tmp = {}
+        thrs = 0.99
+        total = 0
+        for superclass, classes in self.class_hierarchy.items():
+            superclass_seqs = seqclass.loc[superclass, :] > thrs
+            total += superclass_seqs.sum()
+            tmp[superclass] = list(superclass_seqs[superclass_seqs].index)
+
+        total /= seqclass.shape[1]
+        self.data[SeS] = total
+
+        lang_sequence = self.column_normalization(self.class_analysis.lang_sequence)
+
+        total = 0
+        idx = 0
+        for superclass, sequences in tmp.items():
+            class_seq = lang_sequence[sequences]
+            class_seq = class_seq[(class_seq.T != 0).any()]
+            non_zero = class_seq.astype(bool).sum(axis=0) / class_seq.shape[0] - 1 / class_seq.shape[0]
+            non_zero = sum(non_zero) / len(non_zero)
+            total += non_zero
+            idx += 1
+
+        total /= idx
+        self.data[ISeU] = total
+
+    def add_meningful_data(self):
+        a = 1
