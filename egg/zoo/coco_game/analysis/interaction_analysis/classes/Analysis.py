@@ -4,7 +4,6 @@ from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.joined import joined_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness, \
     class_richness
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
@@ -52,8 +51,8 @@ class Analysis:
             f"Analyzing {filter_str} run with accuracy: {self.acc_analysis.iloc[0][0]:.3f} at path {interaction_path}."
             f"\nSaving results in {out_dir}")
 
-        self.update_analysis()
         self.update_infos()
+        self.update_analysis()
 
     def add_readme(self, interaction_path):
         explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
@@ -145,7 +144,7 @@ class Analysis:
         # add means
         for row in self.acc_infos.index:
             mean = self.acc_infos.loc[row].mean()
-            self.acc_analysis = add_row(mean, f"mean {row}", self.acc_analysis)
+            self.acc_analysis = add_row(mean, row, self.acc_analysis)
 
     def update_infos(self):
         to_add, to_add2 = ambiguity_richness(self.lang_sequence_cooc)
@@ -264,116 +263,3 @@ class Analysis:
             data = data[quant]
 
             plot_histogram(data, metric, images_path, show=False)
-
-
-class JoinedAnalysis:
-
-    def __init__(self, interaction_path, out_dir, analysis_path, class_analysis, superclass_analysis):
-        self.class_analysis = class_analysis
-        self.superclass_analysis = superclass_analysis
-
-        filter = "joined_"
-        res_dict = load_generate_files(analysis_path, filter)
-
-        if not any(['joined' in x for x in res_dict.keys()]):
-            joined_res = joined_analysis(interaction_path, out_dir)
-            res_dict.update(joined_res)
-
-        for key in res_dict:
-            new_key = key.replace(f"{filter}", "")
-            self.__setattr__(new_key, res_dict[key])
-
-        self.path_out_dir = out_dir
-        self.data = {}
-
-    def add_readme(self):
-        readme_path = self.path_out_dir.joinpath("README.md")
-
-        classPSC = self.class_analysis.acc_infos.loc[PSC].mean()
-        classPOC = self.class_analysis.acc_infos.loc[POC].mean()
-
-        superclassPSC = self.superclass_analysis.acc_infos.loc[PSC].mean()
-        superclassPOC = self.superclass_analysis.acc_infos.loc[POC].mean()
-
-        class_diff = abs(classPOC - classPSC)
-        superclass_diff = abs(superclassPOC - superclassPSC)
-
-        with open(readme_path, "w+") as file:
-            file.write(
-                f"In the following file some metrics are reported together with a brief analysis\n"
-                f"Considering the discrimination objective (predicting the correct target) as a classification one (predicting the class of the target) we have that\n\n"
-                f"- The prediction precision when the target is the class as the distractor is {classPSC:.3f} vs when is not {classPOC:.3f}\n"
-                f"The difference between the two is {class_diff:.3f}, which implies that it is easier to classify object when they belong to  "
-            )
-
-            if classPSC > classPOC:
-                file.write(f"the same class")
-            else:
-                file.write("different classes")
-
-            file.write(".\n\n"
-                       f"- On the other hand the same kind of precision on the superclasses is {superclassPSC:.3f} when target==distractor and {superclassPOC:.3f} otherwise.\n"
-                       f"Still the difference between the two implies that is easier to classify images belonging to different superclasses")
-
-            if superclass_diff < class_diff:
-                file.write(
-                    f", although the difference ({superclass_diff:.3f}) is not as important as the one xclass one.\n")
-            else:
-                file.write(f"TODO")
-
-            file.write("\n\n")
-            sequence_len = self.class_analysis.lang_sequence.shape[1]
-            file.write(f"Another interesting aspect of the data is {SeS}.\n"
-                       f"{SeS} is defined as: {EXPLENATIONS[SeS]}\n"
-                       f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} ({sequence_len * self.data[SeS]:.2f}/{sequence_len}) is unique per superclass.\n\n"
-                       f"It is also important to consider how much of these symbols are shared across the members of a specific superclass. This is measured by {ISeU}.\n"
-                       f"The {ISeU} is defined as: {EXPLENATIONS[ISeU]}\n"
-                       f"Its value is {self.data[ISeU]:3f}\n\n")
-
-            corr_frq_serc = self.class_analysis.acc_analysis.loc[f"Corr {Frq}-{SeCR}"]
-            corr_frq_serc = corr_frq_serc[0]
-            file.write(
-                f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} defined as: {EXPLENATIONS[SeCR]}\n"
-                f"This implies that more frequent classes are mapped to more {Se}.\n")
-
-        a = 1
-
-    def column_normalization(self, df):
-        df = df.drop('frequency')
-        df = df.multiply(1 / df['class_richness'], axis=0)
-        df = df.drop('class_richness', axis=1)
-        df = df.multiply(1 / df.sum(), axis=1)
-        return df
-
-    def same_superclass_sequence(self):
-
-        seqclass = self.column_normalization(self.superclass_analysis.lang_sequence)
-
-        tmp = {}
-        thrs = 0.99
-        total = 0
-        for superclass, classes in self.class_hierarchy.items():
-            superclass_seqs = seqclass.loc[superclass, :] > thrs
-            total += superclass_seqs.sum()
-            tmp[superclass] = list(superclass_seqs[superclass_seqs].index)
-
-        total /= seqclass.shape[1]
-        self.data[SeS] = total
-
-        lang_sequence = self.column_normalization(self.class_analysis.lang_sequence)
-
-        total = 0
-        idx = 0
-        for superclass, sequences in tmp.items():
-            class_seq = lang_sequence[sequences]
-            class_seq = class_seq[(class_seq.T != 0).any()]
-            non_zero = class_seq.astype(bool).sum(axis=0) / class_seq.shape[0] - 1 / class_seq.shape[0]
-            non_zero = sum(non_zero) / len(non_zero)
-            total += non_zero
-            idx += 1
-
-        total /= idx
-        self.data[ISeU] = total
-
-    def add_meningful_data(self):
-        a = 1

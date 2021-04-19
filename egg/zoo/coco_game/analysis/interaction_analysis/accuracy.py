@@ -144,7 +144,7 @@ def coccurence(lines, classes, superclasses):
 
 
 def analysis_df(infos):
-    analysis = pd.DataFrame()
+    analysis = pd.DataFrame(columns=['0'])
 
     to_add = infos.loc[Acc, :].sum() / infos.shape[1]
     analysis = add_row(to_add, "Total Accuracy", analysis)

@@ -1,7 +1,9 @@
 import pathlib
 from pathlib import PosixPath
 
-from egg.zoo.coco_game.analysis.interaction_analysis.Analysis import Analysis, JoinedAnalysis
+from egg.zoo.coco_game.analysis.interaction_analysis.classes.Analysis import Analysis
+from egg.zoo.coco_game.analysis.interaction_analysis.classes.ComparedAnalysis import ComparedAnalysis
+from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import define_out_dir
 
 
@@ -25,7 +27,7 @@ def add_readme(out_dir_path: PosixPath):
 
 def generate_analysis(interaction_path, generate=True):
     interaction_path = pathlib.Path(interaction_path)
-    out_dir= define_out_dir(interaction_path)
+    out_dir = define_out_dir(interaction_path)
 
     add_readme(out_dir)
 
@@ -47,21 +49,32 @@ def generate_analysis(interaction_path, generate=True):
         perform_all(class_analysis)
         perform_all(superclass_analysis)
 
-    joined_anal = JoinedAnalysis(interaction_path, joined_out_dir , analysis_path, class_analysis, superclass_analysis)
+    joined_anal = JoinedAnalysis(interaction_path, joined_out_dir, analysis_path, class_analysis, superclass_analysis)
     joined_anal.same_superclass_sequence()
     joined_anal.add_meningful_data()
     joined_anal.add_readme()
 
-    return class_analysis, superclass_analysis
+    return joined_anal
+
+
+def compare_anal(interaction_paths, out_path, generate=True):
+    joined = []
+    for ip in interaction_paths:
+        j = generate_analysis(ip, generate=generate)
+        joined.append(j)
+
+    ca = ComparedAnalysis(joined, out_path)
+    return ca
 
 
 if __name__ == "__main__":
     seg_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/seg/runs/interactions.csv"
     both_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/both/runs/interactions.csv"
 
-    seg_class, seg_super_class = generate_analysis(seg_path, generate=False)
+    interaction_paths=[seg_path, both_path]
 
+    out_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/"
 
-    both_class, both_super_class = generate_analysis(both_path, generate=False)
+    ca=compare_anal(interaction_paths, out_path, generate=False)
 
     a = 1

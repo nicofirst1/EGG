@@ -31,7 +31,6 @@ def path_parser():
     return interaction_path
 
 
-
 def define_out_dir(interaction_path):
     out_dir = interaction_path.parent.joinpath("Analysis_out")
 
@@ -42,8 +41,14 @@ def define_out_dir(interaction_path):
 
 
 def add_row(row_value, row_name, df: pd.DataFrame):
+    if not isinstance(row_value, dict):
+        col=df.columns[0]
+        row_value={col:row_value}
+
     s = pd.Series(row_value)
     s.name = row_name
+
+
 
     return df.append(s)
 
