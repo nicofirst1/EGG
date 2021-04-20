@@ -4,7 +4,7 @@ import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.joined import joined_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, max_sequence_num
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, max_sequence_num, normalize_drop
 
 
 class JoinedAnalysis:
@@ -34,8 +34,8 @@ class JoinedAnalysis:
 
         file.write("# Data Analysis\n")
         file.write(
-            f"In the following we perform an analysis for the model in '{self.interaction_path}' with an accuracy of {accuracy:.3f}%\n"
-            f"There are {len(self.class_hierarchy)} superclass and {sum(class_len)} classes.\n"
+            f"In the following we perform an analysis for the model in '{self.interaction_path}' with an accuracy of {accuracy * 100:.2f}%\n"
+            f"There are {len(self.class_hierarchy)} superclasses and {sum(class_len)} classes.\n"
             f"Each superclass has an average of {sum(class_len) / len(class_len):.3f} classes each.\n\n")
 
         file.write("## Class statistics\n"
@@ -44,7 +44,7 @@ class JoinedAnalysis:
         sc_cooc = self.superclass_analysis.acc_infos
         c_cooc = self.class_analysis.acc_infos
 
-        for superclass, dict in self.class_hierarchy.items():
+        for superclass, dict in sorted(self.class_hierarchy.items()):
 
             dt = copy(dict)
             sc_total = dt.pop('total')
@@ -70,7 +70,7 @@ class JoinedAnalysis:
 
         file.write("Following, some stats regarding the most peculiar values per superclass:\n")
 
-        for row in sc_cooc_min.index:
+        for row in sorted(sc_cooc_min.index):
             col = sc_cooc_min[row]
             val = sc_cooc[col][row]
             mean = sc_cooc.loc[row, :].sum() / sc_cooc.shape[1]
@@ -123,18 +123,103 @@ class JoinedAnalysis:
     def readme_language_analysis(self, file):
         file.write("\n\n# Language Analysis\n")
 
-        symbols = self.class_analysis.lang_symbol.shape[1]
-        sequences = self.class_analysis.lang_sequence.shape[1]
-        max_length = [len(x) for x in self.class_analysis.lang_sequence.columns[:-1]]
+        symbols = self.class_analysis.lang_symbol.columns[:-1]
+        symbols = list(symbols)
+        if '0' in symbols:
+            symbols.remove('0')
+        symbols = sorted(symbols)
+        symbols_len = len(symbols)
+
+        sequences = self.class_analysis.lang_sequence.columns[:-1]
+        sequences = list(sequences)
+        sequences_len = len(sequences)
+
+        max_length = [len(x) for x in sequences]
         average_length = sum(max_length) / len(max_length)
         min_length = min(max_length)
         max_length = max(max_length)
-        possible_symbols = max_sequence_num(symbols, max_length)
+        possible_sequences = max_sequence_num(symbols_len, max_length)
 
         file.write(
-            f"The experiment considered a language with vocabulary size = {symbols} and max_length = {max_length}.\n"
-            f"There are {sequences} unique sequences out of {possible_symbols} possibilities ({sequences / possible_symbols * 100:.2f}%).\n"
-            f"The messages average length is {average_length}, with a minimum of {min_length}.\n")
+            f"The experiment considered a language with vocabulary size = {symbols_len} and max_length = {max_length}.\n"
+            f"There are {sequences_len} unique sequences out of {possible_sequences} possibilities ({sequences_len / possible_sequences * 100:.2f}%).\n"
+            f"The messages average length is {average_length:.2f}, with a minimum of {min_length}.\n")
+
+        def symbols_analysis():
+            file.write("\n## Symbols\n")
+            file.write(
+                f"There are {symbols_len} symbols as previously mentioned, for each we report its frequency, "
+                f"distance from the random value (1/symbols = {1 / symbols_len:.2f}), most used superclass/class in a weighted context:\n\n")
+
+            class_symbols_df = self.class_analysis.lang_symbol.copy()
+            class_symbols_df = normalize_drop(class_symbols_df)
+
+            superclass_symbols_df = self.superclass_analysis.lang_symbol.copy()
+            superclass_symbols_df = normalize_drop(superclass_symbols_df)
+
+            for sy in symbols:
+                freq = self.superclass_analysis.lang_symbol[sy][Frq] * 100
+                diff = freq / (1 / symbols_len * 100)
+
+                most_used_class = class_symbols_df[sy].nlargest(2).index.tolist()
+                most_used_superclass = superclass_symbols_df[sy].nlargest(2).index.tolist()
+
+                class_diff12 = class_symbols_df[sy][most_used_class[0]] - class_symbols_df[sy][most_used_class[1]]
+                superclass_diff12 = superclass_symbols_df[sy][most_used_superclass[0]] - superclass_symbols_df[sy][
+                    most_used_superclass[1]]
+
+                class_diff12 *= 100
+                superclass_diff12 *= 100
+
+                file.write(
+                    f"- **{sy}** : has a frequency of {freq:.2f}%, which is {diff:.2f} times the random value.\n"
+                    f"It is most used in *{most_used_superclass[0]}* (+{superclass_diff12:.2f}% than 2nd)-> *{most_used_class[0]}* (+{class_diff12:.2f}% than 2nd).\n\n")
+
+        def sequences_analysis():
+            file.write("\n## Sequences\n")
+            n = 5
+            sc_lang = self.superclass_analysis.lang_sequence.copy()
+            frq_mean = sc_lang.loc[Frq].sum() / sc_lang.shape[1]
+            frq_mean *= 100
+            top_n_seqs = sc_lang.loc[Frq].nlargest(n)
+
+            sc_lang = normalize_drop(sc_lang)
+
+            c_lang = self.class_analysis.lang_sequence.copy()
+            c_lang = normalize_drop(c_lang)
+
+            file.write(
+                f"The mean frequency per sequence is {frq_mean:.2f}% vs the random one  1/sequences= {1 / sequences_len * 100:.2f}%.\n")
+
+            file.write("\n ## Top N\n"
+                       f"The top {n} sequences by frequency are:\n")
+
+            for idx in range(n):
+                val = top_n_seqs[idx]
+                sq = top_n_seqs.index[idx]
+                val *= 100
+                diff = val / frq_mean
+
+                most_used_superclass = sc_lang[sq].nlargest(2).index.tolist()
+                most_used_class = c_lang[sq].nlargest(2).index.tolist()
+
+                class_diff12 = c_lang[sq][most_used_class[0]] - c_lang[sq][most_used_class[1]]
+                superclass_diff12 = sc_lang[sq][most_used_superclass[0]] - sc_lang[sq][
+                    most_used_superclass[1]]
+
+                file.write(f"{idx + 1}. **{sq}** = {val:.2f}% which is {diff:.2f} times the mean value.\n"
+                           f"It is most used in *{most_used_superclass[0]}* (+{superclass_diff12:.2f}% than 2nd)-> *{most_used_class[0]}* (+{class_diff12:.2f}% than 2nd).\n\n")
+
+            file.write(f"\n ## Sequence Specificity\n")
+            file.write(f"Another interesting aspect of the data is {SeS}.\n"
+                       f"{EXPLENATIONS[SeS]}\n"
+                       f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} ({sequences_len * self.data[SeS]:.2f}/{sequences_len}) is unique per superclass.\n\n"
+                       f"It is also important to consider how much of these sequences are shared across the members of a specific superclass. This is measured by {ISeU}.\n"
+                       f"{EXPLENATIONS[ISeU]}\n"
+                       f"Its value is {self.data[ISeU]:3f}.\n")
+
+        symbols_analysis()
+        sequences_analysis()
 
     def readme_classification_analysis(self, file):
 
@@ -174,13 +259,6 @@ class JoinedAnalysis:
             file.write(f"TODO")
 
         file.write("\n\n")
-        sequence_len = self.class_analysis.lang_sequence.shape[1]
-        file.write(f"Another interesting aspect of the data is {SeS}.\n"
-                   f"{SeS} is defined as: {EXPLENATIONS[SeS]}\n"
-                   f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} ({sequence_len * self.data[SeS]:.2f}/{sequence_len}) is unique per superclass.\n\n"
-                   f"It is also important to consider how much of these symbols are shared across the members of a specific superclass. This is measured by {ISeU}.\n"
-                   f"The {ISeU} is defined as: {EXPLENATIONS[ISeU]}\n"
-                   f"Its value is {self.data[ISeU]:3f}\n\n")
 
         corr_frq_serc = self.class_analysis.acc_analysis[f"Corr {Frq}-{SeCR}"]
 

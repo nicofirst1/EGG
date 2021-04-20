@@ -6,6 +6,8 @@ import pickle
 import pandas as pd
 from rich.console import Console
 
+from egg.zoo.coco_game.analysis.interaction_analysis import Frq, CR
+
 console = Console()
 
 
@@ -106,3 +108,10 @@ def max_sequence_num(vocab_size, max_length):
         total += (vocab_size * curr_len)
 
     return total
+
+
+def normalize_drop(df):
+    df = df.drop(Frq)
+    df = df.mul(1 / df[CR], axis=0)
+    df = df.drop([CR], axis=1)
+    return df

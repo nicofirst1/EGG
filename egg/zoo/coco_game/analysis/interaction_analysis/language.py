@@ -61,6 +61,9 @@ def get_infos(lines: list, max_len) -> Dict:
             infos_superclass[Sy][m] += 1
 
         symbol_seq = "".join(message[:msg_len])
+        if symbol_seq == "":
+            symbol_seq = "0"
+
         if symbol_seq not in infos_class[Se].keys():
             infos_class[Se][symbol_seq] = 0
         if symbol_seq not in infos_superclass[Se].keys():
@@ -181,6 +184,10 @@ def cooc_tensor(lines, symbols, sequences, classes, superclasses, max_len):
             superclass_symbol_df[m][target_superclass] += 1
 
         symbol_seq = "".join(message[:msg_len])
+
+        if symbol_seq == "":
+            symbol_seq = "0"
+
         class_sequence_df[symbol_seq][target_class] += 1
         superclass_sequence_df[symbol_seq][target_superclass] += 1
 
