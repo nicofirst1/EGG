@@ -1,4 +1,5 @@
 import csv
+import json
 from typing import Dict
 
 import pandas as pd
@@ -21,13 +22,24 @@ def get_infos(lines: list) -> Dict:
     accuracy_superclass_dict = {}
 
     def normalize(infos):
-        # normalize number of other classes len
-        infos.loc[OCL, :] = (
-                infos.loc[OCL, :] / infos.loc[Tot, :]
-        )
 
-        to_add = infos.loc[Crr, :] / infos.loc[Tot, :]
-        infos = add_row(to_add, Acc, infos)
+        ocl = infos.loc[OCL, :] / infos.loc[OCL, :].sum()
+        tot = infos.loc[Tot, :]
+
+        tf = infos.loc[TF]
+        infos = infos.drop(index=[OCL, Tot, TF])
+
+        infos /= tf
+
+        tf /= tot
+        tot /= tot.sum()
+
+        infos.loc[OCL] = ocl
+        infos.loc[TF] = tf
+        infos.loc[Tot] = tot
+
+        infos = infos.rename(index={Crr: Acc, Tot: Frq})
+
 
         to_add = infos.loc[CTED, :] / (
                 infos.loc[WTED, :] + infos.loc[CTED, :]
@@ -39,11 +51,8 @@ def get_infos(lines: list) -> Dict:
         )
         infos = add_row(to_add, POC, infos)
 
-        to_add = infos.loc[Tot, :] / sum(infos.loc[Tot, :])
-        infos = add_row(to_add, "frequency", infos)
 
         to_add = infos.loc[CTED, :] + infos.loc[WTED, :]
-        to_add /= infos.loc[Tot, :]
         infos = add_row(to_add, ARt, infos)
 
         infos = infos.fillna(0)
@@ -93,6 +102,16 @@ def get_infos(lines: list) -> Dict:
         accuracy_superclass_dict[pred_superclass][Tot] += 1
         accuracy_class_dict[pred_class][OCL] += len(other_classes.split(";"))
         accuracy_superclass_dict[pred_superclass][OCL] += len(other_superclasses.split(";"))
+
+        for oc in other_classes.split(";"):
+            if oc not in accuracy_class_dict:
+                accuracy_class_dict[oc] = empty_dict()
+            accuracy_class_dict[oc][Tot] += 1
+
+        for oc in other_superclasses.split(";"):
+            if oc not in accuracy_superclass_dict:
+                accuracy_superclass_dict[oc] = empty_dict()
+            accuracy_superclass_dict[oc][Tot] += 1
 
         accuracy_class_dict[pred_class][TF] += 1
         accuracy_superclass_dict[pred_superclass][TF] += 1
@@ -144,31 +163,31 @@ def coccurence(lines, classes, superclasses):
 
 
 def analysis_df(infos):
-    analysis = pd.DataFrame(columns=['0'])
+    analysis = {}
 
     to_add = infos.loc[Acc, :].sum() / infos.shape[1]
-    analysis = add_row(to_add, "Total Accuracy", analysis)
+    analysis['accuracy'] = to_add
 
     to_add = (
             infos.loc[PSC, :] - infos.loc[POC, :].sum() / infos.shape[1]
     )
     to_add = to_add.mean()
-    analysis = add_row(to_add, "Precision difference sc/oc", analysis)
+    analysis['Precision difference sc/oc'] = to_add
 
     to_add = infos.loc[Acc, :].corr(infos.loc[Frq, :])
-    analysis = add_row(to_add, f"Corr {Acc}-{Frq}", analysis)
+    analysis[f'Corr {Acc}-{Frq}'] = to_add
 
     to_add = infos.loc[OCL, :].corr(infos.loc[Frq, :])
-    analysis = add_row(to_add, f"Corr {OCL}-{Frq}", analysis)
+    analysis[f'Corr {OCL}-{Frq}'] = to_add
 
     to_add = infos.loc[ARt, :].corr(infos.loc[Frq, :])
-    analysis = add_row(to_add, f"Corr {ARt}-{Frq}", analysis)
+    analysis[f'Corr {ARt}-{Frq}'] = to_add
 
     to_add = infos.loc[ARt, :].corr(infos.loc[Acc, :])
-    analysis = add_row(to_add, f"Corr {ARt}-{Acc}", analysis)
+    analysis[f'Corr {ARt}-{Acc}'] = to_add
 
     to_add = infos.loc[ARt, :].corr(infos.loc[OCL, :])
-    analysis = add_row(to_add, f"Corr {ARt}-{OCL}", analysis)
+    analysis[f'Corr {ARt}-{OCL}'] = to_add
 
     return analysis
 
@@ -192,15 +211,19 @@ def accuracy_analysis(interaction_path, out_dir):
     scooc_path = out_dir.joinpath("acc_superclass_cooc.csv")
     class_infos_path = out_dir.joinpath("acc_class_infos.csv")
     superclass_infos_path = out_dir.joinpath("acc_superclass_infos.csv")
-    class_analysis_path = out_dir.joinpath("acc_class_analysis.csv")
-    superclass_analysis_path = out_dir.joinpath("acc_superclass_analysis.csv")
+    class_analysis_path = out_dir.joinpath("acc_class_analysis.json")
+    superclass_analysis_path = out_dir.joinpath("acc_superclass_analysis.json")
 
     cooc.to_csv(cooc_path)
     scooc.to_csv(scooc_path)
     class_infos.to_csv(class_infos_path)
     superclass_infos.to_csv(superclass_infos_path)
-    class_analysis.to_csv(class_analysis_path)
-    superclass_analysis.to_csv(superclass_analysis_path)
+
+    with open(class_analysis_path, "w") as f:
+        json.dump(class_analysis, f)
+
+    with open(superclass_analysis_path, "w") as f:
+        json.dump(superclass_analysis, f)
 
     print(f"Out saved in {out_dir}")
 
