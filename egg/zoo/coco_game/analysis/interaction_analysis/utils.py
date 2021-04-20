@@ -41,7 +41,7 @@ def define_out_dir(interaction_path):
 
 
 def add_row(row_value, row_name, df: pd.DataFrame):
-    if not isinstance(row_value, dict):
+    if not isinstance(row_value, dict) and not isinstance(row_value,pd.Series):
         col=df.columns[0]
         row_value={col:row_value}
 
@@ -98,3 +98,11 @@ def load_generate_files(out_dir, filter):
         res_dict[path.stem] = df
 
     return res_dict
+
+
+def max_sequence_num(vocab_size, max_length):
+    total= vocab_size**max_length
+    for curr_len in range(1, max_length + 1):
+        total += (vocab_size * curr_len)
+
+    return total

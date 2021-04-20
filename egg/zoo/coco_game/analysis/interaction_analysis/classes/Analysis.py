@@ -48,7 +48,7 @@ class Analysis:
         self.add_readme(interaction_path)
 
         console.log(
-            f"Analyzing {filter_str} run with accuracy: {self.acc_analysis.iloc[0][0]:.3f} at path {interaction_path}."
+            f"Analyzing {filter_str} run with accuracy: {self.acc_analysis[Acc]:.3f} at path {interaction_path}."
             f"\nSaving results in {out_dir}")
 
         self.update_infos()
@@ -61,7 +61,7 @@ class Analysis:
         with open(readme_path, "w+") as f:
             f.write(
                 f"This folder contain the output of the analysis ran on the interaction file `{interaction_path}` "
-                f"which has an accuracy of  {self.acc_analysis.iloc[0][0]:.3f}\n"
+                f"which has an accuracy of  {self.acc_analysis[Acc]:.3f}\n"
                 f"It is divided into subfolder each one reporting different informations about the interactions:\n"
                 f"- *ClassesOccurences* : information based on the co-occurence of classes with other classes, symbols and sequences\n"
                 f"- *ClassInfos* : a diverse set of metrics gatherd from the classes. Contains a csv and some histograms.\n"
@@ -116,35 +116,27 @@ class Analysis:
         to_add = self.acc_infos.loc[ARt, :].corr(
             self.lang_symbol[CR]
         )
-        self.acc_analysis = add_row(
-            float(to_add), f"Corr {ARt}-{SyCR}", self.acc_analysis
-        )
+        self.acc_analysis[f"Corr {ARt}-{SyCR}"] = float(to_add)
 
         to_add = self.acc_infos.loc[Frq, :].corr(
             self.lang_symbol[CR]
         )
-        self.acc_analysis = add_row(
-            to_add, f"Corr {Frq}-{SyCR}", self.acc_analysis
-        )
+        self.acc_analysis[f"Corr {Frq}-{SyCR}"] = to_add
 
         to_add = self.acc_infos.loc[ARt, :].corr(
             self.lang_sequence[CR]
         )
-        self.acc_analysis = add_row(
-            to_add, f"Corr {ARt}-{SeCR}", self.acc_analysis
-        )
+        self.acc_analysis[f"Corr {ARt}-{SeCR}"] = to_add
 
         to_add = self.acc_infos.loc[Frq, :].corr(
             self.lang_sequence[CR]
         )
-        self.acc_analysis = add_row(
-            to_add, f"Corr {Frq}-{SeCR}", self.acc_analysis
-        )
+        self.acc_analysis[f"Corr {Frq}-{SeCR}"] =to_add
 
         # add means
         for row in self.acc_infos.index:
             mean = self.acc_infos.loc[row].mean()
-            self.acc_analysis = add_row(mean, row, self.acc_analysis)
+            self.acc_analysis[row] = mean
 
     def update_infos(self):
         to_add, to_add2 = ambiguity_richness(self.lang_sequence_cooc)

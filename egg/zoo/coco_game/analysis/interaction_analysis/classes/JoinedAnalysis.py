@@ -1,8 +1,10 @@
+from copy import copy
+
 import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.joined import joined_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, max_sequence_num
 
 
 class JoinedAnalysis:
@@ -22,6 +24,7 @@ class JoinedAnalysis:
             new_key = key.replace(f"{filter}", "")
             self.__setattr__(new_key, res_dict[key])
 
+        self.interaction_path = interaction_path
         self.path_out_dir = out_dir
         self.data = {}
 
@@ -38,6 +41,55 @@ class JoinedAnalysis:
         superclass_diff = abs(superclassPOC - superclassPSC)
 
         with open(readme_path, "w+") as file:
+            class_len = [len(x) for x in self.class_hierarchy.values()]
+            accuracy = self.class_analysis.acc_analysis[Acc]
+
+            file.write("# Data Analysis\n")
+            file.write(
+                f"In the following we perform an analysis for the model in '{self.interaction_path}' with an accuracy of {accuracy:.3f}%\n"
+                f"There are {len(self.class_hierarchy)} superclass and {sum(class_len)} classes.\n"
+                f"Each superclass has an average of {sum(class_len) / len(class_len):.3f} classes each.\n\n")
+
+            file.write("## Class statistics\n"
+                       "For each superclass, we report its weight in the dataset together with the weight of its class members:\n\n")
+
+            sc_cooc = self.superclass_analysis.acc_cooc.copy()
+            sc_cooc /= sc_cooc.sum()
+            sc_cooc *= 100
+
+            c_cooc = self.class_analysis.acc_cooc.copy()
+            c_cooc /= c_cooc.sum()
+            c_cooc *= 100
+
+            for superclass, dict in self.class_hierarchy.items():
+
+                dt = copy(dict)
+                sc_total = dt.pop('total')
+                sc_perc = dt.pop('total_perc')
+
+                file.write(
+                    f"- **{superclass}** has {sc_total} instances which make up {sc_perc * 100:.2f}% of the dataset. It has an ambiguity rate of {sc_cooc[superclass][superclass]:.2f}%."
+                    f" Its classes are:\n")
+                for class_name, perc in dt.items():
+                    file.write(f"\t- *{class_name}* represent the {perc * 100:.2f}% of its superclass and has an ambiguity rate of {c_cooc[class_name][class_name]:.2f}%\n")
+                file.write("\n")
+
+            file.write("\n# Language Analysis\n")
+            symbols = self.class_analysis.lang_symbol.shape[1]
+            sequences = self.class_analysis.lang_sequence.shape[1]
+            max_length = [len(x) for x in self.class_analysis.lang_sequence.columns[:-1]]
+            average_length = sum(max_length) / len(max_length)
+            min_length = min(max_length)
+            max_length = max(max_length)
+            possible_symbols = max_sequence_num(symbols, max_length)
+
+            file.write(
+                f"The experiment considered a language with vocabulary size = {symbols} and max_length = {max_length}.\n"
+                f"There are {sequences} unique sequences out of {possible_symbols} possibilities ({sequences / possible_symbols * 100:.2f}%).\n"
+                f"The messages average length is {average_length}, with a minimum of {min_length}.\n")
+
+            file.write("\n\n# Classification \n")
+
             file.write(
                 f"In the following file some metrics are reported together with a brief analysis\n"
                 f"Considering the discrimination objective (predicting the correct target) as a classification one (predicting the class of the target) we have that\n\n"
@@ -69,18 +121,18 @@ class JoinedAnalysis:
                        f"The {ISeU} is defined as: {EXPLENATIONS[ISeU]}\n"
                        f"Its value is {self.data[ISeU]:3f}\n\n")
 
-            corr_frq_serc = self.class_analysis.acc_analysis.loc[f"Corr {Frq}-{SeCR}"]
-            corr_frq_serc = corr_frq_serc[0]
+            corr_frq_serc = self.class_analysis.acc_analysis[f"Corr {Frq}-{SeCR}"]
+
             file.write(
                 f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} defined as: {EXPLENATIONS[SeCR]}\n"
                 f"This implies that more frequent classes are mapped to more {Se}.\n\n")
 
-            class_len=sum([len(x) for x in self.class_hierarchy.values()])
             mpsc = self.data['general'].loc[PSC]
             mpoc = self.data['general'].loc[POC]
-            file.write(f"- Given that there are {len(self.class_hierarchy)} superclasses and {class_len} classes; there is almost no difference in ({mpoc.loc['diff']:.3f}) when the target is different from the distractor between the superclass precision  ({mpoc.loc['superclass']:.3f}) and the class one  ({mpoc.loc['class']:.3f}).\n"
-                       f"On the other hand, the difference increases  ({mpsc.loc['diff']:.3f}) when the classes are the same; indeed it is easier when there are fewer cases such as in the superclass  ({mpsc.loc['superclass']:.3f}) than it is in the class instance  ({mpsc.loc['class']:.3f}).\n"
-                       f"")
+            file.write(
+                f"- Given that there are {len(self.class_hierarchy)} superclasses and {class_len} classes; there is almost no difference in ({mpoc.loc['diff']:.3f}) when the target is different from the distractor between the superclass precision  ({mpoc.loc['superclass']:.3f}) and the class one  ({mpoc.loc['class']:.3f}).\n"
+                f"On the other hand, the difference increases  ({mpsc.loc['diff']:.3f}) when the classes are the same; indeed it is easier when there are fewer cases such as in the superclass  ({mpsc.loc['superclass']:.3f}) than it is in the class instance  ({mpsc.loc['class']:.3f}).\n"
+                f"")
 
     def column_normalization(self, df):
         df = df.drop('frequency')
@@ -123,6 +175,9 @@ class JoinedAnalysis:
 
         ca_anal = self.class_analysis.acc_analysis
         sca_anal = self.superclass_analysis.acc_analysis
+
+        ca_anal = pd.DataFrame.from_dict(ca_anal, orient='index')
+        sca_anal = pd.DataFrame.from_dict(sca_anal, orient='index')
         cat = pd.concat([ca_anal, sca_anal], axis=1)
         cat.columns = ["class", "superclass"]
         cat = cat[(cat <= 1).all(axis=1)]
@@ -130,4 +185,3 @@ class JoinedAnalysis:
         cat['diff'] = diff
 
         self.data['general'] = cat
-        a = 1
