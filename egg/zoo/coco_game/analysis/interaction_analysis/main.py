@@ -45,14 +45,14 @@ def generate_analysis(interaction_path, generate=True):
 
     superclass_analysis = Analysis(interaction_path, superclass_out_dir, analysis_path, "_superclass")
 
+    joined_anal = JoinedAnalysis(interaction_path, joined_out_dir, analysis_path, class_analysis, superclass_analysis)
+    joined_anal.same_superclass_sequence()
+    joined_anal.super_class_comparison()
+    joined_anal.add_readme()
+
     if generate:
         perform_all(class_analysis)
         perform_all(superclass_analysis)
-
-    joined_anal = JoinedAnalysis(interaction_path, joined_out_dir, analysis_path, class_analysis, superclass_analysis)
-    joined_anal.same_superclass_sequence()
-    joined_anal.add_meningful_data()
-    joined_anal.add_readme()
 
     return joined_anal
 
@@ -71,10 +71,10 @@ if __name__ == "__main__":
     seg_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/seg/runs/interactions.csv"
     both_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/both/runs/interactions.csv"
 
-    interaction_paths=[seg_path, both_path]
+    interaction_paths = [seg_path, both_path]
 
     out_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/"
 
-    ca=compare_anal(interaction_paths, out_path, generate=False)
+    ca = compare_anal(interaction_paths, out_path, generate=False)
 
     a = 1

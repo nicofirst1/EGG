@@ -4,7 +4,8 @@ import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.joined import joined_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, max_sequence_num, normalize_drop
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, max_sequence_num, normalize_drop, \
+    add_row
 
 
 class JoinedAnalysis:
@@ -120,6 +121,57 @@ class JoinedAnalysis:
             file.write(
                 f"- *{col}* has the maximum {row}; its value is {val:.2f}% which is {diff:.2f}% more than the mean value.\n")
 
+    def readme_correlations(self, file):
+
+        def get_special_corr(df, not_range):
+            """
+            Get all the values not between the not_range
+            """
+            not_range = [df[x].between(not_range[0], not_range[1]) for x in df.columns]
+            not_range = pd.DataFrame(not_range)
+            not_range = ~ not_range
+            df = df[not_range]
+            df = df[df < 0.99]
+            return df
+
+        def filter_same_words(main_word, serie):
+            words=list(serie.index)
+            words=[x.split("_") for x in words]
+            keep=[all([mw not in words[i] for mw in main_word.split("_") ]) for i in range(len(words))]
+            return serie[keep].dropna()
+
+        def write_correlations(file, cors):
+
+            cors = get_special_corr(cors, [-0.4, 0.4])
+
+            for col in cors.columns:
+                c = cors[col]
+
+                c=filter_same_words(col, c)
+
+                pos = c[c > 0]
+                neg = c[c < 0]
+
+                pos = pos.sort_values(ascending=False)
+                neg = neg.sort_values(ascending=False)
+
+                file.write(f"- *{col}* :\n")
+
+                for r in pos.index:
+                    file.write(f"\t **{r}** = {pos[r]:.3f}\n")
+                for r in neg.index:
+                    file.write(f"\t **{r}** = {neg[r]:.3f}\n")
+
+                file.write("\n")
+
+        file.write("\n# Correlations \n\n"
+                   "In this section we report some correlations between metrics which stands out particularly\n")
+
+        file.write("\n## Class corr\n")
+        write_correlations(file, self.class_analysis.correlations)
+        file.write("\n## Superclass corr\n")
+        write_correlations(file, self.superclass_analysis.correlations)
+
     def readme_language_analysis(self, file):
         file.write("\n\n# Language Analysis\n")
 
@@ -213,16 +265,22 @@ class JoinedAnalysis:
             file.write(f"\n ## Sequence Specificity\n")
             file.write(f"Another interesting aspect of the data is {SeS}.\n"
                        f"{EXPLENATIONS[SeS]}\n"
-                       f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} ({sequences_len * self.data[SeS]:.2f}/{sequences_len}) is unique per superclass.\n\n"
-                       f"It is also important to consider how much of these sequences are shared across the members of a specific superclass. This is measured by {ISeU}.\n"
-                       f"{EXPLENATIONS[ISeU]}\n"
-                       f"Its value is {self.data[ISeU]:3f}.\n")
+                       f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} "
+                       f"({sequences_len * self.data[SeS]:.2f}/{sequences_len}) is unique per superclass.\n\n")
+
+            file.write(
+                f"It is also important to consider how much of these sequences are shared across the members of a specific superclass."
+                f" This is measured by *{ISeU}*.\n"
+                f"{EXPLENATIONS[ISeU]}\n"
+                f"Its value is {self.data[ISeU]:3f}.\n")
+
+            file.write(
+                f"The correlation between {ISeU} and {ARt} is {self.superclass_analysis.correlations[ISeU][ARt]}\n")
 
         symbols_analysis()
         sequences_analysis()
 
     def readme_classification_analysis(self, file):
-
         classPSC = self.class_analysis.acc_infos.loc[PSC].mean()
         classPOC = self.class_analysis.acc_infos.loc[POC].mean()
 
@@ -277,26 +335,27 @@ class JoinedAnalysis:
         readme_path = self.path_out_dir.joinpath("README.md")
 
         with open(readme_path, "w+") as file:
+            file.write("# Intro\n"
+                       "Before starting the anlaysis, we report the meaning of the metrics used:\n")
+
+            explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
+            file.writelines(explenations)
+            file.write("\n\n")
+
             self.readme_data_analysis(file)
 
             self.readme_language_analysis(file)
+            self.readme_correlations(file)
 
             self.readme_classification_analysis(file)
 
-    def column_normalization(self, df):
-        df = df.drop('frequency')
-        df = df.multiply(1 / df['class_richness'], axis=0)
-        df = df.drop('class_richness', axis=1)
-        df = df.multiply(1 / df.sum(), axis=1)
-        return df
-
-    def same_superclass_sequence(self):
-
-        seqclass = self.column_normalization(self.superclass_analysis.lang_sequence)
-
+    def same_superclass_sequence(self, thrs=0.99):
+        seqclass = normalize_drop(self.superclass_analysis.lang_sequence)
+        # normalize on column to sum to 1
+        seqclass = seqclass.multiply(1 / seqclass.sum(), axis=1)
         tmp = {}
-        thrs = 0.99
         total = 0
+        # look for all the sequences that are mostly (> thrs) used for one superclass
         for superclass, classes in self.class_hierarchy.items():
             superclass_seqs = seqclass.loc[superclass, :] > thrs
             total += superclass_seqs.sum()
@@ -305,22 +364,33 @@ class JoinedAnalysis:
         total /= seqclass.shape[1]
         self.data[SeS] = total
 
-        lang_sequence = self.column_normalization(self.class_analysis.lang_sequence)
+        lang_sequence = normalize_drop(self.class_analysis.lang_sequence)
+        # normalize on column to sum to 1
+        lang_sequence = lang_sequence.multiply(1 / lang_sequence.sum(), axis=1)
 
         total = 0
         idx = 0
+        iseu_dict = {}
+        # for alla the sequences above, look how much they are shared across classes of the same superclass
         for superclass, sequences in tmp.items():
             class_seq = lang_sequence[sequences]
             class_seq = class_seq[(class_seq.T != 0).any()]
             non_zero = class_seq.astype(bool).sum(axis=0) / class_seq.shape[0] - 1 / class_seq.shape[0]
             non_zero = sum(non_zero) / len(non_zero)
             total += non_zero
+            iseu_dict[superclass] = non_zero
             idx += 1
 
         total /= idx
         self.data[ISeU] = total
 
-    def add_meningful_data(self):
+        self.superclass_analysis.acc_infos = add_row(iseu_dict, ISeU, self.superclass_analysis.acc_infos)
+        self.superclass_analysis.compute_info_correlations()
+
+    def super_class_comparison(self):
+        """
+        Use the super/class general dict to compare correlation and other metrics
+        """
 
         ca_anal = self.class_analysis.acc_analysis
         sca_anal = self.superclass_analysis.acc_analysis

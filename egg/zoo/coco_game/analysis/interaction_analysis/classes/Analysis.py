@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
@@ -8,7 +9,8 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import language_an
     class_richness
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
     plot_multi_scatter, plot_histogram
-from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row
+from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row, \
+    estimate_correlation
 
 
 def get_analysis(interaction_path, out_dir, filter):
@@ -53,6 +55,7 @@ class Analysis:
 
         self.update_infos()
         self.update_analysis()
+        self.compute_info_correlations()
 
     def add_readme(self, interaction_path):
         explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
@@ -131,7 +134,7 @@ class Analysis:
         to_add = self.acc_infos.loc[Frq, :].corr(
             self.lang_sequence[CR]
         )
-        self.acc_analysis[f"Corr {Frq}-{SeCR}"] =to_add
+        self.acc_analysis[f"Corr {Frq}-{SeCR}"] = to_add
 
         # add means
         for row in self.acc_infos.index:
@@ -193,8 +196,19 @@ class Analysis:
             to_plot, "Class-Sequence CoOccurence Weighted", save_dir=self.path_cm, show=False
         )
 
-    def plot_correlations(self):
+    def compute_info_correlations(self):
+        indices = list(self.acc_infos.index)
+        df = pd.DataFrame(columns=indices, index=indices, dtype=float)
 
+        for idx in indices:
+            for jdx in indices:
+                corr = estimate_correlation(self.acc_infos, idx, jdx)
+
+                df[idx][jdx] = corr
+
+        self.correlations=df
+
+    def plot_correlations(self):
         info_len = len(self.acc_infos)
         for idx in track(range(info_len), "Plotting Correlations..."):
             metric = self.acc_infos.index[idx]

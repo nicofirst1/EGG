@@ -43,14 +43,12 @@ def define_out_dir(interaction_path):
 
 
 def add_row(row_value, row_name, df: pd.DataFrame):
-    if not isinstance(row_value, dict) and not isinstance(row_value,pd.Series):
-        col=df.columns[0]
-        row_value={col:row_value}
+    if not isinstance(row_value, dict) and not isinstance(row_value, pd.Series):
+        col = df.columns[0]
+        row_value = {col: row_value}
 
     s = pd.Series(row_value)
     s.name = row_name
-
-
 
     return df.append(s)
 
@@ -103,7 +101,7 @@ def load_generate_files(out_dir, filter):
 
 
 def max_sequence_num(vocab_size, max_length):
-    total= vocab_size**max_length
+    total = vocab_size ** max_length
     for curr_len in range(1, max_length + 1):
         total += (vocab_size * curr_len)
 
@@ -115,3 +113,35 @@ def normalize_drop(df):
     df = df.mul(1 / df[CR], axis=0)
     df = df.drop([CR], axis=1)
     return df
+
+
+def estimate_correlation(df1, row1, row2, df2=None):
+    """
+    Perform the correlation between two rows of two dataframes
+    If df2 is none then use df1
+    """
+
+    if df2 is None:
+        df2=df1
+
+    if isinstance(row1, int) and isinstance(row2, int):
+        row_i = df1.iloc[row1]
+        row_j = df2.iloc[row2]
+    elif isinstance(row1, str) and isinstance(row2, str):
+        row_i = df1.loc[row1]
+        row_j = df2.loc[row2]
+    else:
+        raise KeyError(f"Cannot use type {type(row1)} as pd key")
+
+    # remove outlayers
+    quant_i = row_i.between(row_i.quantile(0.05), row_i.quantile(0.95))
+    quant_j = row_j.between(row_j.quantile(0.05), row_j.quantile(0.95))
+
+    idexes = quant_i & quant_j
+
+    row_i = row_i[idexes]  # without outliers
+    row_j = row_j[idexes]  # without outliers
+
+    # get correlation
+    corr = row_i.corr(row_j)
+    return corr
