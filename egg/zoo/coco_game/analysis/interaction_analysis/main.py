@@ -46,9 +46,6 @@ def generate_analysis(interaction_path, generate=True):
     superclass_analysis = Analysis(interaction_path, superclass_out_dir, analysis_path, "_superclass")
 
     joined_anal = JoinedAnalysis(interaction_path, joined_out_dir, analysis_path, class_analysis, superclass_analysis)
-    joined_anal.same_superclass_sequence()
-    joined_anal.super_class_comparison()
-    joined_anal.add_readme()
 
     if generate:
         perform_all(class_analysis)

@@ -1,4 +1,6 @@
+import pickle
 from copy import copy
+from pathlib import Path
 
 import pandas as pd
 
@@ -10,9 +12,14 @@ from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_
 
 class JoinedAnalysis:
 
-    def __init__(self, interaction_path, out_dir, analysis_path, class_analysis, superclass_analysis):
+    def __init__(self, interaction_path, out_dir, analysis_path: Path, class_analysis, superclass_analysis):
         self.class_analysis = class_analysis
         self.superclass_analysis = superclass_analysis
+        self.interaction_path = interaction_path
+        self.path_out_dir = out_dir
+
+        model_idx= analysis_path.parts.index('runs')-1
+        self.model_name= analysis_path.parts[model_idx]
 
         filter = "joined_"
         res_dict = load_generate_files(analysis_path, filter)
@@ -25,12 +32,20 @@ class JoinedAnalysis:
             new_key = key.replace(f"{filter}", "")
             self.__setattr__(new_key, res_dict[key])
 
-        self.interaction_path = interaction_path
-        self.path_out_dir = out_dir
-        self.data = {}
+        if "data" not in res_dict:
+            self.data = {}
+            self.same_superclass_sequence()
+            self.super_class_comparison()
+
+            path = analysis_path.joinpath(f"{filter}data.pkl")
+
+            with open(path, "wb") as file:
+                pickle.dump(self.data, file)
+
+        self.add_readme()
 
     def readme_data_analysis(self, file):
-        class_len = [len(x) for x in self.class_hierarchy.values()]
+        class_len = [len(x)-2 for x in self.class_hierarchy.values()]
         accuracy = self.class_analysis.acc_analysis[Acc]
 
         file.write("# Data Analysis\n")
@@ -135,9 +150,9 @@ class JoinedAnalysis:
             return df
 
         def filter_same_words(main_word, serie):
-            words=list(serie.index)
-            words=[x.split("_") for x in words]
-            keep=[all([mw not in words[i] for mw in main_word.split("_") ]) for i in range(len(words))]
+            words = list(serie.index)
+            words = [x.split("_") for x in words]
+            keep = [all([mw not in words[i] for mw in main_word.split("_")]) for i in range(len(words))]
             return serie[keep].dropna()
 
         def write_correlations(file, cors):
@@ -147,7 +162,7 @@ class JoinedAnalysis:
             for col in cors.columns:
                 c = cors[col]
 
-                c=filter_same_words(col, c)
+                c = filter_same_words(col, c)
 
                 pos = c[c > 0]
                 neg = c[c < 0]
@@ -336,7 +351,7 @@ class JoinedAnalysis:
 
         with open(readme_path, "w+") as file:
             file.write("# Intro\n"
-                       "Before starting the anlaysis, we report the meaning of the metrics used:\n")
+                       "Before starting the analysis, we report the meaning of the metrics used:\n")
 
             explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
             file.writelines(explenations)
