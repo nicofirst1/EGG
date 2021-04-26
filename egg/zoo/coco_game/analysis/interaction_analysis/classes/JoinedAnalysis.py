@@ -7,7 +7,7 @@ import pandas as pd
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.joined import joined_analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, max_sequence_num, normalize_drop, \
-    add_row
+    add_row, console
 
 
 class JoinedAnalysis:
@@ -18,8 +18,9 @@ class JoinedAnalysis:
         self.interaction_path = interaction_path
         self.path_out_dir = out_dir
 
-        model_idx= analysis_path.parts.index('runs')-1
-        self.model_name= analysis_path.parts[model_idx]
+        model_idx = analysis_path.parts.index('runs') - 1
+        self.model_name = analysis_path.parts[model_idx]
+        console.log(f"Computing joined analysis for model {self.model_name}\n")
 
         filter = "joined_"
         res_dict = load_generate_files(analysis_path, filter)
@@ -45,7 +46,7 @@ class JoinedAnalysis:
         self.add_readme()
 
     def readme_data_analysis(self, file):
-        class_len = [len(x)-2 for x in self.class_hierarchy.values()]
+        class_len = [len(x) - 2 for x in self.class_hierarchy.values()]
         accuracy = self.class_analysis.acc_analysis[Acc]
 
         file.write("# Data Analysis\n")

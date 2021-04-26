@@ -48,9 +48,19 @@ def update_namespace(opts: Namespace, update_dict):
 def main(params=None):
     opts = parse_arguments(params=params)
 
+    both_path = "0f33c569"
+    seg_path = "b407ecb5"
+    file_path=f"/home/dizzi/Documents/Egg_expermients/median_runs/{seg_path}/"
 
-    params = load_params("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Both_Median/0f33c569/params.json")
+    random_seed=33
+    data_seed=42
+
+    params = load_params(f"{file_path}params.json")
     opts=update_namespace(opts, params)
+
+    opts.random_seed=random_seed
+    opts.data_seed=data_seed
+
     console.log(sorted(vars(opts).items()))
 
     define_project_dir(opts)
@@ -72,8 +82,7 @@ def main(params=None):
         validation_data=None,
     )
 
-    trainer.load_from_latest(
-        Path("/home/dizzi/Documents/Egg_expermients/median_runs/Best_Both_Median/0f33c569/best_both_median_seed_nest_out"))
+    trainer.load_from_latest(Path(file_path))
 
     for _ in track(range(1), "Testing..."):
         loss, logs = trainer.train_eval()

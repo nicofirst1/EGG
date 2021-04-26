@@ -5,6 +5,7 @@ import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis import EXPLENATIONS
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
+from egg.zoo.coco_game.utils.utils import console
 
 
 class ComparedAnalysis:
@@ -16,6 +17,8 @@ class ComparedAnalysis:
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
+
+        console.log(f"Compared analysis for {len(joined_list)} models\n")
 
         self.out_dir.mkdir(exist_ok=True)
 
@@ -39,7 +42,9 @@ class ComparedAnalysis:
             for jdx in range(idx + 1, list_len):
                 join_j = self.joined_list[jdx]
 
-                file.write(f"\n# Difference {join_i.model_name}/{join_j.model_name}\n")
+                file.write(f"\n# Difference {join_i.model_name}/{join_j.model_name}\n"
+                           f"This section regards the differences between the model {join_i.model_name} located at `{join_i.interaction_path}`\n"
+                           f"and the model {join_j.model_name}, located at `{join_j.interaction_path}`.\n")
 
                 self.data_diff(file, join_i, join_j)
                 self.class_diff(file, join_i, join_j, superclass=False)
