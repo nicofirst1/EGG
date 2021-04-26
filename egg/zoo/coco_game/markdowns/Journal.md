@@ -1,3 +1,87 @@
+# Take home from analysis
+
+In the following section, we report the major discoveries coming from the analysis of the both and seg models.
+
+# Seg Model
+
+# Comaprison
+
+In this section we will analyze the main differences between the seg and both model.
+
+## Class vs Superclass
+
+the main differences between the models should be studied differentiating between class and superclass analysis. Indeed
+the per class analysis focuses more on the accuracy of each prediction, in this case all the classes are seen as diverse
+objects that needs to be predicted. On the other hand, the superclass analysis focuses more on a set of objects sharing
+similar characteristics. In this case it emphasize the difficulty in predicting classes with the same superclass.
+
+### Accuracy
+
+The seg and both model focuses on this two levels as can be seen by the accuracy. When the accuracy is estimated on a
+class level, then the seg scores 94.4% and the both 92.7%. On the other hand, when the accuracy is superclass level, seg
+scores 93.3% and both 94.2%.
+
+There are two takeaways from this. Seg is better (0.7%) in the class level classification. Since the model has no idea
+of the general context, it learns to be specific for every instance, trying to diversify the message form each class.
+Differently, both scores higher (0.9%) in the superclass classification. This result derives from the context knowledge
+of the both model, indeed this model learns to differentiate between similar classes (belonging to the same superclass)
+in a more efficient way.
+
+## intraclass_sequences_uniqueness
+
+The intraclass_sequences_uniqueness is calculated onto the sequences_specificity. For all the sequences in one
+superclass it counts the time a sequences is used with more than one class. For example a superclass with
+intraclass_sequences_uniqueness zero has an unique sequences for each class, while a intraclass_sequences_uniqueness of
+1 means that all the symbols are shared among each class.
+
+Its value for the seg (0.004) is higher (+65%) than the one for both (0.001). This means that the both model tends to
+share sequences between the members of the same superclass.
+
+## Corr ambiguity_rate-accuracy
+
+The ambiguity_rate is the number of times the class happens both as a target and a distractors divided the total number
+of appearances.
+
+We see that, on the class level, this correlation is negative (-0.138) for the seg model and positive (0.017) with the
+both model. This means that the the both model finds a target easier to predict the more times the class appears. Indeed
+we report the same trend when it comes to the correlation between accuracy and frequency: we see that for the seg model
+the correlation is (-0.005) while for both is (0.046). Altought the values are small the correlation shows that the both
+model finds it easier to predict class which appear with a higher frequency.
+
+On the other hand, when considering the superclasses, we see an opposite trend. Indeed the correlation is higher with
+the seg model (-0.083) than with the both one (-0.281). Both the trends are inversly correlated, which means that the
+higher the ambiguity rate the lower the cances to guess correcly. (?)
+
+## Super class
+
+## corr accuracy other_classes_num
+
+On a superclass level the correlation between accuracy and the number of total classes present in the image is negative
+for the seg model (-0.454) and positive for the both one (0.437). This means that the both model finds it easier to
+predict a target when the image contains a lot of objects.
+
+## corr accuracy ambiguity_rate
+
+The ambiguity_rate is the number of times the class happens both as a target and a distractors divided the total number
+of appearances.
+
+However the correlation between ambiguity rate and accuracy is positive (0.291) for the seg model and negative (-0.259)
+for the both one. This implies that the seg model finds it easier
+
+## Language
+
+Both has less symbols (571 vs 622) and a lower average message length (5.92 vs 6)
+
+Both mean frequency per sequence is 1% lower than the random one, while the seg one is the same.
+
+Most used sequence is for the superclass accessory for both and seg.
+
+# best take home
+
+The seg model is better in predicting the actual target but it does so at the cost of higher sequences specialization
+and number. On the other hand the both model is slightly worse at predicting the target but it share sequences across
+superclasses.
+
 # Validation problem
 
 The problem is that the validation accuracy is much higher than the training one in most of the epochs. Following a list
@@ -26,10 +110,11 @@ of NOT possible causes:
 - Change data seed: Nope
 - Debug with batchsize = 16: not learnig, the first three epochs the val seems to learn then goes back to 50%
 - add CenterCrop to transformation: maybe this is it? Nope it got thing worse
-- Could be feature extraction Sender/Receiver: check with same image in train eval if features are the same for both: they are the
-  same...
+- Could be feature extraction Sender/Receiver: check with same image in train eval if features are the same for both:
+  they are the same...
 
 Todo:
+
 - Change receiver head: signal_expansion same thing; only_image not learning
 - ?
 
@@ -48,8 +133,8 @@ Some observations on the pattern:
 
 Observation on the other metrics:
 
-- Loss starts low (0.5), then increases during ~4 epochs (1.4), during this time train loss < val loss.
-  then decreases again with train loss > val loss.  
+- Loss starts low (0.5), then increases during ~4 epochs (1.4), during this time train loss < val loss. then decreases
+  again with train loss > val loss.
 
 - X loss: decreases steadily during the train
 
