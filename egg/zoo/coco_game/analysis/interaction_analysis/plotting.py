@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from rich.progress import track
 
 sns.set_theme(style="ticks", color_codes=True)
 from sklearn import preprocessing
@@ -105,3 +106,60 @@ def plot_histogram(
         plt.show()
 
     plt.close()
+
+
+def plot_multi_bar(df1, df2, models, intensity, save_dir):
+    def filter_patches(patches):
+        """
+        Get the patch with the max height
+        """
+        for idx in range(len(patches)):
+            p = patches[idx]
+            x = p[0]
+            y = p[1]
+
+            if abs(x._height) > abs(y._height):
+                patches[idx] = x
+            else:
+                patches[idx] = y
+        return patches
+
+    models = list(models)
+
+    for col_id in track(df1.columns,description="Plotting comparison..."):
+        # get data
+        col1 = df1[col_id]
+        col2 = df2[col_id]
+        col3 = intensity[col_id]
+
+        # define df
+        df = pd.DataFrame([col1, col2], index=models)
+        df['model'] = models
+        df = pd.melt(df, id_vars="model", var_name="col", value_name="correlation")
+
+        # plot
+        g = sns.catplot(x='col', y='correlation', hue='model', data=df, kind='bar', aspect=1.5, )
+        g.set_xticklabels(rotation=90)
+        plt.suptitle(col_id)
+        plt.gcf().subplots_adjust(bottom=0.3)
+
+        # add text
+        ax = g.facet_axis(0, 0)
+        patches1 = ax.patches[:len(col1)]
+        patches2 = ax.patches[len(col1):]
+        patches = filter_patches(list(zip(patches1, patches2)))
+
+        idx = 0
+        for p in patches:
+            ax.text(p.get_x() - 0.01,
+                    p.get_height() + 0.02 if p.get_height() > 0 else p.get_height() - 0.07,
+                    f"{col3.iloc[idx] * 100:.1f}%",  # Used to format it K representation
+                    color='black',
+                    rotation='horizontal',
+                    size=7)
+            idx += 1
+
+        # save
+        plt.savefig(save_dir.joinpath(f"{col_id}.jpg"))
+        #plt.show()
+        plt.close()

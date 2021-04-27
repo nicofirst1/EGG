@@ -5,6 +5,7 @@ import pandas as pd
 
 from egg.zoo.coco_game.analysis.interaction_analysis import EXPLENATIONS
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
+from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_multi_bar
 from egg.zoo.coco_game.utils.utils import console
 
 
@@ -17,17 +18,28 @@ class ComparedAnalysis:
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
+        self.correlation_plots_path = self.out_dir.joinpath("Correlations")
 
         console.log(f"Compared analysis for {len(joined_list)} models\n")
 
         self.out_dir.mkdir(exist_ok=True)
+        self.correlation_plots_path.mkdir(exist_ok=True)
+
+        with open(self.correlation_plots_path.joinpath("README.md"), "w+") as file:
+            file.write("This folder contains a comaprison between the correlation factors of the models.\n"
+                       "Each image contains the correlation between two metrics:\n"
+                       "- A common one, which is reported in the title and the image name (e.g. accuracy.jpg)\n"
+                       "- All other metrics labeled on the x axis\n\n"
+                       "For each correlation pair both the values for two models are reported side by side (in different colors).\n"
+                       "On top of the highes column the significance value is reported as a percentage. "
+                       "The significance value report how much difference there is between the values for each models.\n")
 
         with open(self.readme_path, "w+") as file:
             file.write("# Intro\n"
                        "In the following we will analyze the differences between models in term of metrics.\n"
                        "The format for the analysis is always the same. "
                        "For all the metrics we report the values between model *i* and model *j* side by side.\n"
-                       f"This value is reported for all the metrics with a significance level > {self.significance_thrs*100}%.\n"
+                       f"This value is reported for all the metrics with a significance level > {self.significance_thrs * 100}%.\n"
                        f"Before this, below you can find the definitions for all the metrics:\n")
             explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
             file.writelines(explenations)
@@ -58,7 +70,7 @@ class ComparedAnalysis:
             vi = join_i.data[k]
             vj = join_j.data[k]
 
-            write_diff(vi, vj, k, self.significance_thrs, file)
+            _ = write_diff(vi, vj, k, self.significance_thrs, file)
 
     def class_diff(self, file, join_i, join_j, superclass=False):
 
@@ -74,11 +86,13 @@ class ComparedAnalysis:
             a_j = join_j.class_analysis
 
         file.write(f"\n### General Infos\n")
-        write_diff(a_i.acc_analysis, a_j.acc_analysis, "acc_analysis", self.significance_thrs, file)
+        _ = write_diff(a_i.acc_analysis, a_j.acc_analysis, "acc_analysis", self.significance_thrs, file)
         file.write(f"\n### Per class infos\n")
-        write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
+        _ = write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
         file.write(f"\n### Correlations\n")
-        write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file)
+        intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file)
+        plot_multi_bar(a_i.correlations, a_j.correlations, (join_i.model_name, join_j.model_name), intensity,
+                       self.correlation_plots_path)
 
 
 def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
@@ -99,7 +113,7 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
             if not any(sig > significance_thrs):
                 continue
 
-            file.write(f"- dataframe row *{row}* : \n")
+            file.write(f"- dataframe row **{row}** : \n")
 
             sig = sig.sort_values(ascending=False)[:max_cols]
 
@@ -114,3 +128,4 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
             file.write(f"- *{k}* : {vi:.3f}/{vj:.3f} ({significance * 100:.2f}% significance)\n")
 
     file.write("\n")
+    return significance
