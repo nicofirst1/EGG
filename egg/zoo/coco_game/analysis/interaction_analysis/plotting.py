@@ -126,7 +126,7 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir):
 
     models = list(models)
 
-    for col_id in track(df1.columns,description="Plotting comparison..."):
+    for col_id in track(df1.columns, description="Plotting comparison..."):
         # get data
         col1 = df1[col_id]
         col2 = df2[col_id]
@@ -151,15 +151,13 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir):
 
         idx = 0
         for p in patches:
-            ax.text(p.get_x() - 0.01,
-                    p.get_height() + 0.02 if p.get_height() > 0 else p.get_height() - 0.07,
-                    f"{col3.iloc[idx] * 100:.1f}%",  # Used to format it K representation
-                    color='black',
-                    rotation='horizontal',
-                    size=7)
+            x = p.get_x() - 0.01
+            y = p.get_height() + 0.02 if p.get_height() > 0 else p.get_height() - 0.07
+            text = f"{col3.iloc[idx] * 100:.1f}%"
+            ax.text(x, y, text, color='black', rotation='horizontal', size=7)
             idx += 1
 
         # save
         plt.savefig(save_dir.joinpath(f"{col_id}.jpg"))
-        #plt.show()
+        # plt.show()
         plt.close()

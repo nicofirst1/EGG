@@ -18,14 +18,18 @@ class ComparedAnalysis:
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
-        self.correlation_plots_path = self.out_dir.joinpath("Correlations")
+        self.corr_plots_path = self.out_dir.joinpath("Correlations")
+        self.corr_class_path = self.corr_plots_path.joinpath("Class")
+        self.corr_superclass_path = self.corr_plots_path.joinpath("SuperClass")
 
         console.log(f"Compared analysis for {len(joined_list)} models\n")
 
         self.out_dir.mkdir(exist_ok=True)
-        self.correlation_plots_path.mkdir(exist_ok=True)
+        self.corr_plots_path.mkdir(exist_ok=True)
+        self.corr_class_path.mkdir(exist_ok=True)
+        self.corr_superclass_path.mkdir(exist_ok=True)
 
-        with open(self.correlation_plots_path.joinpath("README.md"), "w+") as file:
+        with open(self.corr_plots_path.joinpath("README.md"), "w+") as file:
             file.write("This folder contains a comaprison between the correlation factors of the models.\n"
                        "Each image contains the correlation between two metrics:\n"
                        "- A common one, which is reported in the title and the image name (e.g. accuracy.jpg)\n"
@@ -59,8 +63,8 @@ class ComparedAnalysis:
                            f"and the model {join_j.model_name}, located at `{join_j.interaction_path}`.\n")
 
                 self.data_diff(file, join_i, join_j)
-                self.class_diff(file, join_i, join_j, superclass=False)
-                self.class_diff(file, join_i, join_j, superclass=True)
+                self.class_diff(file, join_i, join_j, self.corr_class_path, superclass=False)
+                self.class_diff(file, join_i, join_j, self.corr_superclass_path,superclass=True)
 
     def data_diff(self, file, join_i, join_j):
 
@@ -72,7 +76,7 @@ class ComparedAnalysis:
 
             _ = write_diff(vi, vj, k, self.significance_thrs, file)
 
-    def class_diff(self, file, join_i, join_j, superclass=False):
+    def class_diff(self, file, join_i, join_j, path2plots, superclass=False):
 
         if superclass:
             file.write(f"\n## Superclass Difference\n")
@@ -91,8 +95,7 @@ class ComparedAnalysis:
         _ = write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
         file.write(f"\n### Correlations\n")
         intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file)
-        plot_multi_bar(a_i.correlations, a_j.correlations, (join_i.model_name, join_j.model_name), intensity,
-                       self.correlation_plots_path)
+        plot_multi_bar(a_i.correlations, a_j.correlations, (join_i.model_name, join_j.model_name), intensity, path2plots)
 
 
 def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
