@@ -1,29 +1,29 @@
-CTED = "correct_tartget==distr"
-WTED = "wrong_tartget==distr"
-CTND = "correct_tartget!=distr"
-WTND = "wrong_tartget!=distr"
+CTED = "V_trg==dstr"
+WTED = "X_trg==dstr"
+CTND = "V_trg!=dstr"
+WTND = "X_trg!=dstr"
 
 Tot = "total"
 Crr = "correct"
 Acc = "accuracy"
-Frq = "frequency"
+Frq = "freq"
 
-OCL = "other_classes_num"
-TF = "target_freq"
+OCL = "othr_clss_num"
+TF = "trg_freq"
 
-PSC = "precision_sc"
-POC = "precision_oc"
-ARt = "ambiguity_rate"
-ARc = "ambiguity_richness"
-CR = "class_richness"
+PSC = "prec_sc"
+POC = "prec_oc"
+ARt = "ambgty_rate"
+ARc = "ambgty_rchns"
+CR = "class_rchns"
 
-Sy = "symbols"
-Se = "sequences"
+Sy = "sym"
+Se = "seq"
 SyCR = f"{Sy}_{CR}"
 SeCR = f"{Se}_{CR}"
 
-SeS = f"{Se}_specificity"
-ISeU = f"intraclass_{Se}_uniqueness"
+SeS = f"{Se}_spec"
+ISeU = f"intracls_{Se}_uniq"
 
 EXPLENATIONS = {
     CTED: "Number of correct predictions when the target and the distractor belong to the same class",
