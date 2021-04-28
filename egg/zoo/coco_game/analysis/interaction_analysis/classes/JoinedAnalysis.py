@@ -280,14 +280,14 @@ class JoinedAnalysis:
 
             file.write(f"\n ## Sequence Specificity\n")
             file.write(f"Another interesting aspect of the data is {SeS}.\n"
-                       f"{EXPLENATIONS[SeS]}\n"
+                       f"{DEFINITIONS[SeS]}\n"
                        f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} "
                        f"({sequences_len * self.data[SeS]:.2f}/{sequences_len}) is unique per superclass.\n\n")
 
             file.write(
                 f"It is also important to consider how much of these sequences are shared across the members of a specific superclass."
                 f" This is measured by *{ISeU}*.\n"
-                f"{EXPLENATIONS[ISeU]}\n"
+                f"{DEFINITIONS[ISeU]}\n"
                 f"Its value is {self.data[ISeU]:3f}.\n")
 
             file.write(
@@ -337,7 +337,7 @@ class JoinedAnalysis:
         corr_frq_serc = self.class_analysis.acc_analysis[f"Corr {Frq}-{SeCR}"]
 
         file.write(
-            f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} defined as: {EXPLENATIONS[SeCR]}\n"
+            f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} defined as: {DEFINITIONS[SeCR]}\n"
             f"This implies that more frequent classes are mapped to more {Se}.\n\n")
 
         mpsc = self.data['general'].loc[PSC]
@@ -354,8 +354,7 @@ class JoinedAnalysis:
             file.write("# Intro\n"
                        "Before starting the analysis, we report the meaning of the metrics used:\n")
 
-            explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
-            file.writelines(explenations)
+            file.writelines(PRINT_DEF)
             file.write("\n\n")
 
             self.readme_data_analysis(file)

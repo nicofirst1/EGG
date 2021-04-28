@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import olefile
 import pandas as pd
 from rich.progress import track
 
@@ -47,7 +48,6 @@ class Analysis:
         self.path_lang_tensor.mkdir(parents=True, exist_ok=True)
         self.path_infos.mkdir(parents=True, exist_ok=True)
 
-        self.add_readme(interaction_path)
 
         console.log(
             f"Analyzing {filter_str} run with accuracy: {self.acc_analysis[Acc]:.3f} at path {interaction_path}."
@@ -56,9 +56,9 @@ class Analysis:
         self.update_infos()
         self.update_analysis()
         self.compute_info_correlations()
+        self.add_readme(interaction_path)
 
     def add_readme(self, interaction_path):
-        explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
 
         readme_path = self.path_out_dir.joinpath("README.md")
         with open(readme_path, "w+") as f:
@@ -72,7 +72,15 @@ class Analysis:
                 f"- *LanguageTensor* : information regarding the triple (target, distractor, sequence)\n"
                 f"\nFind below the information regarding the metrics:\n"
             )
-            f.writelines(explenations)
+
+            f.writelines(PRINT_DEF)
+            f.write("\n\n# Mean values\n"
+                    "Next we report the mean values for some information about the analysis:\n")
+
+            means=self.acc_infos.mean(axis=1)
+
+            for ind in means.index:
+                f.write(f"-Mean **{ind}** is : {means.loc[ind]:.4f}\n")
 
         readme_path = self.path_correlations.joinpath("README.md")
 
@@ -81,7 +89,7 @@ class Analysis:
                     "Each figure reports a number of plots sorted by the corrleation value\n"
                     "Please find below the meaning of each metric:\n")
 
-            f.writelines(explenations)
+            f.writelines(PRINT_DEF)
 
         readme_path = self.path_cm.joinpath("README.md")
         with open(readme_path, "w+") as f:
@@ -113,7 +121,7 @@ class Analysis:
                 "Moreover each metric is plotted for all the classes (between the 95% and 5% percentile) in the *Histograms* folder\n\n"
 
             )
-            f.writelines(explenations)
+            f.writelines(PRINT_DEF)
 
     def update_analysis(self):
         to_add = self.acc_infos.loc[ARt, :].corr(

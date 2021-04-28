@@ -108,7 +108,7 @@ def plot_histogram(
     plt.close()
 
 
-def plot_multi_bar(df1, df2, models, intensity, save_dir):
+def plot_multi_bar(df1, df2, models, intensity, save_dir, superclass=False):
     def filter_patches(patches):
         """
         Get the patch with the max height
@@ -126,7 +126,7 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir):
 
     models = list(models)
 
-    for col_id in track(df1.columns, description="Plotting comparison..."):
+    for col_id in track(sorted(df1.columns), description="Plotting comparison..."):
         # get data
         col1 = df1[col_id]
         col2 = df2[col_id]
@@ -140,7 +140,11 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir):
         # plot
         g = sns.catplot(x='col', y='correlation', hue='model', data=df, kind='bar', aspect=1.5, )
         g.set_xticklabels(rotation=90)
-        plt.suptitle(col_id)
+
+        title = "[Superclass] " if superclass else "[Class] "
+        title += col_id
+
+        plt.suptitle(title)
         plt.gcf().subplots_adjust(bottom=0.3)
 
         # add text
@@ -160,4 +164,47 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir):
         # save
         plt.savefig(save_dir.joinpath(f"{col_id}.jpg"))
         # plt.show()
+        plt.close()
+
+
+def plot_multi_bar4(df_class, df_superclass, models, save_dir):
+
+
+    models = list(models)*2
+
+    models[0] = f"class {models[0]}"
+    models[1] = f"class {models[1]}"
+
+    models[2] = f"superclass {models[2]}"
+    models[3] = f"superclass {models[3]}"
+
+    df1_class, df2_class = df_class
+    df1_superclass, df2_superclass = df_superclass
+
+    for col_id in track(sorted(df1_superclass.columns), description="Plotting comparison4..."):
+        # get data
+        try:
+            cc1 = df1_class[col_id]
+            cc2 = df2_class[col_id]
+            csc1 = df1_superclass[col_id]
+            csc2 = df2_superclass[col_id]
+        except KeyError:
+            continue
+        # define df
+        df = pd.DataFrame([cc1, cc2, csc1, csc2], index=models)
+        df['model'] = models
+        df = pd.melt(df, id_vars="model", var_name="metrics", value_name="correlation")
+
+        # plot
+        g = sns.catplot(x='metrics', y='correlation', hue='model', data=df, kind='bar', aspect=1.5, )
+        g.set_xticklabels(rotation=90)
+
+        title = col_id
+
+        plt.suptitle(title)
+        plt.gcf().subplots_adjust(bottom=0.35)
+
+        # save
+        plt.savefig(save_dir.joinpath(f"{col_id}.jpg"))
+        #plt.show()
         plt.close()

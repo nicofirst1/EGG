@@ -3,9 +3,9 @@ from typing import List
 
 import pandas as pd
 
-from egg.zoo.coco_game.analysis.interaction_analysis import EXPLENATIONS
+from egg.zoo.coco_game.analysis.interaction_analysis import PRINT_DEF
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
-from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_multi_bar
+from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_multi_bar, plot_multi_bar4
 from egg.zoo.coco_game.utils.utils import console
 
 
@@ -15,12 +15,14 @@ class ComparedAnalysis:
         self.joined_list = joined_list
 
         self.significance_thrs = 0.5
+        self.plot = True
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
         self.corr_plots_path = self.out_dir.joinpath("Correlations")
         self.corr_class_path = self.corr_plots_path.joinpath("Class")
         self.corr_superclass_path = self.corr_plots_path.joinpath("SuperClass")
+        self.corr_both_path = self.corr_plots_path.joinpath("Both")
 
         console.log(f"Compared analysis for {len(joined_list)} models\n")
 
@@ -28,6 +30,7 @@ class ComparedAnalysis:
         self.corr_plots_path.mkdir(exist_ok=True)
         self.corr_class_path.mkdir(exist_ok=True)
         self.corr_superclass_path.mkdir(exist_ok=True)
+        self.corr_both_path.mkdir(exist_ok=True)
 
         with open(self.corr_plots_path.joinpath("README.md"), "w+") as file:
             file.write("This folder contains a comaprison between the correlation factors of the models.\n"
@@ -45,8 +48,7 @@ class ComparedAnalysis:
                        "For all the metrics we report the values between model *i* and model *j* side by side.\n"
                        f"This value is reported for all the metrics with a significance level > {self.significance_thrs * 100}%.\n"
                        f"Before this, below you can find the definitions for all the metrics:\n")
-            explenations = [f"- *{k}* : {v}\n\n" for k, v in EXPLENATIONS.items()]
-            file.writelines(explenations)
+            file.writelines(PRINT_DEF)
 
             self.iterate(file)
 
@@ -64,7 +66,13 @@ class ComparedAnalysis:
 
                 self.data_diff(file, join_i, join_j)
                 self.class_diff(file, join_i, join_j, self.corr_class_path, superclass=False)
-                self.class_diff(file, join_i, join_j, self.corr_superclass_path,superclass=True)
+                self.class_diff(file, join_i, join_j, self.corr_superclass_path, superclass=True)
+
+                if self.plot:
+                    corr_class = (join_i.class_analysis.correlations, join_j.class_analysis.correlations)
+                    corr_superclass = (join_i.superclass_analysis.correlations, join_j.superclass_analysis.correlations)
+                    plot_multi_bar4(corr_class, corr_superclass, (join_i.model_name, join_j.model_name),
+                                    self.corr_both_path)
 
     def data_diff(self, file, join_i, join_j):
 
@@ -95,7 +103,11 @@ class ComparedAnalysis:
         _ = write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
         file.write(f"\n### Correlations\n")
         intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file)
-        plot_multi_bar(a_i.correlations, a_j.correlations, (join_i.model_name, join_j.model_name), intensity, path2plots)
+
+        if self.plot:
+            plot_multi_bar(a_i.correlations, a_j.correlations,
+                           (join_i.model_name, join_j.model_name), intensity,
+                           path2plots, superclass)
 
 
 def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
