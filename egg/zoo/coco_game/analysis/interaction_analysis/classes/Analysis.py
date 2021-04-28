@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import olefile
 import pandas as pd
 from rich.progress import track
 
@@ -11,7 +10,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import language_an
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
     plot_multi_scatter, plot_histogram
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row, \
-    estimate_correlation
+    estimate_correlation, normalize_drop
 
 
 def get_analysis(interaction_path, out_dir, filter):
@@ -48,7 +47,6 @@ class Analysis:
         self.path_lang_tensor.mkdir(parents=True, exist_ok=True)
         self.path_infos.mkdir(parents=True, exist_ok=True)
 
-
         console.log(
             f"Analyzing {filter_str} run with accuracy: {self.acc_analysis[Acc]:.3f} at path {interaction_path}."
             f"\nSaving results in {out_dir}")
@@ -77,7 +75,7 @@ class Analysis:
             f.write("\n\n# Mean values\n"
                     "Next we report the mean values for some information about the analysis:\n")
 
-            means=self.acc_infos.mean(axis=1)
+            means = self.acc_infos.mean(axis=1)
 
             for ind in means.index:
                 f.write(f"-Mean **{ind}** is : {means.loc[ind]:.4f}\n")
@@ -159,10 +157,27 @@ class Analysis:
             to_add2, f"{ARc}_perc", self.acc_infos
         )
 
-        to_add = class_richness(self.lang_sequence_cooc)
+
+        lang_sequence = normalize_drop(self.lang_sequence, axis=0)
+
+        # get all the sequences that are used once
+        sequences = (lang_sequence == 1).any()
+        sequences = sequences[sequences].index
+        # count the unique sequence per class
+        ises = (lang_sequence[sequences] == 1).sum(axis=1)
+
+        total = self.acc_infos.loc[Frq] * self.acc_analysis[NObj] * self.acc_infos.loc[TF]
+        ises/=total
+
+        # # normalize by number of sequences
+        # ises = ises / lang_sequence.shape[1]
+        # # divide per target frequency
+        # ises = ises * self.acc_infos.loc[TF]
+        # add to acc infos
         self.acc_infos = add_row(
-            to_add, CR, self.acc_infos
+            ises, ISeS, self.acc_infos
         )
+
 
     def plot_cm(self):
         plot_confusion_matrix(
@@ -214,7 +229,9 @@ class Analysis:
 
                 df[idx][jdx] = corr
 
-        self.correlations=df
+        self.correlations = df
+
+
 
     def plot_correlations(self):
         info_len = len(self.acc_infos)

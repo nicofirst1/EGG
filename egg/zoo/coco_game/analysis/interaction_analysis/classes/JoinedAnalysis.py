@@ -68,11 +68,11 @@ class JoinedAnalysis:
             sc_perc = dt.pop('total_perc')
 
             file.write(
-                f"- **{superclass}** has {sc_total} instances which make up {sc_perc * 100:.2f}% of the dataset. It has an ambiguity rate of {sc_cooc[superclass][ARt] * 100:.2f}% and a class richness of {sc_cooc[superclass][CR] * 100:.2f}%."
+                f"- **{superclass}** has {sc_total} instances which make up {sc_perc * 100:.2f}% of the dataset. It has an ambiguity rate of {sc_cooc[superclass][ARt] * 100:.2f}% and a intra class specificity of {sc_cooc[superclass][ISeS] * 100:.2f}%."
                 f" Its classes are:\n")
             for class_name, perc in dt.items():
                 file.write(
-                    f"\t- *{class_name}* represent the {perc * 100:.2f}% of its superclass and has an ambiguity rate of {c_cooc[class_name][ARt] * 100:.2f}% and a class richness of {sc_cooc[superclass][CR] * 100:.2f}%\n")
+                    f"\t- *{class_name}* represent the {perc * 100:.2f}% of its superclass and has an ambiguity rate of {c_cooc[class_name][ARt] * 100:.2f}% and a intra class specificity of {sc_cooc[superclass][ISeS] * 100:.2f}%\n")
             file.write("\n")
 
         file.write("\n## General knowledge\n")
@@ -379,16 +379,16 @@ class JoinedAnalysis:
         total /= seqclass.shape[1]
         self.data[SeS] = total
 
-        lang_sequence = normalize_drop(self.class_analysis.lang_sequence)
+        class_lang_sequence = normalize_drop(self.class_analysis.lang_sequence)
         # normalize on column to sum to 1
-        lang_sequence = lang_sequence.multiply(1 / lang_sequence.sum(), axis=1)
+        class_lang_sequence = class_lang_sequence.multiply(1 / class_lang_sequence.sum(), axis=1)
 
         total = 0
         idx = 0
         iseu_dict = {}
         # for alla the sequences above, look how much they are shared across classes of the same superclass
         for superclass, sequences in tmp.items():
-            class_seq = lang_sequence[sequences]
+            class_seq = class_lang_sequence[sequences]
             class_seq = class_seq[(class_seq.T != 0).any()]
             non_zero = class_seq.astype(bool).sum(axis=0) / class_seq.shape[0] - 1 / class_seq.shape[0]
             non_zero = sum(non_zero) / len(non_zero)

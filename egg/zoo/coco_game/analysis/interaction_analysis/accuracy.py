@@ -40,7 +40,6 @@ def get_infos(lines: list) -> Dict:
 
         infos = infos.rename(index={Crr: Acc, Tot: Frq})
 
-
         to_add = infos.loc[CTED, :] / (
                 infos.loc[WTED, :] + infos.loc[CTED, :]
         )
@@ -50,7 +49,6 @@ def get_infos(lines: list) -> Dict:
                 infos.loc[WTND, :] + infos.loc[CTND, :]
         )
         infos = add_row(to_add, POC, infos)
-
 
         to_add = infos.loc[CTED, :] + infos.loc[WTED, :]
         infos = add_row(to_add, ARt, infos)
@@ -137,9 +135,11 @@ def get_infos(lines: list) -> Dict:
     accuracy_class_dict = pd.DataFrame.from_dict(accuracy_class_dict)
     accuracy_superclass_dict = pd.DataFrame.from_dict(accuracy_superclass_dict)
 
+    total = accuracy_superclass_dict.sum(axis=1)[Tot]
+
     accuracy_class_dict = normalize(accuracy_class_dict)
     accuracy_superclass_dict = normalize(accuracy_superclass_dict)
-    return accuracy_class_dict, accuracy_superclass_dict
+    return accuracy_class_dict, accuracy_superclass_dict, total
 
 
 def coccurence(lines, classes, superclasses):
@@ -201,11 +201,14 @@ def accuracy_analysis(interaction_path, out_dir):
 
     header = lines.pop(0)
     assert len(lines) > 0, "Empty Csv File!"
-    class_infos, superclass_infos = get_infos(lines)
+    class_infos, superclass_infos, total = get_infos(lines)
 
     cooc, scooc = coccurence(lines, class_infos.columns, superclass_infos.columns)
     class_analysis = analysis_df(class_infos)
     superclass_analysis = analysis_df(superclass_infos)
+
+    class_analysis[NObj] = int(total)
+    superclass_analysis[NObj] = int(total)
 
     cooc_path = out_dir.joinpath("acc_class_cooc.csv")
     scooc_path = out_dir.joinpath("acc_superclass_cooc.csv")

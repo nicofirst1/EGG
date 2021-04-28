@@ -1,6 +1,8 @@
 _target = "trg"
 _distractor = "dstr"
 
+NObj="number_objects"
+
 CTED = f"V_{_target}=={_distractor}"
 WTED = f"X_{_target}=={_distractor}"
 CTND = f"V_{_target}!={_distractor}"
@@ -30,6 +32,7 @@ SeCR = f"{Se}_{CR}"
 
 SeS = f"{Se}_spec"
 ISeU = f"intercls_{Se}_uniq"
+ISeS = f"intracls_{Se}_spcf"
 
 DEFINITIONS = {
     CTED: "Number of correct predictions when the target and the distractor belong to the same class",
@@ -45,7 +48,7 @@ DEFINITIONS = {
     ARc: f"The {ARc} is ratio between number of unique {Se} used when target=distractor  and when target!= distractor. ",
     SeS: f"The {SeS} is the proportion of {Se} used mainly for one superclass in relation to the total length of all {Se}. ",
     ISeU: f"The {ISeU} is calculated onto the {SeS} regarding both the superclass and the class. For all the {Se} in one superclass it counts the time a {Se} is used with more than one class. For example a superclass with {ISeU} zero has an unique {Se} for each class, while a  {ISeU} of 1 means that all the symbols are shared among each class.",
-    ICSeS:f"E' una variante di class_richness, computata come numero di messaggi unici nella classe, diviso per la target_frequency della classe ",
+    ISeS:f"E' una variante di class_richness, computata come numero di messaggi unici nella classe, diviso per la target_frequency della classe ",
 }
 DEFINITIONS[SeCR] = f"{SeCR} refers to the {CR} on the {Se}.\nThe {CR} is defined as: {DEFINITIONS[CR]}."
 

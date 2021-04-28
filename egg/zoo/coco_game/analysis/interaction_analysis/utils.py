@@ -108,11 +108,17 @@ def max_sequence_num(vocab_size, max_length):
     return total
 
 
-def normalize_drop(df):
+def normalize_drop(df, axis=0):
+
+    if axis==1:
+        df = df.mul(1 / df[CR], axis=0)
+    else:
+        df = df.mul(1 / df.loc[Frq], axis=1)
+
     df = df.drop(Frq)
-    df = df.mul(1 / df[CR], axis=0)
     df = df.drop([CR], axis=1)
     return df
+
 
 
 def estimate_correlation(df1, row1, row2, df2=None):
