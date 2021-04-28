@@ -334,10 +334,10 @@ class JoinedAnalysis:
 
         file.write("\n\n")
 
-        corr_frq_serc = self.class_analysis.acc_analysis[f"Corr {Frq}-{SeCR}"]
+        corr_frq_serc = self.class_analysis.correlations[Frq][SeCR]
 
         file.write(
-            f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} defined as: {DEFINITIONS[SeCR]}\n"
+            f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR}.\n"
             f"This implies that more frequent classes are mapped to more {Se}.\n\n")
 
         mpsc = self.data['general'].loc[PSC]

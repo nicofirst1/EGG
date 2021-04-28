@@ -5,8 +5,7 @@ from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
 from egg.zoo.coco_game.analysis.interaction_analysis.accuracy import accuracy_analysis
-from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness, \
-    class_richness
+from egg.zoo.coco_game.analysis.interaction_analysis.language import language_analysis, ambiguity_richness
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
     plot_multi_scatter, plot_histogram
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row, \
@@ -122,25 +121,6 @@ class Analysis:
             f.writelines(PRINT_DEF)
 
     def update_analysis(self):
-        to_add = self.acc_infos.loc[ARt, :].corr(
-            self.lang_symbol[CR]
-        )
-        self.acc_analysis[f"Corr {ARt}-{SyCR}"] = float(to_add)
-
-        to_add = self.acc_infos.loc[Frq, :].corr(
-            self.lang_symbol[CR]
-        )
-        self.acc_analysis[f"Corr {Frq}-{SyCR}"] = to_add
-
-        to_add = self.acc_infos.loc[ARt, :].corr(
-            self.lang_sequence[CR]
-        )
-        self.acc_analysis[f"Corr {ARt}-{SeCR}"] = to_add
-
-        to_add = self.acc_infos.loc[Frq, :].corr(
-            self.lang_sequence[CR]
-        )
-        self.acc_analysis[f"Corr {Frq}-{SeCR}"] = to_add
 
         # add means
         for row in self.acc_infos.index:
@@ -148,6 +128,17 @@ class Analysis:
             self.acc_analysis[row] = mean
 
     def update_infos(self):
+
+        to_add = self.lang_sequence[CR]
+        self.acc_infos = add_row(
+            to_add, SeCR, self.acc_infos
+        )
+
+        to_add = self.lang_symbol[CR]
+        self.acc_infos = add_row(
+            to_add, SyCR, self.acc_infos
+        )
+
         to_add, to_add2 = ambiguity_richness(self.lang_sequence_cooc)
         self.acc_infos = add_row(
             to_add, ARc, self.acc_infos
@@ -156,7 +147,6 @@ class Analysis:
         self.acc_infos = add_row(
             to_add2, f"{ARc}_perc", self.acc_infos
         )
-
 
         lang_sequence = normalize_drop(self.lang_sequence, axis=0)
 
@@ -167,7 +157,7 @@ class Analysis:
         ises = (lang_sequence[sequences] == 1).sum(axis=1)
 
         total = self.acc_infos.loc[Frq] * self.acc_analysis[NObj] * self.acc_infos.loc[TF]
-        ises/=total
+        ises /= total
 
         # # normalize by number of sequences
         # ises = ises / lang_sequence.shape[1]
@@ -177,7 +167,6 @@ class Analysis:
         self.acc_infos = add_row(
             ises, ISeS, self.acc_infos
         )
-
 
     def plot_cm(self):
         plot_confusion_matrix(
@@ -230,8 +219,6 @@ class Analysis:
                 df[idx][jdx] = corr
 
         self.correlations = df
-
-
 
     def plot_correlations(self):
         info_len = len(self.acc_infos)

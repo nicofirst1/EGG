@@ -168,9 +168,7 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir, superclass=False):
 
 
 def plot_multi_bar4(df_class, df_superclass, models, save_dir):
-
-
-    models = list(models)*2
+    models = list(models) * 2
 
     models[0] = f"class {models[0]}"
     models[1] = f"class {models[1]}"
@@ -192,6 +190,7 @@ def plot_multi_bar4(df_class, df_superclass, models, save_dir):
             continue
         # define df
         df = pd.DataFrame([cc1, cc2, csc1, csc2], index=models)
+        df= df[df <= 1].dropna(axis=1)
         df['model'] = models
         df = pd.melt(df, id_vars="model", var_name="metrics", value_name="correlation")
 
@@ -206,5 +205,6 @@ def plot_multi_bar4(df_class, df_superclass, models, save_dir):
 
         # save
         plt.savefig(save_dir.joinpath(f"{col_id}.jpg"))
-        #plt.show()
+        # plt.show()
         plt.close()
+

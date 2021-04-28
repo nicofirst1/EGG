@@ -112,19 +112,6 @@ def language_tensor(lang_sequence_cooc):
     return tensor
 
 
-def class_richness(lang_sequence_cooc: Dict) -> Dict:
-    richness = {}
-    total = 0
-    for trg, v in lang_sequence_cooc.items():
-        total_class = sum([len(v2) for v2 in v.values()])
-        richness[trg] = total_class
-
-        total += total_class
-
-    richness = {k: v / total for k, v in richness.items()}
-    return richness
-
-
 def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
     ar_res = {}
     ar_perc_res = {}

@@ -162,32 +162,12 @@ def coccurence(lines, classes, superclasses):
     return cdf, scdf
 
 
-def analysis_df(infos):
+def analysis_df(infos, total):
     analysis = {}
 
     to_add = infos.loc[Acc, :].sum() / infos.shape[1]
     analysis['accuracy'] = to_add
-
-    to_add = (
-            infos.loc[PSC, :] - infos.loc[POC, :].sum() / infos.shape[1]
-    )
-    to_add = to_add.mean()
-    analysis['Precision difference sc/oc'] = to_add
-
-    to_add = infos.loc[Acc, :].corr(infos.loc[Frq, :])
-    analysis[f'Corr {Acc}-{Frq}'] = to_add
-
-    to_add = infos.loc[OCL, :].corr(infos.loc[Frq, :])
-    analysis[f'Corr {OCL}-{Frq}'] = to_add
-
-    to_add = infos.loc[ARt, :].corr(infos.loc[Frq, :])
-    analysis[f'Corr {ARt}-{Frq}'] = to_add
-
-    to_add = infos.loc[ARt, :].corr(infos.loc[Acc, :])
-    analysis[f'Corr {ARt}-{Acc}'] = to_add
-
-    to_add = infos.loc[ARt, :].corr(infos.loc[OCL, :])
-    analysis[f'Corr {ARt}-{OCL}'] = to_add
+    analysis[NObj] = int(total)
 
     return analysis
 
@@ -204,11 +184,8 @@ def accuracy_analysis(interaction_path, out_dir):
     class_infos, superclass_infos, total = get_infos(lines)
 
     cooc, scooc = coccurence(lines, class_infos.columns, superclass_infos.columns)
-    class_analysis = analysis_df(class_infos)
-    superclass_analysis = analysis_df(superclass_infos)
-
-    class_analysis[NObj] = int(total)
-    superclass_analysis[NObj] = int(total)
+    class_analysis = analysis_df(class_infos, total)
+    superclass_analysis = analysis_df(superclass_infos, total)
 
     cooc_path = out_dir.joinpath("acc_class_cooc.csv")
     scooc_path = out_dir.joinpath("acc_superclass_cooc.csv")

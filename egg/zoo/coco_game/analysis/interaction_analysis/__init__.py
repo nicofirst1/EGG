@@ -1,7 +1,7 @@
 _target = "trg"
 _distractor = "dstr"
 
-NObj="number_objects"
+NObj = "number_objects"
 
 CTED = f"V_{_target}=={_distractor}"
 WTED = f"X_{_target}=={_distractor}"
@@ -18,12 +18,11 @@ TF = f"{_target}_{Frq}"
 
 PSC = "prec_sc"
 POC = "prec_oc"
-_ambiguity="ambg"
+_ambiguity = "ambg"
 
 ARt = f"{_ambiguity}_rate"
 ARc = f"{_ambiguity}_rchns"
 CR = "cls_rchns"
-
 
 Sy = "sym"
 Se = "seq"
@@ -39,17 +38,32 @@ DEFINITIONS = {
     CTND: "Number of incorrect predictions when the target and the distractor belong to the same class",
     WTED: "Number of correct predictions when the target and the distractor belong to different classes",
     WTND: "Number of incorrect predictions when the target and the distractor belong to different classes",
-    OCL: "Number of classes present in an image with the current target. Some classes such as person appear with many more objects in the image (i.e. other persons), while some like cat have usually only one object, the cat.",
+    OCL: "Number of classes present in an image with the current target. Some classes such as person appear with many"
+         " more objects in the image (i.e. other persons), while some like cat have usually only one object, the cat.",
     TF: "The frequency of the current target in the dataset.",
-    PSC: f"Precision of the prediction when the disctractor and target belong to the same class.\nDerived from the formula :\n ```{CTED} / ({WTED}+{CTED})```",
-    POC: f"Precision of the prediction when the disctractor and target belong to different classes.\nDerived from the formula :\n ```{CTND} / ({WTND}+{CTND})```",
-    ARt: f"The {ARt} is the number of times the class happens both as a target and a distractors divided the total number of appearances.\nThe formula is derived as follos:\n```({CTED}+{WTED})/{Tot}```",
-    CR: f"The class richness is the number of {Se}/{Sy} associated with a target class normalized by the number of target classes. ",
-    ARc: f"The {ARc} is ratio between number of unique {Se} used when target=distractor  and when target!= distractor. ",
-    SeS: f"The {SeS} is the proportion of {Se} used mainly for one superclass in relation to the total length of all {Se}. ",
-    ISeU: f"The {ISeU} is calculated onto the {SeS} regarding both the superclass and the class. For all the {Se} in one superclass it counts the time a {Se} is used with more than one class. For example a superclass with {ISeU} zero has an unique {Se} for each class, while a  {ISeU} of 1 means that all the symbols are shared among each class.",
-    ISeS:f"E' una variante di class_richness, computata come numero di messaggi unici nella classe, diviso per la target_frequency della classe ",
-}
-DEFINITIONS[SeCR] = f"{SeCR} refers to the {CR} on the {Se}.\nThe {CR} is defined as: {DEFINITIONS[CR]}."
+    PSC: f"Precision of the prediction when the disctractor and target belong to the same class.\n"
+         f"Derived from the formula :\n ```{CTED} / ({WTED}+{CTED})```",
+    POC: f"Precision of the prediction when the disctractor and target belong to different classes.\n"
+         f"Derived from the formula :\n ```{CTND} / ({WTND}+{CTND})```",
+    ARt: f"The ambiguity rate is the number of times the class happens both as a target and a distractors divided the"
+         f" total number of appearances.\nThe formula is derived as follos:\n```({CTED}+{WTED})/{Tot}```",
+    CR: f"The class richness is the number of sequences/symbols associated with a target"
+        f" class normalized by the number of targets. ",
+    ARc: f"The ambiguity richness is similar to a precision but regards only the"
+         f" sequences which are unique per class [UniqSeq(class)].\n"
+         f"Its formula is:\n"
+         f"```UniqSeq(target=distractor)/[UniqSeq(target!= distractor)+UniqSeq(target=distractor)]``` ",
+    SeS: f"The sequence specificity is the proportion of sequences used mainly (more than 99% of the times)"
+         f" for one superclass divided by the number of sequences.\nExample:\n"
+         f"Having a sequence specificity of 10% means that 10% of all the sequences appear only with one class.\n",
+    ISeU: f"The *inter class uniqueness* is calculated onto the sequence specificity. "
+          f"It gathers information regarding both the superclass and the class. "
+          f"For all the sequences in one superclass it counts the time a sequence is used with more than one class (shared).\n"
+          f"For example a superclass with *inter class uniqueness* zero has an unique sequence for each class, while an "
+          f"*inter class uniqueness* of 1 means that all the sequences are shared among all the classes of a superclass.",
+    ISeS: f"The *intra class specificity* is a variant of the *inter class uniqueness*.\n"
+          f"It is defined as the number of unique class sequences divided by the class target frequency. "
 
-PRINT_DEF = ["\n# Metrics definitions\n"] + [f"- *{k}* : {v}\n\n" for k, v in DEFINITIONS.items()]
+}
+
+PRINT_DEF = ["\n# Metrics definitions\n"] + [f"- **{k}** : {v}\n\n" for k, v in DEFINITIONS.items()]
