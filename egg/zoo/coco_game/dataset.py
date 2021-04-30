@@ -254,7 +254,7 @@ def get_data(
     # generate dataloaders
     coco_train = DataLoader(
         coco_train,
-        shuffle=True,
+        shuffle=False,
         drop_last=False,
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,
@@ -263,7 +263,7 @@ def get_data(
     )
     coco_val = DataLoader(
         coco_val,
-        shuffle=True,
+        shuffle=False,
         drop_last=False,
         num_workers=opts.num_workers,
         batch_size=opts.batch_size,

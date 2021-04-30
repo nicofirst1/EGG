@@ -11,8 +11,6 @@ def get_hierarchy_classes(lines):
     class_hierarchy = {}
     for l in lines:
         data = split_line(l)
-        pc = data['pred_class']
-        psc = data['pred_superclass']
 
         tc = data['target_class']
         tsc = data['target_superclass']
@@ -23,14 +21,9 @@ def get_hierarchy_classes(lines):
         if tc not in class_hierarchy[tsc].keys():
             class_hierarchy[tsc][tc] = 0
 
-        if psc not in class_hierarchy.keys():
-            class_hierarchy[psc] = {}
 
-        if pc not in class_hierarchy[psc].keys():
-            class_hierarchy[psc][pc] = 0
 
         class_hierarchy[tsc][tc] += 1
-        class_hierarchy[psc][pc] += 1
 
     for k, v in class_hierarchy.items():
         total = sum(v.values())

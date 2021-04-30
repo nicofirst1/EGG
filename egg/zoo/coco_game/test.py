@@ -1,3 +1,4 @@
+import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -35,31 +36,41 @@ def load_params(params_path):
 
 
 def update_namespace(opts: Namespace, update_dict):
+    tmp = vars(opts)
 
-    tmp=vars(opts)
+    for k, v in update_dict.items():
+        tmp[k] = v
 
-    for k,v in update_dict.items():
-        tmp[k]=v
-
-    opts=Namespace(**tmp)
+    opts = Namespace(**tmp)
     return opts
 
 
-def main(params=None):
+def main(is_seg):
+    params = sys.argv[1:]+['--random_seed', '33', '--data_seed', '42']
+
     opts = parse_arguments(params=params)
 
     both_path = "0f33c569"
     seg_path = "b407ecb5"
-    file_path=f"/home/dizzi/Documents/Egg_expermients/median_runs/{seg_path}/"
 
-    random_seed=33
-    data_seed=42
+    if is_seg:
+
+        file_path = f"/home/dizzi/Documents/Egg_expermients/median_runs/{seg_path}/"
+    else:
+        file_path = f"/home/dizzi/Documents/Egg_expermients/median_runs/{both_path}/"
+
+    epochs = 1
 
     params = load_params(f"{file_path}params.json")
-    opts=update_namespace(opts, params)
+    opts = update_namespace(opts, params)
 
-    opts.random_seed=random_seed
-    opts.data_seed=data_seed
+    opts.random_seed = 33
+    opts.data_seed = 42
+
+    if is_seg:
+        opts.log_dir_uid = "seg"
+    else:
+        opts.log_dir_uid = "both"
 
     console.log(sorted(vars(opts).items()))
 
@@ -84,7 +95,7 @@ def main(params=None):
 
     trainer.load_from_latest(Path(file_path))
 
-    for _ in track(range(1), "Testing..."):
+    for _ in track(range(epochs), "Testing..."):
         loss, logs = trainer.train_eval()
         interaction_saver.on_test_end(loss, logs, 0)
     console.log("Test is over")
@@ -92,4 +103,6 @@ def main(params=None):
 
 if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)
-    main()
+
+    main(is_seg=False)
+    main(is_seg=True)
