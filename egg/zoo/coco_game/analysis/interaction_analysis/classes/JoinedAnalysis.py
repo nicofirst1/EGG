@@ -288,10 +288,9 @@ class JoinedAnalysis:
                 f"It is also important to consider how much of these sequences are shared across the members of a specific superclass."
                 f" This is measured by *{ISeU}*.\n"
                 f"{DEFINITIONS[ISeU]}\n"
-                f"Its value is {self.data[ISeU]:3f}.\n")
+                f"Its value is {self.data[ISeU]*100:.3f}%.\n")
 
-            file.write(
-                f"The correlation between {ISeU} and {ARt} is {self.superclass_analysis.correlations[ISeU][ARt]}\n")
+
 
         symbols_analysis()
         sequences_analysis()
@@ -390,8 +389,7 @@ class JoinedAnalysis:
         for superclass, sequences in tmp.items():
             class_seq = class_lang_sequence[sequences]
             class_seq = class_seq[(class_seq.T != 0).any()]
-            non_zero = class_seq.astype(bool).sum(axis=0) / class_seq.shape[0] - 1 / class_seq.shape[0]
-            non_zero = sum(non_zero) / len(non_zero)
+            non_zero = (class_seq.astype(bool).sum(axis=0) > 1).sum() / class_seq.shape[1]
             total += non_zero
             iseu_dict[superclass] = non_zero
             idx += 1

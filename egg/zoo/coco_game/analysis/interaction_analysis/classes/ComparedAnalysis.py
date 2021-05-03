@@ -11,11 +11,11 @@ from egg.zoo.coco_game.utils.utils import console
 
 class ComparedAnalysis:
 
-    def __init__(self, joined_list: List[JoinedAnalysis], out_dir):
+    def __init__(self, joined_list: List[JoinedAnalysis], out_dir, generate):
         self.joined_list = joined_list
 
         self.significance_thrs = 0.5
-        self.plot = False
+        self.plot = generate
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
@@ -69,19 +69,22 @@ class ComparedAnalysis:
                 self.class_diff(file, join_i, join_j, self.corr_superclass_path, superclass=True)
 
                 if self.plot:
+                    # plot correlation
+
                     corr_class = (join_i.class_analysis.correlations, join_j.class_analysis.correlations)
                     corr_superclass = (join_i.superclass_analysis.correlations, join_j.superclass_analysis.correlations)
                     plot_multi_bar4(corr_class, corr_superclass, (join_i.model_name, join_j.model_name),
                                     self.corr_both_path)
 
-                corr_class = (join_i.class_analysis.acc_analysis, join_j.class_analysis.acc_analysis)
-                corr_superclass = (join_i.superclass_analysis.acc_analysis, join_j.superclass_analysis.acc_analysis)
+                    corr_class = (join_i.class_analysis.acc_analysis, join_j.class_analysis.acc_analysis)
+                    corr_superclass = (join_i.superclass_analysis.acc_analysis, join_j.superclass_analysis.acc_analysis)
 
 
-                corr_class = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in corr_class]
-                corr_superclass = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in corr_superclass]
-                plot_multi_bar4(corr_class, corr_superclass, (join_i.model_name, join_j.model_name),
-                                self.out_dir)
+                    corr_class = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in corr_class]
+                    corr_superclass = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in corr_superclass]
+                    plot_multi_bar4(corr_class, corr_superclass, (join_i.model_name, join_j.model_name),
+                                    self.out_dir)
+
 
 
     def data_diff(self, file, join_i, join_j):

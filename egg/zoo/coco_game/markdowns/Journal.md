@@ -2,42 +2,49 @@
 
 In the following section, we report the major discoveries coming from the analysis of the both and seg models.
 
-# Seg Model
 
-# Comaprison
+## Comaprison
 
 In this section we will analyze the main differences between the seg and both model.
 
-## Class vs Superclass
+### Class vs Superclass
 
-the main differences between the models should be studied differentiating between class and superclass analysis. Indeed
-the per class analysis focuses more on the accuracy of each prediction, in this case all the classes are seen as diverse
-objects that needs to be predicted. On the other hand, the superclass analysis focuses more on a set of objects sharing
-similar characteristics. In this case it emphasize the difficulty in predicting classes with the same superclass.
+the main differences between the models should be studied differentiating between class and superclass analysis. Indeed the per class analysis focuses more on the accuracy of each prediction, in this case all the classes are seen as diverse objects that needs to be predicted. 
+
+On the other hand, the superclass analysis focuses more on a set of objects sharing similar characteristics. In this case it emphasize the difficulty in predicting classes with the same superclass.
+
+TD;DR
+Xclass analysis is more about accuracy, Xsuperclass is more about generalization and differentiation.
 
 ### Accuracy
 
-The seg and both model focuses on this two levels as can be seen by the accuracy. When the accuracy is estimated on a
-class level, then the seg scores 94.4% and the both 92.7%. On the other hand, when the accuracy is superclass level, seg
-scores 93.3% and both 94.2%.
+Not much can be said on the accuracy level. 
+Both models score pretty similarly on the class level (94.3% vs 93.4%) and on the superclass level (93.9% vs 93.3%).
 
-There are two takeaways from this. Seg is better (0.7%) in the class level classification. Since the model has no idea
-of the general context, it learns to be specific for every instance, trying to diversify the message form each class.
-Differently, both scores higher (0.9%) in the superclass classification. This result derives from the context knowledge
-of the both model, indeed this model learns to differentiate between similar classes (belonging to the same superclass)
-in a more efficient way.
+### Language
 
-## intraclass_sequences_uniqueness
+Both has less symbols (854 vs 1013) than seg. Specifically the both model produced 16% of all possible combination of symbols into sequences while the seg one produced 19%.  Moreover both has a  lower average message length (5.92 vs 6), due to the occurrence of sequences with length 1 while seg sticks to the max sequence length available
 
-The intraclass_sequences_uniqueness is calculated onto the sequences_specificity. For all the sequences in one
-superclass it counts the time a sequences is used with more than one class. For example a superclass with
-intraclass_sequences_uniqueness zero has an unique sequences for each class, while a intraclass_sequences_uniqueness of
-1 means that all the symbols are shared among each class.
+Most used sequence is for the superclass accessory for both and seg.
 
-Its value for the seg (0.004) is higher (+65%) than the one for both (0.001). This means that the both model tends to
-share sequences between the members of the same superclass.
+#### Sequence specificity
 
-## Corr ambiguity_rate-accuracy
+Another interesting aspect of the data is seq_spec.
+The sequence specificity is the proportion of sequences used mainly (more than 99% of the times) for one superclass divided by the number of sequences.
+Example:
+Having a sequence specificity of 10% means that 10% of all the sequences appear only with one class.
+
+In the both model we have that 40.3% of the sequences are unique per superclass while in the seg is 44.7%. This results in more than 100 sequences which are not share in the seg model but are used in order to differentiate between input. On the other hand the both model can make this differentiation using less sequences 
+
+#### interclass_sequences_uniqueness
+
+The *inter class uniqueness* is calculated onto the sequence specificity. It gathers information regarding both the superclass and the class. For all the sequences in one superclass it counts the time a sequence is used with more than one class (shared).
+For example a superclass with *inter class uniqueness* zero has an unique sequence for each class, while an *inter class uniqueness* of 1 means that all the sequences are shared among all the classes of a superclass.
+
+
+
+
+### Corr ambiguity_rate-accuracy
 
 The ambiguity_rate is the number of times the class happens both as a target and a distractors divided the total number
 of appearances.
@@ -52,15 +59,15 @@ On the other hand, when considering the superclasses, we see an opposite trend. 
 the seg model (-0.083) than with the both one (-0.281). Both the trends are inversly correlated, which means that the
 higher the ambiguity rate the lower the cances to guess correcly. (?)
 
-## Super class
+### Super class
 
-## corr accuracy other_classes_num
+### corr accuracy other_classes_num
 
 On a superclass level the correlation between accuracy and the number of total classes present in the image is negative
 for the seg model (-0.454) and positive for the both one (0.437). This means that the both model finds it easier to
 predict a target when the image contains a lot of objects.
 
-## corr accuracy ambiguity_rate
+### corr accuracy ambiguity_rate
 
 The ambiguity_rate is the number of times the class happens both as a target and a distractors divided the total number
 of appearances.
@@ -68,15 +75,9 @@ of appearances.
 However the correlation between ambiguity rate and accuracy is positive (0.291) for the seg model and negative (-0.259)
 for the both one. This implies that the seg model finds it easier
 
-## Language
 
-Both has less symbols (571 vs 622) and a lower average message length (5.92 vs 6)
 
-Both mean frequency per sequence is 1% lower than the random one, while the seg one is the same.
-
-Most used sequence is for the superclass accessory for both and seg.
-
-# best take home
+## best take home
 
 The seg model is better in predicting the actual target but it does so at the cost of higher sequences specialization
 and number. On the other hand the both model is slightly worse at predicting the target but it share sequences across

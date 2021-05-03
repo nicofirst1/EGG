@@ -1,10 +1,13 @@
+import os
 import pathlib
+import shutil
 from pathlib import PosixPath
 
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.Analysis import Analysis
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.ComparedAnalysis import ComparedAnalysis
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import define_out_dir
+from egg.zoo.coco_game.test import test
 
 
 def perform_all(analysis: Analysis):
@@ -60,19 +63,37 @@ def compare_anal(interaction_paths, out_path, generate=True):
         j = generate_analysis(ip, generate=generate)
         joined.append(j)
 
-    ca = ComparedAnalysis(joined, out_path)
+    ca = ComparedAnalysis(joined, out_path, generate)
     return ca
 
 
-if __name__ == "__main__":
-    seg_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/seg/runs/interactions.csv"
-    both_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/both/runs/interactions.csv"
+def analysis(head_path, generate=False):
+    seg_path = f"{head_path}/seg/runs/interactions.csv"
+    both_path = f"{head_path}/both/runs/interactions.csv"
 
     interaction_paths = [seg_path, both_path]
 
-    out_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/"
+    out_path = head_path
 
-    ca = compare_anal(interaction_paths, out_path, generate=False)
+    ca = compare_anal(interaction_paths, out_path, generate=generate)
 
 
+def test_and_analyze(head_path):
+    seed = 33
+    epochs = 10
+
+    shutil.rmtree(head_path)
+
+    test(is_seg=True, seed=seed, epochs=epochs)
+    test(is_seg=False, seed=seed, epochs=epochs)
+    analysis(head_path)
+
+    duration = 2  # seconds
+    freq = 440  # Hz
+    os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
     a = 1
+
+
+if __name__ == "__main__":
+    head_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/analysis/interaction_analysis/Logs"
+    analysis(head_path, generate=True)

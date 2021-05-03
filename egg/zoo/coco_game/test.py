@@ -45,8 +45,8 @@ def update_namespace(opts: Namespace, update_dict):
     return opts
 
 
-def main(is_seg):
-    params = sys.argv[1:]+['--random_seed', '33', '--data_seed', '42']
+def test(is_seg, seed=0, epochs=1):
+    params = sys.argv[1:] + ['--random_seed', '33', '--data_seed', '42']
 
     opts = parse_arguments(params=params)
 
@@ -59,13 +59,13 @@ def main(is_seg):
     else:
         file_path = f"/home/dizzi/Documents/Egg_expermients/median_runs/{both_path}/"
 
-    epochs = 1
 
     params = load_params(f"{file_path}params.json")
     opts = update_namespace(opts, params)
 
-    opts.random_seed = 33
-    opts.data_seed = 42
+    i = seed
+    opts.random_seed = 33 + i
+    opts.data_seed = 42 + i
 
     if is_seg:
         opts.log_dir_uid = "seg"
@@ -103,6 +103,5 @@ def main(is_seg):
 
 if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)
-
-    main(is_seg=False)
-    main(is_seg=True)
+    test(is_seg=False)
+    test(is_seg=True)
