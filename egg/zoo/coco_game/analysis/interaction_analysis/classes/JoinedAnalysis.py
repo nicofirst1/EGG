@@ -279,18 +279,28 @@ class JoinedAnalysis:
                            f"It is most used in *{most_used_superclass[0]}* (+{superclass_diff12:.2f}% than 2nd)-> *{most_used_class[0]}* (+{class_diff12:.2f}% than 2nd).\n\n")
 
             file.write(f"\n ## Sequence Specificity\n")
-            file.write(f"Another interesting aspect of the data is {SeS}.\n"
-                       f"{DEFINITIONS[SeS]}\n"
-                       f"Its value is {self.data[SeS]:.3f}, which means that {self.data[SeS] * 100:.1f}% of the {Se} "
-                       f"({sequences_len * self.data[SeS]:.2f}/{sequences_len}) is unique per superclass.\n\n")
+            file.write(f"Another interesting aspect of the data is {SSeS}.\n"
+                       f"{DEFINITIONS[SSeS]}\n"
+                       f"Its value is {self.data[SSeS]:.3f}, which means that {self.data[SSeS] * 100:.1f}% of the {Se} "
+                       f"({sequences_len * self.data[SSeS]:.2f}/{sequences_len}) is unique per superclass.\n"
+                       f"This also means that {(1 - self.data[SSeS]) * 100:.1f}% is shared across the superclasses.\n"
+                       f"\n")
+
+            file.write(f"On the other hand, sequences may be unique on a class level, this is reported by the {CSeS}.\n"
+                       f"{DEFINITIONS[CSeS]}\n"
+                       f"Its value is {self.data[CSeS]:.3f}, which means that {self.data[CSeS] * 100:.1f}% of the {Se} "
+                       f"({sequences_len * self.data[CSeS]:.2f}/{sequences_len}) is unique per class.\n"
+                       f"This also means that {(1 - self.data[CSeS]) * 100:.1f}% is shared across the superclasses.\n"
+                       f"\n")
 
             file.write(
                 f"It is also important to consider how much of these sequences are shared across the members of a specific superclass."
-                f" This is measured by *{ISeU}*.\n"
-                f"{DEFINITIONS[ISeU]}\n"
-                f"Its value is {self.data[ISeU]*100:.3f}%.\n")
-
-
+                f" This is measured by *{SScS}*.\n"
+                f"{DEFINITIONS[SScS]}\n"
+                f"Its value is {self.data[SScS]:.4f}, which means that {self.data[SScS] * 100:.2f}% "
+                f"of the *{SSeS}* is shared among classes of a specific superclass.\n"
+                f"Indeed if we compute *{SScS}*X*{SSeS}*={self.data[SScS] * self.data[SSeS] * 100:.2f}% "
+                f"we get the difference between *{SSeS}* and the *{CSeS}*.\n\n")
 
         symbols_analysis()
         sequences_analysis()
@@ -363,7 +373,7 @@ class JoinedAnalysis:
 
             self.readme_classification_analysis(file)
 
-    def same_superclass_sequence(self, thrs=0.99):
+    def same_superclass_sequence(self, thrs=0.9999):
         seqclass = normalize_drop(self.superclass_analysis.lang_sequence)
         # normalize on column to sum to 1
         seqclass = seqclass.multiply(1 / seqclass.sum(), axis=1)
@@ -376,11 +386,14 @@ class JoinedAnalysis:
             tmp[superclass] = list(superclass_seqs[superclass_seqs].index)
 
         total /= seqclass.shape[1]
-        self.data[SeS] = total
+        self.data[SSeS] = total
 
         class_lang_sequence = normalize_drop(self.class_analysis.lang_sequence)
-        # normalize on column to sum to 1
         class_lang_sequence = class_lang_sequence.multiply(1 / class_lang_sequence.sum(), axis=1)
+
+        self.data[CSeS] = (class_lang_sequence > thrs).sum().sum() / class_lang_sequence.shape[1]
+
+        # normalize on column to sum to 1
 
         total = 0
         idx = 0
@@ -388,16 +401,17 @@ class JoinedAnalysis:
         # for alla the sequences above, look how much they are shared across classes of the same superclass
         for superclass, sequences in tmp.items():
             class_seq = class_lang_sequence[sequences]
+            # filter classes
             class_seq = class_seq[(class_seq.T != 0).any()]
             non_zero = (class_seq.astype(bool).sum(axis=0) > 1).sum() / class_seq.shape[1]
             total += non_zero
             iseu_dict[superclass] = non_zero
             idx += 1
 
-        total /= idx
-        self.data[ISeU] = total
+        total /= len(tmp)
+        self.data[SScS] = total
 
-        self.superclass_analysis.acc_infos = add_row(iseu_dict, ISeU, self.superclass_analysis.acc_infos)
+        self.superclass_analysis.acc_infos = add_row(iseu_dict, SScS, self.superclass_analysis.acc_infos)
         self.superclass_analysis.compute_info_correlations()
 
     def super_class_comparison(self):

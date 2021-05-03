@@ -29,8 +29,9 @@ Se = "seq"
 SyCR = f"{Sy}_{CR}"
 SeCR = f"{Se}_{CR}"
 
-SeS = f"{Se}_spec"
-ISeU = f"intercls_{Se}_uniq"
+SSeS = f"supercls_{Se}_spec"
+CSeS = f"cls_{Se}_spec"
+SScS = f"shared_supercls_{Se}"
 ISeS = f"intracls_{Se}_spcf"
 
 DEFINITIONS = {
@@ -53,15 +54,17 @@ DEFINITIONS = {
          f" sequences which are unique per class [UniqSeq(class)].\n"
          f"Its formula is:\n"
          f"```UniqSeq(target=distractor)/[UniqSeq(target!= distractor)+UniqSeq(target=distractor)]``` ",
-    SeS: f"The sequence specificity is the proportion of sequences used mainly (more than 99% of the times)"
-         f" for one superclass divided by the number of sequences.\nExample:\n"
-         f"Having a sequence specificity of 10% means that 10% of all the sequences appear only with one class.\n",
-    ISeU: f"The *inter class uniqueness* is calculated onto the sequence specificity. "
+    SSeS: f"The *super class sequence specificity* is the proportion of sequences used mainly (more than 99% of the times)"
+          f" for one superclass divided by the number of sequences.\nExample:\n"
+          f"Having a sequence specificity of 10% means that 10% of all the sequences appear only with one class.\n",
+
+    CSeS: f"The *class sequence specificity* is the number of sequences used in one class only divided by the total number of sequences.\n",
+    SScS: f"The *shared superclass sequences* is calculated onto the sequence specificity. "
           f"It gathers information regarding both the superclass and the class. "
           f"For all the sequences in one superclass it counts the time a sequence is used with more than one class (shared).\n"
-          f"For example a superclass with *inter class uniqueness* zero has an unique sequence for each class, while an "
-          f"*inter class uniqueness* of 1 means that all the sequences are shared among all the classes of a superclass.",
-    ISeS: f"The *intra class specificity* is a variant of the *inter class uniqueness*.\n"
+          f"For example a superclass with *shared superclass sequences* zero has an unique sequence for each class, while an "
+          f"*class sequence specificity* of 1 means that all the sequences are shared among all the classes of a superclass.",
+    ISeS: f"The *intra class specificity* is a variant of the *class sequence specificity*.\n"
           f"It is defined as the number of unique class sequences divided by the class target frequency. "
 
 }

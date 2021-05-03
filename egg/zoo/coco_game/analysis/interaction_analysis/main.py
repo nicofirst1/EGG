@@ -96,4 +96,4 @@ def test_and_analyze(head_path):
 
 if __name__ == "__main__":
     head_path = "/home/dizzi/Desktop/EGG/egg/zoo/coco_game/analysis/interaction_analysis/Logs"
-    analysis(head_path, generate=True)
+    analysis(head_path, generate=False)
