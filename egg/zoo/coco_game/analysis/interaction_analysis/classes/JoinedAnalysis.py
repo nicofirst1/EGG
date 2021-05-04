@@ -389,11 +389,11 @@ class JoinedAnalysis:
         self.data[SSeS] = total
 
         class_lang_sequence = normalize_drop(self.class_analysis.lang_sequence)
+        # normalize on column to sum to 1
         class_lang_sequence = class_lang_sequence.multiply(1 / class_lang_sequence.sum(), axis=1)
 
         self.data[CSeS] = (class_lang_sequence > thrs).sum().sum() / class_lang_sequence.shape[1]
 
-        # normalize on column to sum to 1
 
         total = 0
         idx = 0

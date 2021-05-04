@@ -125,6 +125,7 @@ def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
             if dstr == trg:
                 ar_res[trg] += len(v2)
                 ar_perc_res[trg] += sum(v2.values())
+
             total += len(v2)
             total_perc += sum(v2.values())
 

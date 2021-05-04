@@ -29,6 +29,8 @@ Se = "seq"
 SyCR = f"{Sy}_{CR}"
 SeCR = f"{Se}_{CR}"
 
+ClsCmt = "cls_comity"
+
 SSeS = f"supercls_{Se}_spec"
 CSeS = f"cls_{Se}_spec"
 SScS = f"shared_supercls_{Se}"
@@ -50,10 +52,11 @@ DEFINITIONS = {
          f" total number of appearances.\nThe formula is derived as follos:\n```({CTED}+{WTED})/{Tot}```",
     CR: f"The class richness is the number of sequences/symbols associated with a target"
         f" class normalized by the number of targets. ",
-    ARc: f"The ambiguity richness is similar to a precision but regards only the"
-         f" sequences which are unique per class [UniqSeq(class)].\n"
-         f"Its formula is:\n"
-         f"```UniqSeq(target=distractor)/[UniqSeq(target!= distractor)+UniqSeq(target=distractor)]``` ",
+    ARc: f"The ambiguity richness estimates the number of sequences used for a target when target==distractor"
+         f" divided by the number of sequences used when target!=distractor (for the same target).\n"
+         f"For example, given the class cat which appears with dog, cat and bike in the dataset, the ambiguity rate is equal to:\n"
+         f"```len(Seq(cat,cat))/[len(Seq(cat,cat)+Seq(cat,dog) +Seq(cat, bike))]```\n"
+         f"Where `Seq(i,j)` returns the sequences when the target i appears together with the distractor j.",
     SSeS: f"The *super class sequence specificity* is the proportion of sequences used mainly (more than 99% of the times)"
           f" for one superclass divided by the number of sequences.\nExample:\n"
           f"Having a sequence specificity of 10% means that 10% of all the sequences appear only with one class.\n",
@@ -65,7 +68,11 @@ DEFINITIONS = {
           f"For example a superclass with *shared superclass sequences* zero has an unique sequence for each class, while an "
           f"*class sequence specificity* of 1 means that all the sequences are shared among all the classes of a superclass.",
     ISeS: f"The *intra class specificity* is a variant of the *class sequence specificity*.\n"
-          f"It is defined as the number of unique class sequences divided by the class target frequency. "
+          f"It is defined as the number of unique class sequences divided by the class target frequency. ",
+    Frq: "Number of times an object appears as target, distractor or in the other classes, divided by all the objects in the dataset",
+    ClsCmt: "Given a target class t, the class comity is the number of other classes d which appears together with t"
+            " divided by the total number of classes.\n"
+            "It is a measure of how likely a class is to appear with another one or alone."
 
 }
 

@@ -15,11 +15,12 @@ class ComparedAnalysis:
         self.joined_list = joined_list
 
         self.significance_thrs = 0.5
-        self.plot = generate
+        self.plot = True
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
         self.corr_plots_path = self.out_dir.joinpath("Correlations")
+        self.data_plots_path = self.out_dir.joinpath("Data")
         self.corr_class_path = self.corr_plots_path.joinpath("Class")
         self.corr_superclass_path = self.corr_plots_path.joinpath("SuperClass")
         self.corr_both_path = self.corr_plots_path.joinpath("Both")
@@ -28,6 +29,7 @@ class ComparedAnalysis:
 
         self.out_dir.mkdir(exist_ok=True)
         self.corr_plots_path.mkdir(exist_ok=True)
+        self.data_plots_path.mkdir(exist_ok=True)
         self.corr_class_path.mkdir(exist_ok=True)
         self.corr_superclass_path.mkdir(exist_ok=True)
         self.corr_both_path.mkdir(exist_ok=True)
@@ -79,23 +81,35 @@ class ComparedAnalysis:
                     corr_class = (join_i.class_analysis.acc_analysis, join_j.class_analysis.acc_analysis)
                     corr_superclass = (join_i.superclass_analysis.acc_analysis, join_j.superclass_analysis.acc_analysis)
 
-
-                    corr_class = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in corr_class]
-                    corr_superclass = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in corr_superclass]
+                    corr_class = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in
+                                  corr_class]
+                    corr_superclass = [pd.DataFrame.from_dict(x, orient="index", columns=["General Info"]) for x in
+                                       corr_superclass]
                     plot_multi_bar4(corr_class, corr_superclass, (join_i.model_name, join_j.model_name),
                                     self.out_dir)
-
-
 
     def data_diff(self, file, join_i, join_j):
 
         file.write(f"\n## Data difference\n")
+
+        vi_df = join_i.data['general']
+        vj_df = join_j.data['general']
 
         for k in join_i.data.keys():
             vi = join_i.data[k]
             vj = join_j.data[k]
 
             _ = write_diff(vi, vj, k, self.significance_thrs, file)
+
+            if 'general' not in k:
+                vi_df.loc[k] = [join_i.data[k], join_i.data[k], 0]
+                vj_df.loc[k] = [join_j.data[k], join_j.data[k], 0]
+        if self.plot:
+
+            intensity = get_significance(vi_df, vj_df)
+            plot_multi_bar(vi_df, vj_df,
+                           (join_i.model_name, join_j.model_name), intensity,
+                           self.data_plots_path, superclass=False)
 
     def class_diff(self, file, join_i, join_j, path2plots, superclass=False):
 
@@ -123,6 +137,14 @@ class ComparedAnalysis:
                            path2plots, superclass)
 
 
+def get_significance(df1, df2):
+    assert type(df1) == type(df2), "Types must be the same"
+
+    diff = abs(df1 - df2)
+    significance = abs(diff / abs(df1 + df2))
+    return significance
+
+
 def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
     assert type(vi) == type(vj), "Types must be the same"
 
@@ -130,8 +152,7 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
         vi = pd.DataFrame.from_dict(vi, orient="index")
         vj = pd.DataFrame.from_dict(vj, orient="index")
 
-    diff = abs(vi - vj)
-    significance = abs(diff / abs(vi + vj))
+    significance = get_significance(vi, vj)
 
     if isinstance(significance, pd.DataFrame):
         for row in significance.index:

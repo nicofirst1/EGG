@@ -1,3 +1,61 @@
+# Answering Marco
+
+## Question one
+Marco asks:
+"Is there any relationship between the ambiguity rate, the class richness and the target frequency in seg?"
+
+### Metrics Definition
+First let's define the metrics:
+  - **ambiguity rate** : The ambiguity rate is the number of times the class happens both as a target and a distractors divided the total number of appearances.
+The formula is derived as follos:
+```(V_trg==dstr+X_trg==dstr)/total```
+- **intracls_seq_spcf**  (old class richness): It is defined as the number of unique class sequences divided by the class target frequency. 
+- **trg_freq** : The frequency of the current target in the dataset.
+- **freq**: number of times the class appears as a target, distractor or other object in the image
+
+### Answer
+Following the correlation values between pairs of metrics estimated on a class level:
+- Ambiguity rate/ intracls_seq_spcf: 0.185 [Class]
+- Ambiguity rate/ trg_freq: -0.161 [Class]
+- Ambiguity rate/ freq: 0.155 [Class]
+- trg_freq/intracls_seq_spcf: -0.356 [Class]
+
+There is a slight positive correlation between ambiguity rate and intracls_seq_spcf, which means that the more a class appears both as a distractor and a target the more unique sequences it tends to have.
+
+Moreover we can observe a slight negative correlation between the ambiguity rate and the trg_freq while a positive correlation occurs between the ambiguity rate and the frequency. This is a clear factor deriving from the definition of the ambiguity rate which depends on *total=freq* .
+
+Finally there is a considerable negative correlation between the target frequency and the intracls_seq_spcf. We can conclude that more sequences are allocate for classes which have a high ration of appearance with targe==distractor rather than just a high appearance overall.
+
+## Question two
+Marco Asks:
+"The seg Sender has no idea of the whole context but know only about the target. For this reason the ambiguity_richness metric should be close to 1 "
+
+### Metrics Definitions
+- **ambg_rchns** : The ambiguity richness estimates the number of sequences used for a target when target==distractor divided by the number of sequences used when target!=distractor (for the same target).
+For example, given the class cat which appears with dog, cat and bike in the dataset, the ambiguity rate is equal to:
+```len(Seq(cat,cat))/[len(Seq(cat,dog) +Seq(cat, bike))]``` 
+Where `Seq(i,j)` returns the sequences when the target i appears together with the distractor j.
+- **cls_comity** : Given a target class t, the class comity is the number of other classes d which appears together with t divided by the total number of classes.
+It is a measure of how likely a class is to appear with another one or alone.
+
+
+### Answer
+The mean value of the ambg_rchns across the seg setup is:
+- 0.2321 on a class level 
+
+While the mean value of cls_comity is:
+ - 0.2749  on a class level.
+
+Consider that there are 70 classes and 12 superclasses, we get the value of the un-normalized cls_comity as:
+- 19.24 [Class]
+
+So now we can see how an ambg_rchns of 0.2321 means that 1 class over 19 is taking 23.21% of the sequences, which is 4 times the random baseline (1/19=0.052=5.2%) 
+
+
+## Question three
+Marco Asks:
+"What about ambiguity richness in the both setup? "
+
 # Take home from analysis
 
 In the following section, we report the major discoveries coming from the analysis of the both and seg models.

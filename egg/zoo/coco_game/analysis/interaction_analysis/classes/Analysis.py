@@ -145,7 +145,12 @@ class Analysis:
         )
 
         self.acc_infos = add_row(
-            to_add2, f"{ARc}_perc", self.acc_infos
+            to_add2, ClsCmt, self.acc_infos
+        )
+
+        shared_appearances={k: len(v) / self.acc_cooc.shape[0] for k, v in self.lang_sequence_cooc.items()}
+        self.acc_infos = add_row(
+            shared_appearances, f"{ARc}_perc", self.acc_infos
         )
 
         lang_sequence = normalize_drop(self.lang_sequence, axis=0)
