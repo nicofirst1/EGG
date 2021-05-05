@@ -1,3 +1,76 @@
+# Observations
+
+## Seg
+
+
+
+- Accuracy is negatively correlated with the ambiguity rate (-0.314): the more a class appears both as target and distractor the less accuracy.
+
+- Ambiguity rate is light pos (0.155) with frequency: more frequent classes have higher chances to have target==distractor 
+
+- Ambiguity rate is slight pos (0.2) with class richness: more symbols/sequences for ambivalent classes
+
+- Ambiguity rate is high pos (0.96) with amb richness: classes with more target==distr have more sequences.
+
+- Amb rich has slight neg (-0.193) with targ freq: more frequent target have less sequences. 
+- Amb rich has slight pos (0.149) with freq: more frequent class have more sequences.
+-  Class richness is high pos (0.88) to the class frequency: more frequent classes have more symbols/sequences
+-  Target freq is high neg (-0.53) to frequency: classes which are more frequent appear less as a target and more as other classes 
+
+## Differences with both 
+
+First of all seg has more sequences than both (1360 vs 1135 ) normalized by the max combinations of sequences 531630 (0.21% vs 0.26%).
+
+Seg has higher values for all types of specificity, which means that it has more sequences which are used once for class/superclass. Instead both has a lower number of sequences overall which are shared more across objects.
+
+## Difference Correlation Class
+
+
+- Correlation between *X_trg==dstr* and *othr_clss_num* is 0.043 for seg and 0.266 for both.
+The correlation measure how difficult is the prediction in relation with the number of classes present in the overall image. Since the Seg model does not have access to the image the correlation is practically zero, while for the both model is positive. This means that both finds it more difficult to distinguish target from distractor (when they are the same class) when there is a high number of objects in the image.
+
+
+- Correlation between *othr_clss_num* and *prec_sc* is  0.077 on seg and  -0.303 for both.
+The correlation measures the precision in correctly predicting a class when target==distractor in relationship with the number of objects in the image. Here too we see how the both model is confused by number of object in the image while the seg one nope.
+
+
+- On the other hand, correlation between *othr_clss_num* and *prec_oc* is   -0.242 on seg and  0.024  for both.
+The correlation measures the precision in correctly predicting a class when target!=distractor in relationship with the number of objects in the image. 
+In a completely different results as before, here we see how the number of objects in the image influences negatively Seg when it needs to differentiate between to objects coming from different classes.
+
+
+- Correlation between *freq* and the two precisions *prec_oc* and *prec_sc* confirms what previsouly said. Indeed for the Seg model this correlation is negative with *prec_oc* (-0.251) and zero with *prec_sc* (0.049), on the other hand, Both has a negative correlation with *prec_sc* (-0.299) and zer with *prec_oc* (0.041).
+This means that Seg is fooled in predicting targets which appears frequently when the distractor is not the same class, on the other hand both is fooled when the opposite is true.
+
+TL;DR
+Seg is better at differentiating between objects with the same class while Both is better when target!=distractor.
+
+
+- Correlation between *trg_freq* and *intracls_seq_spcf* is  -0.356 on seg and   0.015  for both.
+The correlation measures how many unique senquencies a classes has in relationship with its target frequency. Since the *intracls_seq_spcf* is multiplied by the *trg_freq* in its computation we actually have a relationship between the number of seq and the target freq.
+The values shows how the Seg model tends to have less unique sequences for objects which appears frequently as target, while both is not influenced.
+
+
+- Correlation between *prec_sc* and *seq/sym_cls_rchns* is  0.081 on seg and   -0.262  for both.
+The correlation measures how the number of sequences/symbols used for a class is related to the accuracy when target==distractor. We already know that both has problems in discerning objects from the same class, but here we see that these problems are accentuated by the richness of the class itself. That is, more sequences are used for a class worse is the precision when target==distractor.
+Moreover we have the opposite for *prec_oc*
+
+
+- Correlation *prec_oc* and *ambg_rate* is -0.227 in Seg and 0.048 in Both.
+This correlation measures how the times an object appears both as target and distractor influences the precision when having that object as target and another one as distractor. While Both is not bothered by this correlation, Seg has a negative value. This can be explained by saing that seg build representation which are more specific in order to distinguish similar objects but fails when the objects are dissimilar. 
+
+- Correlation *prec_sc* and *ambg_rate* is : -0.044 in Seg and -0.070 in Both.
+This is a sanity check, since the more ambiguity there is in a class the more difficult it is to predict it when target==distractor.
+On the same wave, we have that the correlation between *ambg_rate* and *accuracy* is negative for Seg (-0.314) and Both (-0.230) since it is more difficult to predict object, but both finds it slightly easier. 
+
+
+- Correlation between *cls_comity* and  *prec_oc* is  -0.239 for Seg and  0.035  for Both. The class comity is a measure of how likely a class is to appear with another one or alone, and its correlation with the precision oc measures how good a model is in differentiating objects of different classes. 
+As we derived before, Seg does not perform well in these cases while Both is not bothered.
+As a sanity check we have that the correlation between  *cls_comity* and *accuracy* is negative for both models: in Seg we have a value of  -0.323 while for Both we have a lower value  -0.242.
+
+## Difference Correlation Superclass
+
+
 # Answering Marco
 
 ## Question one
