@@ -9,7 +9,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import language_an
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
     plot_multi_scatter, plot_histogram
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row, \
-    estimate_correlation, normalize_drop
+    estimate_correlation, normalize_drop, max_sequence_num
 
 
 def get_analysis(interaction_path, out_dir, filter):
@@ -127,6 +127,17 @@ class Analysis:
             mean = self.acc_infos.loc[row].mean()
             self.acc_analysis[row] = mean
 
+
+
+        symbols_len =self.lang_symbol.shape[0]-1
+        sequences = list(self.lang_sequence.columns[:-1])
+        max_length = [len(x) for x in sequences]
+        max_length = max(max_length)
+
+        possible_sequences = max_sequence_num(symbols_len, max_length)
+
+        self.acc_analysis[SeNm]= len(sequences)/ possible_sequences
+
     def update_infos(self):
 
         to_add = self.lang_sequence[CR]
@@ -150,7 +161,7 @@ class Analysis:
 
         shared_appearances={k: len(v) / self.acc_cooc.shape[0] for k, v in self.lang_sequence_cooc.items()}
         self.acc_infos = add_row(
-            shared_appearances, f"{ARc}_perc", self.acc_infos
+            shared_appearances, ARcP, self.acc_infos
         )
 
         lang_sequence = normalize_drop(self.lang_sequence, axis=0)
@@ -271,7 +282,7 @@ class Analysis:
                     df, k, self.path_lang_tensor, use_scaler=False, show=False
                 )
 
-    def add_infos(self):
+    def plot_infos(self):
 
         csv_path = self.path_infos.joinpath("infos.csv")
         self.acc_infos.to_csv(csv_path)

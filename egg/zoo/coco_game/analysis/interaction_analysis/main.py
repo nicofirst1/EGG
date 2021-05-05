@@ -14,7 +14,7 @@ def perform_all(analysis: Analysis):
     analysis.plot_cm()
     analysis.plot_correlations()
     analysis.plot_2d_language_tensor()
-    analysis.add_infos()
+    analysis.plot_infos()
 
 
 def add_readme(out_dir_path: PosixPath):

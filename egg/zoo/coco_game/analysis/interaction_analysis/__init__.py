@@ -22,12 +22,14 @@ _ambiguity = "ambg"
 
 ARt = f"{_ambiguity}_rate"
 ARc = f"{_ambiguity}_rchns"
+ARcP = f"{ARc}_perc"
 CR = "cls_rchns"
 
 Sy = "sym"
 Se = "seq"
 SyCR = f"{Sy}_{CR}"
 SeCR = f"{Se}_{CR}"
+SeNm = f"{Se}_num"
 
 ClsCmt = "cls_comity"
 
@@ -54,9 +56,12 @@ DEFINITIONS = {
         f" class normalized by the number of targets. ",
     ARc: f"The ambiguity richness estimates the number of sequences used for a target when target==distractor"
          f" divided by the number of sequences used when target!=distractor (for the same target).\n"
-         f"For example, given the class cat which appears with dog, cat and bike in the dataset, the ambiguity rate is equal to:\n"
+         f"For example, given the class cat which appears with dog, cat and bike in the dataset, the ambiguity richness is equal to:\n"
          f"```len(Seq(cat,cat))/[len(Seq(cat,cat)+Seq(cat,dog) +Seq(cat, bike))]```\n"
          f"Where `Seq(i,j)` returns the sequences when the target i appears together with the distractor j.",
+    ARcP: f"The *ambiguity richness perc* follows the same pattern as the standar ambiguity richness but instead of "
+          f"counting how many sequences are used with the `Seq(i,j)` function it counts the number of times the each sequence is used:\n"
+          f"```SeqPerc(i,j)=Sum(Seq(i,j))```",
     SSeS: f"The *super class sequence specificity* is the proportion of sequences used mainly (more than 99% of the times)"
           f" for one superclass divided by the number of sequences.\nExample:\n"
           f"Having a sequence specificity of 10% means that 10% of all the sequences appear only with one class.\n",

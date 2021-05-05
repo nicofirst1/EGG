@@ -77,7 +77,7 @@ class JoinedAnalysis:
 
         file.write("\n## General knowledge\n")
 
-        to_drop_rows = [CTED, CTND, WTED, WTND, TF, POC, PSC, f"{ARc}_perc"]
+        to_drop_rows = [CTED, CTND, WTED, WTND, TF, POC, PSC, ARcP]
 
         file.write("\n### SuperClass\n")
         sc_cooc_min = sc_cooc.idxmin(axis=1)
