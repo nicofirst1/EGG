@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-import scipy
 
 from egg.zoo.coco_game.analysis.interaction_analysis import PRINT_DEF
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
@@ -16,7 +15,7 @@ class ComparedAnalysis:
         self.joined_list = joined_list
 
         self.significance_thrs = 0.01
-        self.plot = generate
+        self.plot = True
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
@@ -106,7 +105,6 @@ class ComparedAnalysis:
                 vi_df.loc[k] = [join_i.data[k], join_i.data[k], 0]
                 vj_df.loc[k] = [join_j.data[k], join_j.data[k], 0]
         if self.plot:
-
             intensity = get_significance(vi_df, vj_df)
             plot_multi_bar(vi_df, vj_df,
                            (join_i.model_name, join_j.model_name), intensity,
@@ -130,7 +128,9 @@ class ComparedAnalysis:
         file.write(f"\n### Per class infos\n")
         _ = write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
         file.write(f"\n### Correlations\n")
-        intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file)
+        intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file,
+                               pvals_i=
+                               a_i.pvalues, pvals_j=a_j.pvalues)
 
         if self.plot:
             plot_multi_bar(a_i.correlations, a_j.correlations,
@@ -146,8 +146,24 @@ def get_significance(df1, df2):
     return significance
 
 
-def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
+def merge_pvals(df1, df2):
+    assert type(df1) == type(df2), "Types must be the same"
+
+    df_max = pd.concat([df1, df2]).max(level=0)
+
+    df_b = df_max < 0.05
+
+    return df_max[df_b]
+
+
+def write_diff(vi, vj, k, significance_thrs, file, max_cols=5, pvals_i=None, pvals_j=None):
     assert type(vi) == type(vj), "Types must be the same"
+
+    if pvals_j is None and pvals_i is not None:
+        pvals_j = pvals_i
+
+    elif pvals_j is not None and pvals_i is None:
+        pvals_i = pvals_j
 
     if isinstance(vi, dict):
         vi = pd.DataFrame.from_dict(vi, orient="index")
@@ -155,17 +171,17 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
 
     significance = get_significance(vi, vj)
 
-    try:
-        corr,p_value= scipy.stats.pearsonr(vi,vj)
-    except TypeError:
-        pass
+    if pvals_i is not None:
+        significance = merge_pvals(pvals_i, pvals_j)
+        significance = significance.fillna(-99999)
+        significance_thrs = -1
 
     if isinstance(significance, pd.DataFrame):
         for row in significance.index:
             sig = significance.loc[row]
 
             # if significance value is not reached skip
-            if not any(sig > significance_thrs):
+            if all(sig < significance_thrs):
                 continue
 
             file.write(f"- dataframe row **{row}** : \n")
@@ -173,8 +189,17 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
             sig = sig.sort_values(ascending=False)[:max_cols]
 
             for col in sig.index:
+
+                if sig[col] < significance_thrs:
+                    continue
+
+                if significance_thrs == -1:
+                    measure = f"({sig[col]:.4f} pval)"
+                else:
+                    measure = f"({sig[col] * 100:.2f}% significance)"
+
                 file.write(
-                    f"\t- col *{col}* : {vi[col][row]:.3f}/{vj[col][row]:.3f}  ({sig[col] * 100:.2f}% significance)\n")
+                    f"\t- col *{col}* : {vi[col][row]:.3f}/{vj[col][row]:.3f} {measure}\n")
             file.write("\n")
 
     else:

@@ -132,6 +132,11 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir, superclass=False):
         col2 = df2[col_id]
         col3 = intensity[col_id]
 
+        bool_col = col3 > -1
+        col1 = col1[bool_col]
+        col2 = col2[bool_col]
+        col3 = col3[bool_col]
+
         # define df
         df = pd.DataFrame([col1, col2], index=models)
         df['model'] = models
@@ -157,7 +162,7 @@ def plot_multi_bar(df1, df2, models, intensity, save_dir, superclass=False):
         for p in patches:
             x = p.get_x() - 0.01
             y = p.get_height() + 0.02 if p.get_height() > 0 else p.get_height() - 0.07
-            text = f"{col3.iloc[idx] * 100:.1f}%"
+            text = f"{col3.iloc[idx] * 100:.3f}%"
             ax.text(x, y, text, color='black', rotation='horizontal', size=7)
             idx += 1
 
@@ -190,7 +195,7 @@ def plot_multi_bar4(df_class, df_superclass, models, save_dir):
             continue
         # define df
         df = pd.DataFrame([cc1, cc2, csc1, csc2], index=models)
-        df= df[df <= 1].dropna(axis=1)
+        df = df[df <= 1].dropna(axis=1)
         df['model'] = models
         df = pd.melt(df, id_vars="model", var_name="metrics", value_name="correlation")
 
@@ -207,4 +212,3 @@ def plot_multi_bar4(df_class, df_superclass, models, save_dir):
         plt.savefig(save_dir.joinpath(f"{col_id}.jpg"))
         # plt.show()
         plt.close()
-
