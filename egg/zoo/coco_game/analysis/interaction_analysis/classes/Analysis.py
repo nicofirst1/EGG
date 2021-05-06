@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import scipy
 from rich.progress import track
 
 from egg.zoo.coco_game.analysis.interaction_analysis import *
@@ -259,7 +260,7 @@ class Analysis:
                 row_j = row_j[idexes]  # without outliers
 
                 # get correlation
-                corr = row_i.corr(row_j)
+                corr, pvalue = scipy.stats.pearsonr(row_i, row_j)
 
                 # cast tu numpy
                 row_i = row_i.values
@@ -268,7 +269,7 @@ class Analysis:
                 name_i = self.acc_infos.index[idx]
                 name_j = self.acc_infos.index[jdx]
 
-                to_plot.append((name_i, name_j, row_i, row_j, corr))
+                to_plot.append((name_i, name_j, row_i, row_j, corr, pvalue))
 
             to_plot = sorted(to_plot, key=lambda tup: tup[-1], reverse=True)
             path = self.path_correlations.joinpath(metric)

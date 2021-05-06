@@ -129,8 +129,7 @@ class ComparedAnalysis:
         _ = write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
         file.write(f"\n### Correlations\n")
         intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file,
-                               pvals_i=
-                               a_i.pvalues, pvals_j=a_j.pvalues)
+                               pvals_i=a_i.pvalues, pvals_j=a_j.pvalues, max_cols=10)
 
         if self.plot:
             plot_multi_bar(a_i.correlations, a_j.correlations,
@@ -149,11 +148,14 @@ def get_significance(df1, df2):
 def merge_pvals(df1, df2):
     assert type(df1) == type(df2), "Types must be the same"
 
-    df_max = pd.concat([df1, df2]).max(level=0)
+    b1 = df1 < 0.05
+    b2 = df2 < 0.05
 
-    df_b = df_max < 0.05
+    b = b1 | b2
 
-    return df_max[df_b]
+    df_max = pd.concat([df1, df2]).min(level=0)
+
+    return df_max[b]
 
 
 def write_diff(vi, vj, k, significance_thrs, file, max_cols=5, pvals_i=None, pvals_j=None):
@@ -173,7 +175,7 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5, pvals_i=None, pva
 
     if pvals_i is not None:
         significance = merge_pvals(pvals_i, pvals_j)
-        significance = significance.fillna(-99999)
+        significance = significance.fillna(-999)
         significance_thrs = -1
 
     if isinstance(significance, pd.DataFrame):

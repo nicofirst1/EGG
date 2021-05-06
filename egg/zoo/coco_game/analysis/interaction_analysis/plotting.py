@@ -66,7 +66,7 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
                 if idx >= len(plot_list): continue
 
                 to_plot = plot_list[idx]
-                n1, n2, p1, p2, corr = to_plot
+                n1, n2, p1, p2, corr, pvalue = to_plot
 
                 axs[jdx, kdx].scatter(
                     p1,
@@ -75,7 +75,7 @@ def plot_multi_scatter(plot_list, save_dir: Path, max_plot_figure=4, show=True):
                 )
                 axs[jdx, kdx].set_xlabel(n1)
                 axs[jdx, kdx].set_ylabel(n2)
-                axs[jdx, kdx].set_title(f"Corr {corr:.3f}")
+                axs[jdx, kdx].set_title(f"Corr {corr*100:.1f}%; Pval {pvalue:.4f}")
                 idx += 1
 
         fig.tight_layout()
