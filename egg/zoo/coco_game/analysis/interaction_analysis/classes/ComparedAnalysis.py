@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
+import scipy
 
 from egg.zoo.coco_game.analysis.interaction_analysis import PRINT_DEF
 from egg.zoo.coco_game.analysis.interaction_analysis.classes.JoinedAnalysis import JoinedAnalysis
@@ -14,8 +15,8 @@ class ComparedAnalysis:
     def __init__(self, joined_list: List[JoinedAnalysis], out_dir, generate):
         self.joined_list = joined_list
 
-        self.significance_thrs = 0.5
-        self.plot = True
+        self.significance_thrs = 0.01
+        self.plot = generate
 
         self.out_dir = Path(out_dir).joinpath("Comparison")
         self.readme_path = self.out_dir.joinpath("README.md")
@@ -153,6 +154,11 @@ def write_diff(vi, vj, k, significance_thrs, file, max_cols=5):
         vj = pd.DataFrame.from_dict(vj, orient="index")
 
     significance = get_significance(vi, vj)
+
+    try:
+        corr,p_value= scipy.stats.pearsonr(vi,vj)
+    except TypeError:
+        pass
 
     if isinstance(significance, pd.DataFrame):
         for row in significance.index:

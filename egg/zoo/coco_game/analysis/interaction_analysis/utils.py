@@ -4,6 +4,7 @@ import pathlib
 import pickle
 
 import pandas as pd
+import scipy
 from rich.console import Console
 
 from egg.zoo.coco_game.analysis.interaction_analysis import Frq, CR
@@ -149,7 +150,8 @@ def estimate_correlation(df1, row1, row2, df2=None):
     row_j = row_j[idexes]  # without outliers
 
     # get correlation
-    corr = row_i.corr(row_j)
-    return corr
+    corr, pvalue=scipy.stats.pearsonr(row_i,row_j)
+
+    return corr, pvalue
 
 

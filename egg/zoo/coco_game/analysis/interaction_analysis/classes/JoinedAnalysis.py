@@ -156,14 +156,19 @@ class JoinedAnalysis:
             keep = [all([mw not in words[i] for mw in main_word.split("_")]) for i in range(len(words))]
             return serie[keep].dropna()
 
-        def write_correlations(file, cors):
+        def write_correlations(file, cors, pavals):
 
             cors = get_special_corr(cors, [-0.4, 0.4])
 
             for col in cors.columns:
                 c = cors[col]
+                pval= pavals[col]
 
                 c = filter_same_words(col, c)
+                pval = filter_same_words(col, pval)
+
+                if not (pval < 0.05).any():
+                    continue
 
                 pos = c[c > 0]
                 neg = c[c < 0]
@@ -174,9 +179,13 @@ class JoinedAnalysis:
                 file.write(f"- *{col}* :\n")
 
                 for r in pos.index:
-                    file.write(f"\t **{r}** = {pos[r]:.3f}\n")
+                    if pval[r] >0.05:
+                        continue
+                    file.write(f"\t **{r}** = {pos[r]:.3f} (pval {pval[r]:.3f})\n")
                 for r in neg.index:
-                    file.write(f"\t **{r}** = {neg[r]:.3f}\n")
+                    if pval[r] > 0.05:
+                        continue
+                    file.write(f"\t **{r}** = {neg[r]:.3f} (pval {pval[r]:.3f})\n")
 
                 file.write("\n")
 
@@ -184,9 +193,9 @@ class JoinedAnalysis:
                    "In this section we report some correlations between metrics which stands out particularly\n")
 
         file.write("\n## Class corr\n")
-        write_correlations(file, self.class_analysis.correlations)
+        write_correlations(file, self.class_analysis.correlations, self.class_analysis.pvalues)
         file.write("\n## Superclass corr\n")
-        write_correlations(file, self.superclass_analysis.correlations)
+        write_correlations(file, self.superclass_analysis.correlations, self.superclass_analysis.pvalues)
 
     def readme_language_analysis(self, file):
         file.write("\n\n# Language Analysis\n")
@@ -344,9 +353,10 @@ class JoinedAnalysis:
         file.write("\n\n")
 
         corr_frq_serc = self.class_analysis.correlations[Frq][SeCR]
+        pval_frq_serc = self.class_analysis.pvalues[Frq][SeCR]
 
         file.write(
-            f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR}.\n"
+            f"- There is a high correlation ({corr_frq_serc:.4f}) between the {Frq} and the {SeCR} (pval {pval_frq_serc:.4f}).\n"
             f"This implies that more frequent classes are mapped to more {Se}.\n\n")
 
         mpsc = self.data['general'].loc[PSC]

@@ -226,15 +226,18 @@ class Analysis:
 
     def compute_info_correlations(self):
         indices = list(self.acc_infos.index)
-        df = pd.DataFrame(columns=indices, index=indices, dtype=float)
+        df_corr = pd.DataFrame(columns=indices, index=indices, dtype=float)
+        df_pval = pd.DataFrame(columns=indices, index=indices, dtype=float)
 
         for idx in indices:
             for jdx in indices:
                 corr = estimate_correlation(self.acc_infos, idx, jdx)
 
-                df[idx][jdx] = corr
+                df_corr[idx][jdx] = corr[0]
+                df_pval[idx][jdx] = corr[1]
 
-        self.correlations = df
+        self.correlations = df_corr
+        self.pvalues = df_pval
 
     def plot_correlations(self):
         info_len = len(self.acc_infos)
