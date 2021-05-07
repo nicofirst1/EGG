@@ -49,13 +49,14 @@ On the other hand the shared_supercls_seq increases linearly with the dataset di
 ### General 
 
 
-- Ambiguity rate is high pos (0.96) with amb richness: classes with more target==distr have more sequences.
-
-- Ambiguity rate is neg (-0.314) with accuracy: ambiguous objects are more difficult to predict
-
--  Class richness is high pos (0.88) to the class frequency: more frequent classes have more symbols/sequences
-
--  Target freq is high neg (-0.53) to frequency: classes which are more frequent appear less as a target and more as other classes 
+- Correlation between *ambiguity_rate*  and *ambg_rchns*  (0.0000 pval) is 0.96 : classes with more target==distr have more sequences.
+- Correlation between *ambiguity_rate*  and *accuracy* (0.0184 pval) is -0.230:  ambiguous objects are more difficult to predict
+- Correlation between *cls_comity*  and *accuracy* (0.0153 pval)  is -0.242: which means that is more difficult to predict objects when they appear with a lot of other classes.
+- Correlation between *cls_rchns*  and *freq* (0.0206 pval) is  0.882: more frequent classes have more symbols/sequences
+- Correlation between *trg_freq*  and *freq* (0.0000 pval) is -0.534 :classes which are more frequent appear less as a target and more as other classes 
+- Correlation between *trg_freq*  and *cls_rchns* (0.0206 pval) is -0.309: objects appearing frequently as target use less sequences
+- Correlation between *X_trg==dstr*  and *cls_comity* (0.0000 pval) is  0.608: objects appearing more frequently with other objects tend to be more difficult to predict when t==d
+- Correlation between *trg_freq*  and *ambg_rchns_perc* (0.0386 pval)  is -0.277: objects with high frequency as a target tend to have less sequences then t==d.
 
 
 ### Differences
@@ -66,7 +67,10 @@ On the other hand the shared_supercls_seq increases linearly with the dataset di
 -  Correlation between *trg_freq* and *intracls_seq_spcf*   (0.0061 pval) is -0.356/0.015. The correlation measures how many unique senquencies a classes has in relationship with its target frequency. Since the *intracls_seq_spcf* is multiplied by the *trg_freq* in its computation we actually have a relationship between the number of seq and the target freq.
 The values shows how the Seg model tends to have less unique sequences for objects which appears frequently as target, while both is not influenced.
 - Correlation between *prec_sc* and *seq/sym_cls_rchns* is  0.081/-0.262. The correlation measures how the number of sequences/symbols used for a class is related to the accuracy when target==distractor. We already know that both has problems in discerning objects from the same class, but here we see that these problems are accentuated by the richness of the class itself. That is, more sequences are used for a class worse is the precision when target==distractor.
-
+- Correlation between *freq* and *X_trg==dstr*  (0.0358 pval) is  0.107/0.276 . This correlation measures the difficulty in prediction when t==d and the object in t has a high frequency. We see that Seg has an easier time to predict since it has highly specialized sequences.
+- Correlation between *freq* and *prec_sc*  (0.0194 pval) is  0.049/-0.299. Again we see how the specialization of sequences in Seg helps the model with the same class accuracy when the target is seen frequently as a distractor. 
+- Correlation between *prec_oc* and *ambg_rchns_perc* (0.0259 pval) is -0.292/-0.188. This correlation tells us how easy it is to predict class when t!=d. We see that both are negative, which means that the more sequences used for t==d the less likely the model is to predict correctly when t!=d. On the other hand, in Both, this relationship is less evident because it has the ability to spot different classes.
+-  Correlation between *cls_comity* and *accuracy* (0.0153 pval) is -0.323/-0.242. The correlation means that is more difficult to predict objects when they appear with a lot of other classes. As previously stated we see that Both finds it easier to distinguish objects when they appear with a large amount of other classes.
 
 #### P> 0.5
 
@@ -123,7 +127,7 @@ superclasses.
 
 Seg is better at differentiating between objects with the same class while Both is better when target!=distractor.
 
-
+both models use more sequences for objects appearing many times but not as target
 
 
 ###############################################################################################
