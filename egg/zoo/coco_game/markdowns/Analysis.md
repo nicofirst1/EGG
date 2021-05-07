@@ -101,13 +101,20 @@ As a sanity check we have that the correlation between  *cls_comity* and *accura
 # Super Class
 
 ## Correlation 
+- Correlation between *V_trg==dstr*  and *cls_comity*(0.0050 pval)  is 0.836: when t==d objects are easier to predict when they appear with a large amount of other classes.
+
+- Correlation between *V_trg==dstr*  and *ambg_rate* (0.0000 pval) is 0.998: in a superclass context more ambiguity means more sequences for all the subclasses, so it becomes easier to distinguish them apart.
+
+
+- - Correlation between *trg_freq*  and *cls_rchns* (0.0000 pval) is 0.998  objects appearing frequently as target use less sequences
+- - Correlation between *trg_freq*  and *cls_rchns* (0.0206 pval) is -0.309: objects appearing frequently as target use less sequences
 
 ### Differences 
 
 - Correlation between *X_trg!=dstr* and *shared_supercls_seq* (0.0197 pval) is   0.055/0.716.  This relationship measure how the number of shared sequences in a superclass is related to the incorrect predictions when target!=distractor.
 Here we see that Both has a high correlation value, which means that the more a superclass shares sequences between its subclasses the more prone the model is to get a prediction wrong.
--  Correlation between *freq* and *shared_supercls_seq* (0.0189 pval) is  0.754/0.301 . We see how Seg tends to share more sequences based on the frequency of the object. Indeed we can look at the *seq_cls_rchns* and see that its correlation with  *shared_supercls_seq*  (0.0043 pval) is  0.843 for Seg and 0.399 for Both. 
-Again we see how Seg tends to have more sequences in general than both based on the frequency of the object.
+-  Correlation between *freq* and *shared_supercls_seq* (0.0189 pval) is  0.754/0.301 . We see how Seg tends to share more sequences based on the frequency of the object. 
+-  Correlation between *cls_rchns* and  *shared_supercls_seq*  (0.0043 pval) is  0.843/0.399.Again we see how Seg tends to have more sequences in general than both based on the frequency of the object.
 - Correlation between *trg_freq* and *prec_oc* (0.0499 pval) is  -0.667/0.129. This correlation highlights the precision in predicting the object when tartget!=distractor in relationship with the target frequency.
 We see that Seg finds very difficult to correctly predict this when the object appears frequently as a target, on the other hand Both finds it slightly helpful.
 - Correlation between *ambg_rchns_perc* and *prec_oc* (0.0268 pval)  is 0.691/-0.022.
@@ -115,7 +122,7 @@ This correlation emphasize the precision in correctly predicting when target!=di
 For Seg, more sequences for the t==d means a better differentiation when t!=d.
 - Correlation between *cls_comity* and *X_trg==dstr* (0.0252 pval) is  0.683/0.731.
 This correlation highlights how many wrong prediction a model makes when t==d in relationship with the number of distractors t appears with. We can see that it is slightly higher for Both.
-
+- Correlation between *othr_clss_num* and *shared_supercls_seq*   (0.0186 pval) is 0.755/0.286 . This relationship enphasize the namber of shared sequences in a superclass in relation with the number of other classes present with the target. We see that more target with appear with more objects tend to have more sequences shared, for seg this is especially true. (?)
 
 
 
