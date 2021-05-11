@@ -13,7 +13,9 @@ Crr = "correct"
 Acc = "accuracy"
 Frq = "freq"
 
-OCL = "othr_clss_num"
+Cls="cls"
+
+OCN = f"othr_{Cls}_num"
 TF = f"{_target}_{Frq}"
 
 PSC = "prec_sc"
@@ -23,7 +25,7 @@ _ambiguity = "ambg"
 ARt = f"{_ambiguity}_rate"
 ARc = f"{_ambiguity}_rchns"
 ARcP = f"{ARc}_perc"
-CR = "cls_rchns"
+CR = f"{Cls}_rchns"
 
 Sy = "sym"
 Se = "seq"
@@ -31,10 +33,10 @@ SyCR = f"{Sy}_{CR}"
 SeCR = f"{Se}_{CR}"
 SeNm = f"{Se}_num"
 
-ClsCmt = "cls_comity"
+ClsCmt = f"{Cls}_comity"
 
 SSeS = f"supercls_{Se}_spec"
-CSeS = f"cls_{Se}_spec"
+CSeS = f"{Cls}_{Se}_spec"
 SScS = f"shared_supercls_{Se}"
 ISeS = f"intracls_{Se}_spcf"
 
@@ -43,7 +45,7 @@ DEFINITIONS = {
     CTND: "Number of incorrect predictions when the target and the distractor belong to the same class",
     WTED: "Number of correct predictions when the target and the distractor belong to different classes",
     WTND: "Number of incorrect predictions when the target and the distractor belong to different classes",
-    OCL: "Number of classes present in an image with the current target. Some classes such as person appear with many"
+    OCN: "Number of classes present in an image with the current target. Some classes such as person appear with many"
          " more objects in the image (i.e. other persons), while some like cat have usually only one object, the cat.",
     TF: "The frequency of the current target in the dataset.",
     PSC: f"Precision of the prediction when the disctractor and target belong to the same class.\n"

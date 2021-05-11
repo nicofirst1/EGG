@@ -104,6 +104,7 @@ class ComparedAnalysis:
             if 'general' not in k:
                 vi_df.loc[k] = [join_i.data[k], join_i.data[k], 0]
                 vj_df.loc[k] = [join_j.data[k], join_j.data[k], 0]
+
         if self.plot:
             intensity = get_significance(vi_df, vj_df)
             plot_multi_bar(vi_df, vj_df,
@@ -129,7 +130,7 @@ class ComparedAnalysis:
         _ = write_diff(a_i.acc_infos, a_j.acc_infos, "acc_infos", self.significance_thrs, file)
         file.write(f"\n### Correlations\n")
         intensity = write_diff(a_i.correlations, a_j.correlations, "correlations", self.significance_thrs, file,
-                               pvals_i=a_i.pvalues, pvals_j=a_j.pvalues, max_cols=10)
+                               pvals_i=a_i.pvalues, pvals_j=a_j.pvalues, max_cols=100)
 
         if self.plot:
             plot_multi_bar(a_i.correlations, a_j.correlations,

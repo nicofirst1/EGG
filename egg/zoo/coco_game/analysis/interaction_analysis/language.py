@@ -74,18 +74,18 @@ def get_infos(lines: list, max_len) -> Dict:
 
     lines_len = len(lines)
     infos_class["message_len"] /= lines_len
-    infos_class[Se] = {k: v / lines_len for k, v in infos_class[Se].items()}
+    #infos_class[Se] = {k: v / lines_len for k, v in infos_class[Se].items()}
 
     infos_superclass["message_len"] /= lines_len
-    infos_superclass[Se] = {k: v / lines_len for k, v in infos_superclass[Se].items()}
+    #infos_superclass[Se] = {k: v / lines_len for k, v in infos_superclass[Se].items()}
 
-    for k in infos_class[Sy].keys():
-        infos_class[Sy][k] /= lines_len
-        infos_class[Sy][k] /= max_len
+    # for k in infos_class[Sy].keys():
+    #     infos_class[Sy][k] /= lines_len
+    #     infos_class[Sy][k] /= max_len
 
-    for k in infos_superclass[Sy].keys():
-        infos_superclass[Sy][k] /= lines_len
-        infos_superclass[Sy][k] /= max_len
+    # for k in infos_superclass[Sy].keys():
+    #     infos_superclass[Sy][k] /= lines_len
+    #     infos_superclass[Sy][k] /= max_len
 
     return (infos_class, classes), (infos_superclass, superclasses)
 
@@ -106,7 +106,7 @@ def language_tensor(lang_sequence_cooc):
             for seq_k, seq_v in seqs.items():
                 df[dist_k][seq_k] += seq_v
 
-        df /= df.sum().sum()
+        # df /= df.sum().sum()
         tensor[true_c] = df
 
     return tensor
@@ -128,12 +128,12 @@ def ambiguity_richness(lang_sequence_cooc: Dict) -> Dict:
 
             total += len(v2)
             total_perc += sum(v2.values())
-
-        try:
-            ar_res[trg] /= total
-            ar_perc_res[trg] /= total_perc
-        except ZeroDivisionError:
-            pass
+        #
+        # try:
+        #     ar_res[trg] /= total
+        #     ar_perc_res[trg] /= total_perc
+        # except ZeroDivisionError:
+        #     pass
 
     return ar_res, ar_perc_res
 
@@ -194,13 +194,13 @@ def cooc_tensor(lines, symbols, sequences, classes, superclasses, max_len):
         class_tensor[target_class][distractor_class][symbol_seq] += 1
         superclass_tensor[target_superclass][distractor_superclass][symbol_seq] += 1
 
-    class_symbol_df /= len(lines)
-    class_symbol_df /= max_len
-    class_sequence_df /= len(lines)
-
-    superclass_symbol_df /= len(lines)
-    superclass_symbol_df /= max_len
-    superclass_sequence_df /= len(lines)
+    # class_symbol_df /= len(lines)
+    # class_symbol_df /= max_len
+    # class_sequence_df /= len(lines)
+    #
+    # superclass_symbol_df /= len(lines)
+    # superclass_symbol_df /= max_len
+    # superclass_sequence_df /= len(lines)
 
     classes = (class_symbol_df, class_sequence_df, class_tensor)
     superclasses = (superclass_symbol_df, superclass_sequence_df, superclass_tensor)

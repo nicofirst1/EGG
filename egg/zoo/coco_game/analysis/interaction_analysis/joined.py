@@ -29,14 +29,14 @@ def get_hierarchy_classes(lines):
         total = sum(v.values())
 
         for k2, v2 in v.items():
-            class_hierarchy[k][k2] = v2 / total
+            class_hierarchy[k][k2] = v2 #/ total
 
         class_hierarchy[k]['total'] = total
 
     total = sum([class_hierarchy[x]['total'] for x in class_hierarchy.keys()])
 
     for k in class_hierarchy.keys():
-        class_hierarchy[k]['total_perc'] = class_hierarchy[k]['total'] / total
+        class_hierarchy[k]['total_perc'] = class_hierarchy[k]['total'] #/ total
 
     return class_hierarchy
 

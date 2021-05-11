@@ -10,7 +10,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import language_an
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
     plot_multi_scatter, plot_histogram
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row, \
-    estimate_correlation, normalize_drop, max_sequence_num
+    estimate_correlation, normalize_drop
 
 
 def get_analysis(interaction_path, out_dir, filter):
@@ -123,21 +123,45 @@ class Analysis:
 
     def update_analysis(self):
 
+        self.acc_analysis[Sy] = self.lang_symbol.shape[1] - 1
+        self.acc_analysis[Se] = self.lang_sequence.shape[1] - 1
+        self.acc_analysis[Cls] = self.acc_infos.shape[1] - 1
+
+        normalize_map = {
+            TF: [Acc, CTND, CTED, WTED, WTND, ARt],
+            Frq: [OCN, TF, Frq],
+            Sy: [SyCR],
+            Se: [SeCR],
+            Cls: [ClsCmt],
+            SeCR: [ARc, ARcP, ISeS]
+
+        }
+        nm = {}
+        for k in normalize_map.keys():
+            v = normalize_map[k]
+            for k2 in v:
+                nm[k2] = k
+
         # add means
-        for row in self.acc_infos.index:
-            mean = self.acc_infos.loc[row].mean()
-            self.acc_analysis[row] = mean
+        for row_id in self.acc_infos.index:
+            row = self.acc_infos.loc[row_id].copy()
 
+            if row_id in nm.keys():
+                row_id2 = nm[row_id]
 
+                try:
+                    row2 = self.acc_infos.loc[row_id2]
 
-        symbols_len =self.lang_symbol.shape[0]-1
-        sequences = list(self.lang_sequence.columns[:-1])
-        max_length = [len(x) for x in sequences]
-        max_length = max(max_length)
+                except KeyError:
 
-        possible_sequences = max_sequence_num(symbols_len, max_length)
+                    row2 = self.acc_analysis[row_id2]
+            else:
+                row2 = 1
 
-        self.acc_analysis[SeNm]= len(sequences)/ possible_sequences
+            row /= row2
+            row = row.mean()
+
+            self.acc_analysis[row_id] = row
 
     def update_infos(self):
 
@@ -160,7 +184,7 @@ class Analysis:
             to_add2, ClsCmt, self.acc_infos
         )
 
-        shared_appearances={k: len(v) / self.acc_cooc.shape[0] for k, v in self.lang_sequence_cooc.items()}
+        shared_appearances = {k: len(v) for k, v in self.lang_sequence_cooc.items()}
         self.acc_infos = add_row(
             shared_appearances, ARcP, self.acc_infos
         )
@@ -173,8 +197,8 @@ class Analysis:
         # count the unique sequence per class
         ises = (lang_sequence[sequences] == 1).sum(axis=1)
 
-        total = self.acc_infos.loc[Frq] * self.acc_analysis[NObj] * self.acc_infos.loc[TF]
-        ises /= total
+        # total = self.acc_infos.loc[Frq] * self.acc_analysis[NObj] * self.acc_infos.loc[TF]
+        # ises /= total
 
         # # normalize by number of sequences
         # ises = ises / lang_sequence.shape[1]

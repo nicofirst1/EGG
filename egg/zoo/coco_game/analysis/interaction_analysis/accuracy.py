@@ -23,21 +23,20 @@ def get_infos(lines: list) -> Dict:
 
     def normalize(infos):
 
-        ocl = infos.loc[OCL, :] / infos.loc[OCL, :].sum()
+        ocl = infos.loc[OCN, :]
         tot = infos.loc[Tot, :]
 
         tf = infos.loc[TF]
-        infos = infos.drop(index=[OCL, Tot, TF])
+        infos = infos.drop(index=[OCN, Tot, TF])
 
-        infos /= tf
-
-        tf /= tot
-        tot /= tot.sum()
-
-        infos.loc[OCL] = ocl
+        infos.loc[OCN] = ocl
         infos.loc[TF] = tf
         infos.loc[Tot] = tot
 
+
+        return infos
+
+    def add_rows(infos):
         infos = infos.rename(index={Crr: Acc, Tot: Frq})
 
         to_add = infos.loc[CTED, :] / (
@@ -65,7 +64,7 @@ def get_infos(lines: list) -> Dict:
             WTED: 0,
             CTND: 0,
             WTND: 0,
-            OCL: 0,
+            OCN: 0,
             TF: 0,
         }
 
@@ -98,8 +97,8 @@ def get_infos(lines: list) -> Dict:
 
         accuracy_class_dict[pred_class][Tot] += 1
         accuracy_superclass_dict[pred_superclass][Tot] += 1
-        accuracy_class_dict[pred_class][OCL] += len(other_classes.split(";"))
-        accuracy_superclass_dict[pred_superclass][OCL] += len(other_superclasses.split(";"))
+        accuracy_class_dict[pred_class][OCN] += len(other_classes.split(";"))
+        accuracy_superclass_dict[pred_superclass][OCN] += len(other_superclasses.split(";"))
 
         for oc in other_classes.split(";"):
             if oc not in accuracy_class_dict:
@@ -139,6 +138,9 @@ def get_infos(lines: list) -> Dict:
 
     accuracy_class_dict = normalize(accuracy_class_dict)
     accuracy_superclass_dict = normalize(accuracy_superclass_dict)
+
+    accuracy_class_dict = add_rows(accuracy_class_dict)
+    accuracy_superclass_dict = add_rows(accuracy_superclass_dict)
     return accuracy_class_dict, accuracy_superclass_dict, total
 
 
@@ -165,7 +167,7 @@ def coccurence(lines, classes, superclasses):
 def analysis_df(infos, total):
     analysis = {}
 
-    to_add = infos.loc[Acc, :].sum() / infos.shape[1]
+    to_add = infos.loc[Acc, :].sum()# / infos.shape[1]
     analysis['accuracy'] = to_add
     analysis[NObj] = int(total)
 
