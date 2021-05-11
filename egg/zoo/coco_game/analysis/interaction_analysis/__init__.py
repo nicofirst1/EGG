@@ -81,4 +81,5 @@ DEFINITIONS = {
 
 }
 
-PRINT_DEF = ["\n# Metrics definitions\n"] + [f"- **{k}** : {v}\n\n" for k, v in DEFINITIONS.items()]
+PRINT_DEF = ["\n# Metrics definitions\n"] + [f"- **{k}** : {v}\n\n" for k, v in
+                                             sorted(DEFINITIONS.items(), key=lambda item: item[0])]

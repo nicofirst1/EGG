@@ -76,38 +76,36 @@ The values shows how the Seg model tends to have less unique sequences for objec
 
 
 
-- On the other hand, correlation between *othr_clss_num* and *prec_oc* is   -0.242/0.024  .
+- On the other hand, correlation between *othr_clss_num* and *prec_oc* (0.0676 pval) is   -0.242/0.024  .
 The correlation measures the precision in correctly predicting a class when target!=distractor in relationship with the number of objects in the image. 
 In a completely different results as before, here we see how the number of objects in the image influences negatively Seg when it needs to differentiate between to objects coming from different classes.
 
 
-- Correlation between *freq* and the two precisions *prec_oc*   and *prec_sc* (0.0194 p) confirms what previously said. Indeed for the Seg model this correlation is negative with *prec_oc* (-0.251) and zero with *prec_sc* (0.049), on the other hand, Both has a negative correlation with *prec_sc* (-0.299) and zer with *prec_oc* (0.041).
+- Correlation between *freq* and the two precisions *prec_oc* (0.0575 pval)  and *prec_sc* (0.0194 p) confirms what previously said. Indeed for the Seg model this correlation is negative with *prec_oc* (-0.251) and zero with *prec_sc* (0.041), on the other hand, Both has a negative correlation with *prec_sc* (-0.299) and zer with *prec_oc* (0.041).
 This means that Seg is fooled in predicting targets which appears frequently when the distractor is not the same class, on the other hand both is fooled when the opposite is true.
 
 
 
-- Correlation *prec_oc* and *ambg_rate* is -0.227 in Seg and 0.048 in Both (pval>0.05).
+- Correlation *prec_oc* and *ambg_rate*(0.0844 pval)  is -0.227/0.048 .
 This correlation measures how the times an object appears both as target and distractor influences the precision when having that object as target and another one as distractor. While Both is not bothered by this correlation, Seg has a negative value. This can be explained by saing that seg build representation which are more specific in order to distinguish similar objects but fails when the objects are dissimilar. 
 
-- Correlation *prec_sc* and *ambg_rate* is : -0.044 in Seg and -0.070 in Both  (pval>0.05)..
+- Correlation *prec_sc* and *ambg_rate*  (0.5903 pval)is -0.044/-0.070..
 This is a sanity check, since the more ambiguity there is in a class the more difficult it is to predict it when target==distractor.
-On the same wave, we have that the correlation between *ambg_rate* and *accuracy*  (0.0184 pval) is negative for Seg (-0.314) and Both (-0.230) since it is more difficult to predict object, but both finds it slightly easier. 
+On the same wave, we have that the correlation between *ambg_rate* and *accuracy*  (0.0184 pval) is negative  -0.314/-0.230 since it is more difficult to predict object, but both finds it slightly easier. 
 
 
-- Correlation between *cls_comity* and  *prec_oc* is  -0.239 for Seg and  0.035  for Both  (pval>0.05) .  The class comity is a measure of how likely a class is to appear with another one or alone, and its correlation with the precision oc measures how good a model is in differentiating objects of different classes. 
+- Correlation between *cls_comity* and  *prec_oc*  (0.0687 pval) is   -0.239/0.035 .  The class comity is a measure of how likely a class is to appear with another one or alone, and its correlation with the precision oc measures how good a model is in differentiating objects of different classes. 
 As we derived before, Seg does not perform well in these cases while Both is not bothered.
 As a sanity check we have that the correlation between  *cls_comity* and *accuracy*  (0.0153 pval) is negative for both models: in Seg we have a value of  -0.323 while for Both we have a lower value  -0.242.
 
 # Super Class
 
 ## Correlation 
-- Correlation between *V_trg==dstr*  and *cls_comity*(0.0050 pval)  is 0.836: when t==d objects are easier to predict when they appear with a large amount of other classes.
+- Correlation between *V_trg==dstr*  and *cls_comity*(0.0050 pval)  is 0.836: when t==d objects are easier to predict when they appear with a large amount of other superclasses.
 
 - Correlation between *V_trg==dstr*  and *ambg_rate* (0.0000 pval) is 0.998: in a superclass context more ambiguity means more sequences for all the subclasses, so it becomes easier to distinguish them apart.
 
-
-- - Correlation between *trg_freq*  and *cls_rchns* (0.0000 pval) is 0.998  objects appearing frequently as target use less sequences
-- - Correlation between *trg_freq*  and *cls_rchns* (0.0206 pval) is -0.309: objects appearing frequently as target use less sequences
+- Correlation between *trg_freq*  and *cls_rchns* (0.0206 pval) is -0.309: objects appearing frequently as target use less sequences
 
 ### Differences 
 
