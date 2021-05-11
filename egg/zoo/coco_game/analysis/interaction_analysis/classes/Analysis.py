@@ -48,7 +48,7 @@ class Analysis:
         self.path_infos.mkdir(parents=True, exist_ok=True)
 
         console.log(
-            f"Analyzing {filter_str} run with accuracy: {self.acc_analysis[Acc]:.3f} at path {interaction_path}."
+            f"Analyzing {filter_str} at path {interaction_path}."
             f"\nSaving results in {out_dir}")
 
         self.update_infos()
