@@ -112,3 +112,16 @@ def define_project_dir(opts):
         opts.checkpoint_dir = join(opts.log_dir_uid, opts.checkpoint_dir)
 
 
+def get_true_elems(true_segments, classes, annotations):
+    true_classes = []
+    true_annotations = []
+
+    for idx in range(len(true_segments)):
+        ts = true_segments[idx]
+        tc = classes[idx][ts]
+        ta = annotations[idx][ts]
+
+        true_classes.append(tc)
+        true_annotations.append(ta)
+
+    return true_classes, true_annotations
