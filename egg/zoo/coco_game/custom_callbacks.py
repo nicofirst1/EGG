@@ -21,7 +21,7 @@ class SyncLogging(LoggingStrategy):
 
     def __init__(self, logging_step: int, *args):
         self.logging_step = logging_step
-        self.cur_batch = 0
+        self.cur_batch = 1
         super().__init__(*args)
 
     def filtered_interaction(
@@ -195,10 +195,6 @@ class InteractionCSV(Callback):
         Logs the csv with message
         """
 
-
-
-
-
         def get_annotation_id(annotations):
             return [x['id'] for x in annotations]
 
@@ -249,8 +245,6 @@ class InteractionCSV(Callback):
         true_superclass = get_supercat_name_id(true_class)
         dist_super_cat = [get_supercat_name_id(idx) for idx in distractors]
 
-
-
         # Getting classes
         pred_cats = get_cat_name_id(predictions)
         true_class = get_cat_name_id(true_class)
@@ -286,8 +280,6 @@ class TensorboardLogger(Callback):
             self,
             tensorboard_dir: str,
             loggers: Dict[str, LoggingStrategy] = None,
-            train_logging_step: int = 50,
-            val_logging_step: int = 20,
             resume_training: bool = False,
             game: torch.nn.Module = None,
             class_map: Dict[int, str] = {},
@@ -306,8 +298,6 @@ class TensorboardLogger(Callback):
         """
         self.writer = SummaryWriter(log_dir=tensorboard_dir)
         self.gs_file = join(tensorboard_dir, "gs.txt")
-        self.train_log_step = train_logging_step
-        self.val_log_step = val_logging_step
         self.train_gs = 0
         self.val_gs = 0
         self.loggers = loggers
@@ -371,7 +361,7 @@ class TensorboardLogger(Callback):
 
         self.writer.add_scalar("epoch", epoch, global_step=self.train_gs)
         if self.loggers is not None:
-            self.loggers["train"].cur_batch = 0
+            self.loggers["train"].cur_batch = 1
 
     def on_test_end(self, loss: float, logs: Interaction, epoch: int):
         # self.log_precision_recall(logs, phase="val", global_step=epoch)
@@ -380,7 +370,7 @@ class TensorboardLogger(Callback):
         if self.log_conv:
             self.log_conv_filter(logs, phase="train", global_step=epoch)
         if self.loggers is not None:
-            self.loggers["val"].cur_batch = 0
+            self.loggers["val"].cur_batch = 1
 
         self.log_conv = False
 
@@ -388,10 +378,13 @@ class TensorboardLogger(Callback):
             self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
 
+        if logs == Interaction.empty():
+            return
+
         if batch_id != 0:
-            if batch_id % self.train_log_step == 0 and is_training:
+            if batch_id % self.loggers['train'].cur_batch == 0 and is_training:
                 self.log(loss.detach(), logs, is_training)
-            if batch_id % self.val_log_step == 0 and not is_training:
+            if batch_id % self.loggers['val'].cur_batch == 0 and not is_training:
                 self.log(loss.detach(), logs, is_training)
 
     def log_receiver_output(
@@ -472,7 +465,7 @@ class TensorboardLogger(Callback):
         )
 
     def log_labels(
-            self, logs: Interaction, phase: str, global_step: int, label_key="true_segment"
+            self, logs: Interaction, phase: str, global_step: int, label_key="target_position"
     ):
         """
         Logs statistic about the labels such as the class and the bounding boxes
@@ -691,4 +684,3 @@ class TensorboardLogger(Callback):
         self.log_receiver_output(logs.receiver_output, phase, global_step)
         self.log_labels(logs, phase, global_step)
         self.log_messages_distribution(logs, phase, global_step)
-

@@ -31,6 +31,15 @@ def image_parser(parser):
 
 
 def logs_parser(parser):
+
+    parser.add_argument(
+        "--use_tensorboard_logger",
+        type=str2bool,
+        nargs="?",
+        default=False,
+        help="If true, use the tensorboard logger with path 'tensorboard_path",
+    )
+
     parser.add_argument(
         "--use_rich_traceback",
         type=str2bool,
@@ -43,7 +52,7 @@ def logs_parser(parser):
         "--use_progress_bar",
         type=str2bool,
         nargs="?",
-        default=False,
+        default=True,
         help="If to use the traceback provided by the rich library",
     )
 
@@ -72,6 +81,7 @@ def logs_parser(parser):
         default=2,
         help="Number of steps (in batches) before logging during validation",
     )
+
 
 
 def dataloader_parsing(parser):

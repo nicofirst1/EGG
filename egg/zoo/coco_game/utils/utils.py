@@ -5,7 +5,7 @@ from copy import copy
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import torch
 from rich.console import Console
@@ -125,3 +125,18 @@ def get_true_elems(true_segments, classes, annotations):
         true_annotations.append(ta)
 
     return true_classes, true_annotations
+
+
+def get_images(train_method, val_method):
+    def inner(
+            image_ids: List[int],
+            image_ann_ids: List[int],
+            is_training: bool,
+            img_size: Tuple[int, int],
+    ):
+        if is_training:
+            return train_method(image_ids, image_ann_ids, img_size)
+        else:
+            return val_method(image_ids, image_ann_ids, img_size)
+
+    return inner

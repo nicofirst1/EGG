@@ -2,10 +2,11 @@ import os
 from argparse import Namespace
 from functools import reduce
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 import PIL
 import cv2
+import lycon
 import numpy as np
 import torch
 import torchvision
@@ -53,7 +54,30 @@ class CocoDetection(VisionDataset):
         self.distractors = distractors
         self.random_state = np.random.RandomState(data_seed)
 
+    def get_images(
+            self, img_id: List[int], image_anns: List[int], size: Tuple[int, int]
+    ) -> List[np.array]:
+        """
+        Get images, draw bbox with class name, resize and return
+        """
 
+        infos = self.coco.loadImgs(img_id)
+        paths = [os.path.join(self.root, pt["file_name"]) for pt in infos]
+        anns = self.coco.loadAnns(image_anns)
+        cats_name = [self.coco.cats[x["category_id"]]["name"] for x in anns]
+        bboxs = [x["bbox"] for x in anns]
+
+        imgs = [lycon.load(pt) for pt in paths]
+        imgs = [
+            visualize_bbox(img, bbox, class_name, (0, 255, 0))
+            for img, bbox, class_name in zip(imgs, bboxs, cats_name)
+        ]
+
+        imgs = [
+            cv2.resize(img, dsize=size, interpolation=cv2.INTER_CUBIC) for img in imgs
+        ]
+
+        return imgs
     def delete_rand_items(self, perc_ids: float):
         """
         Delete percentage of dataset randomly for testing

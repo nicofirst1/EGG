@@ -11,7 +11,8 @@ from egg.core import (
 from egg.zoo.coco_game.archs.heads import initialize_model
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
-from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy, InteractionCSV, SyncLogging
+from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy, InteractionCSV, SyncLogging, \
+    TensorboardLogger
 from egg.zoo.coco_game.dataset import get_data
 from egg.zoo.coco_game.losses import final_loss
 from egg.zoo.coco_game.utils.dataset_utils import get_dummy_data, split_dataset
@@ -19,7 +20,7 @@ from egg.zoo.coco_game.utils.parsers import parse_arguments
 from egg.zoo.coco_game.utils.utils import (
     console,
     define_project_dir,
-    dump_params,
+    dump_params, get_images,
 )
 
 
@@ -56,12 +57,14 @@ def get_game(opts, is_test=False):
     ######################################
     #   Game wrapper
     ######################################
-    if is_test:
+    if opts.use_tensorboard_logger:
         train_log = SyncLogging(logging_step=opts.train_logging_step)
         val_log = SyncLogging(logging_step=opts.val_logging_step)
     else:
         train_log = LoggingStrategy().minimal()
         val_log = LoggingStrategy().minimal()
+
+    loggers=dict(train=train_log, val=val_log)
 
     game = core.SenderReceiverRnnReinforce(
         sender,
@@ -72,7 +75,7 @@ def get_game(opts, is_test=False):
         train_logging_strategy=train_log,
         test_logging_strategy=val_log,
     )
-    return game
+    return game, loggers
 
 
 def main(params=None):
@@ -82,7 +85,7 @@ def main(params=None):
 
     train_data, val_data = get_data(opts)
 
-    game = get_game(opts)
+    game, loggers = get_game(opts)
 
     optimizer = core.build_optimizer(game.parameters())
     rl_optimizer = torch.optim.lr_scheduler.ExponentialLR(
@@ -96,7 +99,7 @@ def main(params=None):
     ]
 
     if opts.use_progress_bar:
-        clbs = [
+        callbacks += [
             ProgressBarLogger(
                 n_epochs=opts.n_epochs,
                 train_data_len=len(train_data)*2,
@@ -104,7 +107,23 @@ def main(params=None):
                 use_info_table=False,
             ),
         ]
-        callbacks += clbs
+
+    if opts.use_tensorboard_logger:
+        get_imgs = get_images(train_data.dataset.get_images, val_data.dataset.get_images)
+
+        callbacks+=[
+            TensorboardLogger(
+                tensorboard_dir=opts.tensorboard_dir,
+                resume_training=opts.resume_training,
+                loggers=loggers,
+                game=game,
+                class_map={
+                    k: v["name"] for k, v in train_data.dataset.coco.cats.items()
+                },
+                get_image_method=get_imgs,
+                hparams=vars(opts),
+            )
+        ]
 
     trainer = core.Trainer(
         game=game,
