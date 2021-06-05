@@ -5,6 +5,7 @@ import pickle
 
 import pandas as pd
 import scipy
+import statsmodels.api as sm
 from rich.console import Console
 
 from egg.zoo.coco_game.analysis.interaction_analysis import Frq, CR
@@ -110,8 +111,7 @@ def max_sequence_num(vocab_size, max_length):
 
 
 def normalize_drop(df, axis=0):
-
-    if axis==1:
+    if axis == 1:
         df = df.mul(1 / df[CR], axis=0)
     else:
         df = df.mul(1 / df.loc[Frq], axis=1)
@@ -121,7 +121,6 @@ def normalize_drop(df, axis=0):
     return df
 
 
-
 def estimate_correlation(df1, row1, row2, df2=None):
     """
     Perform the correlation between two rows of two dataframes
@@ -129,7 +128,7 @@ def estimate_correlation(df1, row1, row2, df2=None):
     """
 
     if df2 is None:
-        df2=df1
+        df2 = df1
 
     if isinstance(row1, int) and isinstance(row2, int):
         row_i = df1.iloc[row1]
@@ -150,8 +149,35 @@ def estimate_correlation(df1, row1, row2, df2=None):
     row_j = row_j[idexes]  # without outliers
 
     # get correlation
-    corr, pvalue=scipy.stats.pearsonr(row_i,row_j)
+    corr, pvalue = scipy.stats.pearsonr(row_i, row_j)
 
     return corr, pvalue
 
 
+def estimate_correlation_residulas(X, Y, z_x, z_y):
+    """
+    Perform the correlation between two rows of two dataframes
+    If df2 is none then use df1
+    """
+
+    def get_residuals(vec1, vec2):
+        # add constant to predictor variables
+        vec1 = sm.add_constant(vec1)
+
+        # fit linear regression model
+        model = sm.OLS(vec2, vec1).fit()
+
+        influence = model.get_influence()
+
+        # obtain standardized residuals
+        standardized_residuals = influence.resid_studentized_internal
+        return standardized_residuals
+
+    if z_x is not None:
+        X = get_residuals(X, z_x)
+    if z_y is not None:
+        Y = get_residuals(Y, z_y)
+
+    corr, pvalue = scipy.stats.pearsonr(X, Y)
+
+    return corr, pvalue

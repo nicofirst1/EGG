@@ -10,7 +10,7 @@ from egg.zoo.coco_game.analysis.interaction_analysis.language import language_an
 from egg.zoo.coco_game.analysis.interaction_analysis.plotting import plot_confusion_matrix, sort_dataframe, \
     plot_multi_scatter, plot_histogram
 from egg.zoo.coco_game.analysis.interaction_analysis.utils import load_generate_files, console, add_row, \
-    estimate_correlation, normalize_drop
+    normalize_drop, estimate_correlation_residulas
 
 
 def get_analysis(interaction_path, out_dir, filter):
@@ -25,6 +25,25 @@ def get_analysis(interaction_path, out_dir, filter):
         res_dict.update(lan_res)
 
     return res_dict
+
+
+def get_normalize_map():
+    normalize_map = {
+        TF: [Acc, CTND, CTED, WTED, WTND, ARt],
+        Frq: [OCN, TF, Frq],
+        Sy: [SyCR],
+        Se: [SeCR],
+        Cls: [ClsCmt],
+        SeCR: [ARc, ARcP, ISeS]
+
+    }
+    nm = {}
+    for k in normalize_map.keys():
+        v = normalize_map[k]
+        for k2 in v:
+            nm[k2] = k
+
+    return nm
 
 
 class Analysis:
@@ -127,20 +146,7 @@ class Analysis:
         self.acc_analysis[Se] = self.lang_sequence.shape[1] - 1
         self.acc_analysis[Cls] = self.acc_infos.shape[1] - 1
 
-        normalize_map = {
-            TF: [Acc, CTND, CTED, WTED, WTND, ARt],
-            Frq: [OCN, TF, Frq],
-            Sy: [SyCR],
-            Se: [SeCR],
-            Cls: [ClsCmt],
-            SeCR: [ARc, ARcP, ISeS]
-
-        }
-        nm = {}
-        for k in normalize_map.keys():
-            v = normalize_map[k]
-            for k2 in v:
-                nm[k2] = k
+        nm = get_normalize_map()
 
         # add means
         for row_id in self.acc_infos.index:
@@ -165,12 +171,12 @@ class Analysis:
 
     def update_infos(self):
 
-        to_add = self.lang_sequence[CR]
+        to_add = self.lang_sequence[CR][:-1]
         self.acc_infos = add_row(
             to_add, SeCR, self.acc_infos
         )
 
-        to_add = self.lang_symbol[CR]
+        to_add = self.lang_symbol[CR][:-1]
         self.acc_infos = add_row(
             to_add, SyCR, self.acc_infos
         )
@@ -253,10 +259,29 @@ class Analysis:
         indices = list(self.acc_infos.index)
         df_corr = pd.DataFrame(columns=indices, index=indices, dtype=float)
         df_pval = pd.DataFrame(columns=indices, index=indices, dtype=float)
+        nm = get_normalize_map()
+
+        def get_residual(row):
+            if row not in nm.keys():
+                residuals = None
+            else:
+                residuals = nm[row]
+                try:
+                    residuals = self.acc_infos.loc[residuals]
+                except KeyError:
+
+                    residuals = None
+
+            return residuals
 
         for idx in indices:
             for jdx in indices:
-                corr = estimate_correlation(self.acc_infos, idx, jdx)
+                X = self.acc_infos.loc[idx]
+                Y = self.acc_infos.loc[jdx]
+
+                z_x = get_residual(idx)
+                z_y = get_residual(jdx)
+                corr = estimate_correlation_residulas(X, Y, z_x, z_y)
 
                 df_corr[idx][jdx] = corr[0]
                 df_pval[idx][jdx] = corr[1]
