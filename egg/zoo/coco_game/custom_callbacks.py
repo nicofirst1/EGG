@@ -5,8 +5,10 @@ from random import random
 from typing import List, Tuple, Dict
 
 import numpy as np
+import rich
 import torch
 from pycocotools.coco import COCO
+from rich.progress import track
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
@@ -130,18 +132,29 @@ class InteractionCSV(Callback):
         self.init_message_file()
 
     def init_message_file(self):
+
         header = [
             "Epoch",
             "Message",
-            "Pred Class",
-            "Pred SuperClass",
-            "True Class",
-            "True SuperClass",
             "Is correct",
+
+            "Pred Class",
+            "True Class",
             "Distractor class",
-            "Distractor SuperClass",
             "Other Classes",
+
+            "Pred SuperClass",
+            "True SuperClass",
+            "Distractor SuperClass",
             "Other SuperClasses",
+
+            "Annotation id",
+            "Image id",
+
+            "Loss",
+            "Accuracy",
+            "Sender Entropy",
+            "Message Length",
         ]
 
         if self.message_file.exists():
@@ -240,12 +253,12 @@ class InteractionCSV(Callback):
         get_cat_name_id = lambda cat_ids: [self.val_coco.cats[idx]["name"] for idx in cat_ids]
         get_supercat_name_id = lambda cat_ids: [self.val_coco.cats[idx]["supercategory"] for idx in cat_ids]
 
-        # Getting superclasses
+        # Getting sc names from ids
         pred_super_cats = get_supercat_name_id(predictions)
         true_superclass = get_supercat_name_id(true_class)
         dist_super_cat = [get_supercat_name_id(idx) for idx in distractors]
 
-        # Getting classes
+        # Getting c names from ids
         pred_cats = get_cat_name_id(predictions)
         true_class = get_cat_name_id(true_class)
         dist_cat = [get_cat_name_id(idx) for idx in distractors]
@@ -256,21 +269,61 @@ class InteractionCSV(Callback):
         other_supercats = [get_supercat_name_id(idx) for idx in other_ans]
         other_cats = [get_cat_name_id(idx) for idx in other_ans]
 
+        #infos from res_dict
+        image_ids = res_dict['image_id'].tolist()
+        ann_id = res_dict['ann_id'].gather(1, res_dict['target_position'].unsqueeze(1)).squeeze().tolist()
+
+        # infos from aux dict
+        loss = logs.aux['x_loss'].tolist()
+        accuracy = logs.aux['accuracy'].squeeze().tolist()
+        sender_entropy = logs.aux['sender_entropy'][:, 0].squeeze().tolist()
+        message_length = logs.aux['length'].squeeze().tolist()
+
         with open(self.message_file, "a+") as file:
-            for idx in range(len(true_class)):
-                # 'Epoch,Message,Pred Class,Pred SuperClass,True Class,True SuperClass,Is correct,Distractor class,Distractor SuperClass,Other Classes,Other SuperClasses'
+            for idx in track(range(len(true_class)), description="Logging lines..."):
+                # "Epoch",
+                # "Message",
+                # "Is correct",
 
                 line = f"{global_step},"
                 line += f"{';'.join([str(x) for x in messages[idx].tolist()])},"
-                line += f"{pred_cats[idx]},"
-                line += f"{pred_super_cats[idx]},"
-                line += f"{true_class[idx]},"
-                line += f"{true_superclass[idx]},"
                 line += f"{correct_pred[idx]},"
+
+                # "Pred Class",
+                # "True Class",
+                # "Distractor class",
+                # "Other Classes",
+
+                line += f"{pred_cats[idx]},"
+                line += f"{true_class[idx]},"
                 line += f"{';'.join(dist_cat[idx])},"
-                line += f"{';'.join(dist_super_cat[idx])},"
                 line += f"{';'.join(other_cats[idx])},"
-                line += f"{';'.join(other_supercats[idx])}"
+
+                # "Pred SuperClass",
+                # "True SuperClass",
+                # "Distractor SuperClass",
+                # "Other SuperClasses",
+
+
+                line += f"{pred_super_cats[idx]},"
+                line += f"{true_superclass[idx]},"
+                line += f"{';'.join(dist_super_cat[idx])},"
+                line += f"{';'.join(other_supercats[idx])},"
+
+                # "Annotation id",
+                # "Image id",
+                line += f"{ann_id[idx]},"
+                line += f"{image_ids[idx]},"
+
+                # "Loss",
+                # "Accuracy",
+                # "Sender Entropy",
+                # "Message Length",
+                line += f"{loss[idx]},"
+                line += f"{accuracy[idx]},"
+                line += f"{sender_entropy[idx]},"
+                line += f"{message_length[idx]}"
+
                 line += "\n"
                 file.write(line)
 

@@ -57,7 +57,7 @@ def get_game(opts, is_test=False):
     ######################################
     #   Game wrapper
     ######################################
-    if opts.use_tensorboard_logger:
+    if opts.use_tensorboard_logger or is_test:
         train_log = SyncLogging(logging_step=opts.train_logging_step)
         val_log = SyncLogging(logging_step=opts.val_logging_step)
     else:
