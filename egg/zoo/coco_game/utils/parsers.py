@@ -10,9 +10,12 @@ def image_parser(parser):
     parser.add_argument(
         "--image_type",
         type=str,
-        default="seg",
-        help="Choose the sender input type: seg(mented), image, both",
-        choices=["seg", "img", "both"],
+        default="ImgTargetContext",
+        help="Choose the sender input type, an image of the"
+             "1) ImgTarget: just the single object in the image"
+             "2) ImgContext: the whole image without specifying which objects (target) you're referring to"
+             "3) ImgTargetContext: both the target and the whole image",
+        choices=["ImgTarget", "ImgContext", "ImgTargetContext"],
     )
 
     parser.add_argument(
@@ -248,7 +251,7 @@ def training_parsing(parser):
         "--resume_training",
         type=str2bool,
         nargs="?",
-        const=True,
+        const=False,
         help="Resume training loading models from '--checkpoint_dir'",
     )
 
