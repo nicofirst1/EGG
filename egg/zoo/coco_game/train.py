@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import torch
+
+from agents.prolonet_agent import DeepProLoNet
 from egg.core.early_stopping import EarlyStopper, EarlyStopperAccuracy
 
 from egg import core
@@ -8,7 +10,7 @@ from egg.core import (
     LoggingStrategy,
     ProgressBarLogger, ConsoleLogger, CheckpointSaver,
 )
-from egg.zoo.coco_game.archs.heads import initialize_model
+from egg.zoo.coco_game.archs.heads import initialize_model, get_vision_dim
 from egg.zoo.coco_game.archs.receiver import build_receiver
 from egg.zoo.coco_game.archs.sender import build_sender
 from egg.zoo.coco_game.custom_callbacks import CustomEarlyStopperAccuracy, InteractionCSV, SyncLogging, \
@@ -36,15 +38,22 @@ def get_game(opts, is_test=False):
     ######################################
     #   Sender receiver wrappers
     ######################################
-    sender = core.RnnSenderReinforce(
-        sender,
-        vocab_size=opts.vocab_size,
-        embed_dim=opts.sender_embedding,
-        hidden_size=opts.sender_hidden,
-        max_len=opts.max_len,
-        num_layers=opts.sender_num_layers,
-        cell=opts.sender_cell_type,
-    )
+    # sender = core.RnnSenderReinforce(
+    #     sender,
+    #     vocab_size=opts.vocab_size,
+    #     embed_dim=opts.sender_embedding,
+    #     hidden_size=opts.sender_hidden,
+    #     max_len=opts.max_len,
+    #     num_layers=opts.sender_num_layers,
+    #     cell=opts.sender_cell_type,
+    # )
+    sender= DeepProLoNet(input_dim=get_vision_dim(),
+                         output_dim=2,
+                         use_gpu=not opts.no_cuda,
+                         vocab_size=opts.vocab_size,
+                         max_len=opts.max_len,
+                         image_processor=sender,
+                         )
     receiver = core.RnnReceiverDeterministic(
         receiver,
         vocab_size=opts.vocab_size,

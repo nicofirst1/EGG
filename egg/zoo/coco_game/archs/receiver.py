@@ -62,5 +62,6 @@ class Receiver(nn.Module):
 
         vision_out = torch.stack(vision_out)
         # from [distractors,batch, features] to [batch, distractors, features]
-        vision_out = vision_out.permute((1, 0, 2))
+        if vision_out.ndim > 2:
+            vision_out = vision_out.permute((1, 0, 2))
         return vision_out

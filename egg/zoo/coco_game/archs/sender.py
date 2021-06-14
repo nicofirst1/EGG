@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+from agents.prolonet_agent import DeepProLoNet
 from egg.zoo.coco_game.archs import get_vision_dim
 from egg.zoo.coco_game.utils.utils import console
 
@@ -77,7 +78,7 @@ class VisionSender(nn.Module):
             self.fc = nn.Identity()
         else:
             console.log(f"Using Linear vision2hidden= [{vision_dim}]->[{n_hidden}] for sender out")
-            self.fc = nn.Linear(vision_dim, n_hidden)
+            self.fc= DeepProLoNet(input_dim=vision_dim, output_dim=n_hidden, use_gpu=True)
 
         if image_type == "both" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * out_features, out_features)
@@ -96,10 +97,9 @@ class VisionSender(nn.Module):
 
         # vision out [batch , vision out]
         # then fc on vision out
-        fc_out = self.fc(vision_out)
 
         # fc_out [batch, hidden size]
-        return fc_out
+        return vision_out
 
 
     def combine_images(self, segment_out, image_out):

@@ -1,0 +1,3 @@
+[submodule "ProLoNets"]
+	path = ProLoNets
+	url = https://github.com/CORE-Robotics-Lab/ProLoNets
