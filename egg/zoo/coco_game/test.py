@@ -20,11 +20,17 @@ from egg.zoo.coco_game.utils.utils import (
 def load_params(params_path):
     # parse x:
     with open(params_path, "r") as file:
-        lines = file.readline()
+        lines = file.readlines()
+
+    lines = " ".join(lines)
 
     lines = lines.replace("null", "None")
     lines = lines.replace("false", "False")
     lines = lines.replace("true", "True")
+
+    lines = lines.strip()
+    lines = lines.replace("\n", "")
+
     lines = eval(lines)
     lines.pop("log_dir")
     lines.pop("log_dir_uid")
@@ -102,20 +108,16 @@ def customTest(is_seg, seed=0, epochs=1):
     console.log("Test is over")
 
 
-def test( seed=0, epochs=1):
-
-
-    random_seed=666
-    data_seed= random_seed
+def test(seed=0, epochs=1):
+    random_seed = 666
+    data_seed = random_seed
 
     params = sys.argv[1:] + ['--random_seed', f"{random_seed}", '--data_seed', f"{data_seed}"]
 
     opts = parse_arguments(params=params)
 
-
-
     file_path = f"/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/"
-    log="Vocab2Len1Target/"
+    log = "Vocab5Len10TargetContext/"
 
     file_path += log
 
@@ -125,14 +127,13 @@ def test( seed=0, epochs=1):
     opts.random_seed = random_seed
     opts.data_seed = random_seed
 
-    opts.log_dir_uid= log
-
+    opts.log_dir_uid = log
 
     console.log(sorted(vars(opts).items()))
 
     define_project_dir(opts)
 
-    #dump_params(opts)
+    # dump_params(opts)
 
     _, test_data = get_data(opts)
 
@@ -161,4 +162,3 @@ def test( seed=0, epochs=1):
 if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)
     test()
-

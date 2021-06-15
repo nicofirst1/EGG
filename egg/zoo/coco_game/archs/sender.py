@@ -79,7 +79,7 @@ class VisionSender(nn.Module):
             console.log(f"Using Linear vision2hidden= [{vision_dim}]->[{n_hidden}] for sender out")
             self.fc = nn.Linear(vision_dim, n_hidden)
 
-        if image_type == "both" and image_union == "cat":
+        if image_type == "ImgTargetContext" and image_union == "cat":
             self.cat_fc = nn.Linear(2 * out_features, out_features)
 
     def forward(self, inp):
@@ -136,10 +136,10 @@ class VisionSender(nn.Module):
         seg = inp[:, 1, :, :]
         # img and seg = [batch, channels, image_size, image_size]
 
-        if self.image_type == "seg":
+        if self.image_type == "ImgTarget":
             out = self.feature_extractor(seg)
 
-        elif self.image_type == "img":
+        elif self.image_type == "ImgContext":
             out = self.feature_extractor(img)
 
         else:
