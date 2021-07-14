@@ -585,7 +585,9 @@ class CommunicationRnnReinforce(nn.Module):
         aux_info["receiver_entropy"] = entropy_r.detach()
         aux_info["length"] = message_length.float()  # will be averaged
         aux_info["policy_loss"] = policy_loss.unsqueeze(dim=0).float()  # will be averaged
-        aux_info["weighted_entropy"] = weighted_entropy.unsqueeze(dim=0).float() # will be averaged
+        aux_info["weighted_entropy"] = weighted_entropy.unsqueeze(dim=0).float()  # will be averaged
+        aux_info["log_prob_s"] = log_prob_s.unsqueeze(dim=0).float()  # will be averaged
+        aux_info["log_prob_r"] = log_prob_r.unsqueeze(dim=0).float()  # will be averaged
 
         logging_strategy = (
             self.train_logging_strategy if self.training else self.val_logging_strategy

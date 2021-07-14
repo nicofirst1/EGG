@@ -155,6 +155,10 @@ class InteractionCSV(Callback):
             "Accuracy",
             "Sender Entropy",
             "Message Length",
+
+            "Sender Logits",
+            "Receiver Logits",
+
         ]
 
         if self.message_file.exists():
@@ -278,6 +282,8 @@ class InteractionCSV(Callback):
         accuracy = logs.aux['accuracy'].squeeze().tolist()
         sender_entropy = logs.aux['sender_entropy'][:, 0].squeeze().tolist()
         message_length = logs.aux['length'].squeeze().tolist()
+        sender_logits = logs.aux['log_prob_s'].squeeze().tolist()
+        receiver_logits = logs.aux['log_prob_r'].squeeze().tolist()
 
         with open(self.message_file, "a+") as file:
             for idx in track(range(len(true_class)), description="Logging lines..."):
@@ -322,7 +328,13 @@ class InteractionCSV(Callback):
                 line += f"{loss[idx]},"
                 line += f"{accuracy[idx]},"
                 line += f"{sender_entropy[idx]},"
-                line += f"{message_length[idx]}"
+                line += f"{message_length[idx]},"
+
+                # "Sender Logits",
+                # "Receiver Logits",
+
+                line += f"{sender_logits[idx]},"
+                line += f"{receiver_logits[idx]}"
 
                 line += "\n"
                 file.write(line)
