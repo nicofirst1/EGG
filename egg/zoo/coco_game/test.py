@@ -108,7 +108,22 @@ def customTest(is_seg, seed=0, epochs=1):
     console.log("Test is over")
 
 
-def test(seed=0, epochs=1):
+def multi_test():
+    logs = [
+        "Vocab10Len2Target",
+        "Vocab10Len2TargetContext",
+        "Vocab10Len6Target",
+        "Vocab10Len6TargetContext",
+        "Vocab100Len2Target",
+        "Vocab100Len2TargetContext",
+        "Vocab100Len6Target",
+        "Vocab100Len6TargetContext"]
+
+    for l in logs:
+        test(l + "/")
+
+
+def test(log="", epochs=1):
     random_seed = 666
     data_seed = random_seed
 
@@ -117,7 +132,8 @@ def test(seed=0, epochs=1):
     opts = parse_arguments(params=params)
 
     file_path = f"/home/dizzi/Desktop/EGG/egg/zoo/coco_game/Logs/"
-    log = "Vocab5Len10TargetContext/"
+    if len(log) == 0:
+        log = "Vocab10Len2TargetContext/"
 
     file_path += log
 
@@ -161,4 +177,4 @@ def test(seed=0, epochs=1):
 
 if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)
-    test()
+    multi_test()

@@ -188,6 +188,7 @@ class InteractionCSV(Callback):
             distractors.append(objects[idx])
 
         predictions = torch.softmax(predictions, dim=1)
+        logits = predictions.tolist()
         predictions = torch.argmax(predictions, dim=1)
         correct_pred = predictions == true_seg
 
@@ -203,6 +204,7 @@ class InteractionCSV(Callback):
             true_class=true_class,
             distractors=distractors,
             correct_pred=correct_pred,
+            logits=logits,
         )
 
         return res_dict
@@ -252,6 +254,7 @@ class InteractionCSV(Callback):
         true_class = data_dict['true_class']
         distractors = data_dict['distractors']
         correct_pred = data_dict['correct_pred']
+        logits = data_dict['logits']
 
         # define lambdas
         get_cat_name_id = lambda cat_ids: [self.val_coco.cats[idx]["name"] for idx in cat_ids]
@@ -325,6 +328,7 @@ class InteractionCSV(Callback):
                 # "Accuracy",
                 # "Sender Entropy",
                 # "Message Length",
+                # "Logits",
                 line += f"{loss[idx]},"
                 line += f"{accuracy[idx]},"
                 line += f"{sender_entropy[idx]},"
