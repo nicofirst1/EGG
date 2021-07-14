@@ -337,7 +337,7 @@ class InteractionCSV(Callback):
                 # "Sender Logits",
                 # "Receiver Logits",
 
-                line += f"{sender_logits[idx]},"
+                line += ";".join(map(str, sender_logits[idx]))+","
                 line += f"{receiver_logits[idx]}"
 
                 line += "\n"
